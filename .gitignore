@@ -1,4 +1,14 @@
+/vendor/
+/.env
+/storage/logs/*.log
+/storage/uploads/*
+!/storage/uploads/.gitkeep
+!/storage/logs/.gitkeep
+
+# Tài liệu gốc ban đầu
 ktx.docx
 Bao_cao_Quan_ly_KTX_DHQG_TPHCM.docx
 tai-lieu-thiet-ke-database-ktx-dhqghcm.pdf
 qlktx_dhqg_hcm.sql
+DB_QLKTX.docx
+Mô tả các chức năng.docx
