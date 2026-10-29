@@ -8,7 +8,13 @@ ob_start();
             <h1 class="page-title">Cổng thông tin sinh viên</h1>
             <p class="page-subtitle"><?= htmlspecialchars($sinhVien['HoVaTen'] ?? '') ?> — MSSV: <?= htmlspecialchars($sinhVien['MaSinhVien'] ?? '') ?> — <?= htmlspecialchars($sinhVien['TenTruong'] ?? '') ?></p>
         </div>
-        <div>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <a href="<?= url('student/profile') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">
+                👤 Hồ sơ sinh viên
+            </a>
+            <a href="<?= url('student/payments') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">
+                💳 Xem thanh toán
+            </a>
             <span class="badge badge-success">
                 Trạng thái: <?= htmlspecialchars($sinhVien['TrangThaiNoiTru'] ?? 'Chưa ở') ?>
             </span>
