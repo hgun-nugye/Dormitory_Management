@@ -43,20 +43,14 @@ class AuthController extends Controller {
     }
 
     private function redirectBasedOnRole(): void {
-        $role = Auth::role();
-        switch ($role) {
-            case 'SinhVien':
-                $this->redirect('student/dashboard');
-                break;
-            case 'NhanVien':
-                $this->redirect('staff/dashboard');
-                break;
-            case 'QuanTriVien':
-                $this->redirect('admin/dashboard');
-                break;
-            default:
-                $this->redirect('/');
-                break;
+        if (Auth::isSinhVien()) {
+            $this->redirect('student/dashboard');
+        } elseif (Auth::isNhanVien()) {
+            $this->redirect('staff/dashboard');
+        } elseif (Auth::isQuanTriVien()) {
+            $this->redirect('admin/dashboard');
+        } else {
+            $this->redirect('/');
         }
     }
 }

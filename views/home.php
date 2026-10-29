@@ -209,12 +209,37 @@ ob_start();
             Giải pháp tích hợp quản lý lưu trú sinh viên, xét duyệt giữ chỗ theo hạn định, dồn phòng tối ưu, thanh toán điện nước và giám sát an ninh nội trú.
         </p>
         <div class="hero-actions" style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
-            <a href="<?= url('login') ?>" class="btn hero-btn-primary" style="padding: 12px 28px; border-radius: 10px;">
-                Đăng nhập cổng dịch vụ &rarr;
-            </a>
-            <a href="#features" class="btn btn-outline" style="padding: 12px 24px; border-radius: 10px; border-color: #cbd5e1; color: #334155;">
-                Xem quy trình nghiệp vụ
-            </a>
+            <?php if (\App\Core\Auth::check()): ?>
+                <?php if (\App\Core\Auth::isSinhVien()): ?>
+                    <a href="<?= url('student/dashboard') ?>" class="btn hero-btn-primary" style="padding: 12px 28px; border-radius: 10px;">
+                        Vào Cổng sinh viên &rarr;
+                    </a>
+                    <a href="<?= url('student/profile') ?>" class="btn btn-outline" style="padding: 12px 20px; border-radius: 10px; border-color: #cbd5e1; color: #334155;">
+                        👤 Hồ sơ sinh viên
+                    </a>
+                    <a href="<?= url('student/payments') ?>" class="btn btn-outline" style="padding: 12px 20px; border-radius: 10px; border-color: #cbd5e1; color: #334155;">
+                        💳 Xem thanh toán
+                    </a>
+                <?php elseif (\App\Core\Auth::isNhanVien()): ?>
+                    <a href="<?= url('staff/dashboard') ?>" class="btn hero-btn-primary" style="padding: 12px 28px; border-radius: 10px;">
+                        Vào BQL cụm nhà &rarr;
+                    </a>
+                <?php elseif (\App\Core\Auth::isQuanTriVien()): ?>
+                    <a href="<?= url('admin/dashboard') ?>" class="btn hero-btn-primary" style="padding: 12px 28px; border-radius: 10px;">
+                        Vào Quản trị hệ thống &rarr;
+                    </a>
+                <?php endif; ?>
+            <?php else: ?>
+                <a href="<?= url('login') ?>" class="btn hero-btn-primary" style="padding: 12px 28px; border-radius: 10px;">
+                    Đăng nhập cổng dịch vụ &rarr;
+                </a>
+                <a href="<?= url('student/profile') ?>" class="btn btn-outline" style="padding: 12px 20px; border-radius: 10px; border-color: #cbd5e1; color: #334155;">
+                    👤 Xem mẫu Hồ sơ SV
+                </a>
+                <a href="<?= url('student/payments') ?>" class="btn btn-outline" style="padding: 12px 20px; border-radius: 10px; border-color: #cbd5e1; color: #334155;">
+                    💳 Xem mẫu Thanh toán
+                </a>
+            <?php endif; ?>
         </div>
     </div>
 
