@@ -55,13 +55,20 @@ Router::get('/logout', 'AuthController@logout');
 
 // Student Routes
 Router::get('/student/dashboard', 'Student\DashboardController@index', [AuthMiddleware::class]);
+Router::get('/student/profile', 'Student\ProfileController@index');
+Router::get('/student/payments', 'Student\PaymentController@index');
 
 // Staff Routes
 Router::get('/staff/dashboard', 'Staff\DashboardController@index', [AuthMiddleware::class]);
 Router::post('/staff/approve-application', 'Staff\DashboardController@approveApplication', [AuthMiddleware::class]);
 
 // Admin Routes
-Router::get('/admin/dashboard', 'Admin\DashboardController@index', [AuthMiddleware::class]);
+Router::get('/admin/dashboard', 'Admin\DashboardController@index');
+Router::get('/admin/users', 'Admin\DashboardController@users');
+Router::get('/admin/rooms', 'Admin\DashboardController@rooms');
+Router::get('/admin/periods', 'Admin\DashboardController@periods');
+Router::get('/admin/room-types', 'Admin\DashboardController@roomTypes');
+Router::get('/admin/universities', 'Admin\DashboardController@universities');
 
 // Cron Trigger Routes
 Router::get('/cron/trigger_release', function () {

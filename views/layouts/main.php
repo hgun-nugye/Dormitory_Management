@@ -19,10 +19,17 @@
             <?php if (\App\Core\Auth::check()): ?>
                 <?php if (\App\Core\Auth::isSinhVien()): ?>
                     <li><a href="<?= url('student/dashboard') ?>">Cổng sinh viên</a></li>
+                    <li><a href="<?= url('student/profile') ?>">Hồ sơ sinh viên</a></li>
+                    <li><a href="<?= url('student/payments') ?>">Thanh toán</a></li>
                 <?php elseif (\App\Core\Auth::isNhanVien()): ?>
                     <li><a href="<?= url('staff/dashboard') ?>">BQL cụm nhà</a></li>
                 <?php elseif (\App\Core\Auth::isQuanTriVien()): ?>
-                    <li><a href="<?= url('admin/dashboard') ?>">Quản trị hệ thống</a></li>
+                    <li><a href="<?= url('admin/dashboard') ?>" style="font-weight: 600;">Dashboard</a></li>
+                    <li><a href="<?= url('admin/users') ?>">Cán bộ</a></li>
+                    <li><a href="<?= url('admin/rooms') ?>">Phòng ở</a></li>
+                    <li><a href="<?= url('admin/periods') ?>">Đợt 72h</a></li>
+                    <li><a href="<?= url('admin/room-types') ?>">Loại phòng</a></li>
+                    <li><a href="<?= url('admin/universities') ?>">Trường ĐH</a></li>
                 <?php endif; ?>
                 <li>
                     <span class="user-info">
@@ -31,6 +38,9 @@
                 </li>
                 <li><a href="<?= url('logout') ?>" class="btn btn-primary btn-sm" style="color:white">Đăng xuất</a></li>
             <?php else: ?>
+                <li><a href="<?= url('student/profile') ?>">Hồ sơ SV</a></li>
+                <li><a href="<?= url('student/payments') ?>">Thanh toán</a></li>
+                <li><a href="<?= url('admin/dashboard') ?>" style="font-weight: 600; color: #2563eb;">Admin KTX</a></li>
                 <li><a href="<?= url('login') ?>" class="btn btn-primary btn-sm" style="color:white">Đăng nhập</a></li>
             <?php endif; ?>
         </ul>
