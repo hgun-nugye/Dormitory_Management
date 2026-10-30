@@ -51,7 +51,7 @@ ob_start();
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Mật khẩu khởi tạo</label>
-                    <input type="password" class="btn-outline" style="width: 100%; padding: 10px; border-radius: 6px; font-size: 0.9rem;" placeholder="Nhập mật khẩu ban đầu" required>
+                    <?= \App\Core\Auth::passwordInput('matKhau', 'matKhau', 'Nhập mật khẩu ban đầu', true, 'btn-outline') ?>
                 </div>
             </div>
 
