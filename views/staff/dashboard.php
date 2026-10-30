@@ -6,9 +6,9 @@ ob_start();
     <!-- Header -->
     <div class="page-header" style="margin-bottom: 24px;">
         <div>
-            <h1 class="page-title">Quản lý Cụm nhà KTX</h1>
+            <h1 class="page-title">Bảng điều khiển BQL Cụm nhà</h1>
             <p class="page-subtitle">
-                Cán bộ phụ trách: <b><?= htmlspecialchars($user['HoVaTen'] ?? 'Cán bộ BQL') ?></b> &bull; Cụm quản lý: <b><?= htmlspecialchars($maCum ?? 'Cụm AG') ?></b>
+                Cán bộ phụ trách: <b><?= htmlspecialchars($user['HoVaTen'] ?? 'Cán bộ BQL') ?></b> &bull; Cụm quản lý: <b><?= htmlspecialchars($maCum ?? 'AG') ?></b>
             </p>
         </div>
         <div style="display: flex; gap: 8px;">
@@ -17,6 +17,33 @@ ob_start();
             </a>
             <a href="<?= url('cron/trigger_absence') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">
                 📋 Quét vắng mặt 30 ngày
+            </a>
+        </div>
+    </div>
+
+    <!-- Thanh phím tắt chuyển nhanh các phân hệ nghiệp vụ Staff -->
+    <div class="card" style="margin-bottom: 24px; padding: 14px 18px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <div style="font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+            ⚡ Phím tắt chuyển nhanh sang các nghiệp vụ BQL Cụm:
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="<?= url('staff/rooms') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-weight: 500;">
+                🏢 1. Sơ đồ Phòng & Cư trú (CT01)
+            </a>
+            <a href="<?= url('staff/applications') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-weight: 500;">
+                📋 2. Xét duyệt Chỗ ở 72h & Miễn giảm
+            </a>
+            <a href="<?= url('staff/utilities') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-weight: 500;">
+                ⚡ 3. Ghi Điện Nước & Công nợ
+            </a>
+            <a href="<?= url('staff/requests') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-weight: 500;">
+                📬 4. Dịch vụ Một Cửa (Chuyển phòng/Tạm vắng)
+            </a>
+            <a href="<?= url('staff/maintenance') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-weight: 500;">
+                🛠️ 5. Điều phối Bảo trì Thiết bị
+            </a>
+            <a href="<?= url('staff/discipline') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-weight: 500;">
+                🛡️ 6. An ninh Ra vào & Rèn luyện
             </a>
         </div>
     </div>
@@ -49,7 +76,10 @@ ob_start();
     <div class="card" style="margin-bottom: 24px;">
         <div class="card-title">
             <span>1. Danh sách hồ sơ đăng ký chỗ ở chờ duyệt (Cụm <?= htmlspecialchars($maCum ?? 'AG') ?>)</span>
-            <span class="badge badge-warning"><?= count($pendingApplications ?? []) ?> hồ sơ</span>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <span class="badge badge-warning"><?= count($pendingApplications ?? []) ?> hồ sơ</span>
+                <a href="<?= url('staff/applications') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">Xem tất cả &rarr;</a>
+            </div>
         </div>
         
         <?php if (!empty($pendingApplications)): ?>
@@ -101,7 +131,10 @@ ob_start();
     <div class="card" style="margin-bottom: 24px;">
         <div class="card-title">
             <span>2. Theo dõi công suất phòng & Đề xuất dồn phòng (Cụm <?= htmlspecialchars($maCum ?? 'AG') ?>)</span>
-            <span class="badge badge-info"><?= count($consolidation ?? []) ?> phòng</span>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <span class="badge badge-info"><?= count($consolidation ?? []) ?> phòng</span>
+                <a href="<?= url('staff/rooms') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">Xem sơ đồ phòng &rarr;</a>
+            </div>
         </div>
         
         <?php if (!empty($consolidation)): ?>
@@ -150,7 +183,10 @@ ob_start();
     <div class="card" style="margin-bottom: 24px;">
         <div class="card-title">
             <span>3. Xử lý phiếu báo hỏng thiết bị phòng (Cụm <?= htmlspecialchars($maCum ?? 'AG') ?>)</span>
-            <span class="badge badge-danger"><?= count($maintenanceTickets ?? []) ?> phiếu</span>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <span class="badge badge-danger"><?= count($maintenanceTickets ?? []) ?> phiếu</span>
+                <a href="<?= url('staff/maintenance') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">Xem chi tiết &rarr;</a>
+            </div>
         </div>
         
         <?php if (!empty($maintenanceTickets)): ?>
@@ -179,9 +215,9 @@ ob_start();
                                     <span class="badge badge-warning"><?= htmlspecialchars($mb['TrangThaiSua']) ?></span>
                                 </td>
                                 <td style="text-align: right;">
-                                    <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px;" onclick="alert('Tiếp nhận xử lý kỹ thuật')">
+                                    <a href="<?= url('staff/maintenance') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">
                                         🛠️ Tiếp nhận xử lý
-                                    </button>
+                                    </a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -197,14 +233,15 @@ ob_start();
     <div class="card">
         <div class="card-title">
             <span>4. Ghi nhận chỉ số Điện - Nước định kỳ hàng tháng</span>
+            <a href="<?= url('staff/utilities') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">Vào phân hệ Điện Nước &rarr;</a>
         </div>
         <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">
             Nhập số đo công tơ ngày 25 hàng tháng cho các phòng thuộc cụm quản lý:
         </p>
         <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-            <button type="button" class="btn btn-primary" style="border-radius: 6px;" onclick="alert('Mở biểu mẫu nhập chỉ số điện nước tháng')">
+            <a href="<?= url('staff/utilities') ?>" class="btn btn-primary" style="border-radius: 6px;">
                 ⚡ Nhập chỉ số Điện & Nước tháng này
-            </button>
+            </a>
             <button type="button" class="btn btn-outline" style="border-radius: 6px;" onclick="alert('Xuất danh sách chỉ số ra Excel')">
                 📥 Xuất bảng chỉ số cụm
             </button>
