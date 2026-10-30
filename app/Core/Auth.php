@@ -74,6 +74,86 @@ class Auth
             || str_contains(mb_strtolower($ten), 'quản trị');
     }
 
+    // Băm mật khẩu theo chuẩn BCrypt
+    public static function hashPassword(string $password): string
+    {
+        return password_hash($password, PASSWORD_BCRYPT);
+    }
+
+    // Kiểm tra tính hợp lệ của mật khẩu (hỗ trợ hash BCrypt & demo fallback)
+    public static function verifyPassword(string $password, string $hash): bool
+    {
+        $isMatch = password_verify($password, $hash);
+
+        // Chỉ hỗ trợ mật khẩu demo nếu dữ liệu chứa hash mẫu
+        if (
+            !$isMatch
+            && str_starts_with($hash, '$2y$10$demo_hash')
+            && in_array($password, ['Demo@123', '123456'], true)
+        ) {
+            $isMatch = true;
+        }
+
+        return $isMatch;
+    }
+
+    // Đổi mật khẩu người dùng (Bảo toàn dữ liệu theo PDF: Mật khẩu băm BCrypt)
+    public static function changePassword(int $userId, string $oldPassword, string $newPassword): array
+    {
+        $user = Database::fetch(
+            "SELECT * FROM TaiKhoan WHERE MaTaiKhoan = :id LIMIT 1",
+            ['id' => $userId]
+        );
+
+        if (!$user) {
+            return ['success' => false, 'message' => 'Không tìm thấy tài khoản.'];
+        }
+
+        if (!self::verifyPassword($oldPassword, $user['MatKhauMaHoa'] ?? '')) {
+            return ['success' => false, 'message' => 'Mật khẩu cũ không chính xác.'];
+        }
+
+        if (strlen($newPassword) < 6) {
+            return ['success' => false, 'message' => 'Mật khẩu mới phải có ít nhất 6 ký tự.'];
+        }
+
+        $newHash = self::hashPassword($newPassword);
+        Database::execute(
+            "UPDATE TaiKhoan SET MatKhauMaHoa = :hash WHERE MaTaiKhoan = :id",
+            ['hash' => $newHash, 'id' => $userId]
+        );
+
+        return ['success' => true, 'message' => 'Đổi mật khẩu thành công.'];
+    }
+
+    /**
+     * Render trình / ô nhập mật khẩu có sẵn nút ẩn/hiện (Show/Hide Password Widget)
+     * Sử dụng được cho cả form đăng nhập và form đổi mật khẩu
+     */
+    public static function passwordInput(
+        string $name = 'password',
+        string $id = 'password',
+        string $placeholder = 'Nhập mật khẩu',
+        bool $required = true,
+        string $extraClass = ''
+    ): string {
+        $reqAttr = $required ? 'required' : '';
+        $cls = trim('form-control ' . $extraClass);
+        $escapedPlaceholder = htmlspecialchars($placeholder, ENT_QUOTES, 'UTF-8');
+
+        return <<<HTML
+        <div class="password-field-wrapper" style="position: relative; display: flex; align-items: center; width: 100%;">
+            <input type="password" id="{$id}" name="{$name}" class="{$cls}" placeholder="{$escapedPlaceholder}" {$reqAttr} style="padding-right: 42px; width: 100%;">
+            <button type="button" class="btn-toggle-password" onclick="togglePasswordVisibility('{$id}', this)" title="Hiện mật khẩu" aria-label="Hiện mật khẩu" style="position: absolute; right: 8px; background: none; border: none; cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: color 0.15s ease;">
+                <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+            </button>
+        </div>
+HTML;
+    }
+
     // Đăng nhập
     public static function login(
         string $username,
@@ -98,24 +178,7 @@ class Auth
 
         // 2. Kiểm tra mật khẩu đã mã hóa
         $hash = $user['MatKhauMaHoa'] ?? '';
-
-        $isMatch = password_verify($password, $hash);
-
-        // Chỉ hỗ trợ mật khẩu demo nếu dữ liệu chứa hash mẫu
-        if (
-            !$isMatch
-            && str_starts_with($hash, '$2y$10$demo_hash')
-            && in_array(
-                $password,
-                ['Demo@123', '123456'],
-                true
-            )
-        ) {
-            $isMatch = true;
-        }
-
-        // Mật khẩu không đúng
-        if (!$isMatch) {
+        if (!self::verifyPassword($password, $hash)) {
             return false;
         }
 

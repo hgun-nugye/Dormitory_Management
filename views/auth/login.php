@@ -24,7 +24,7 @@ ob_start();
 
             <div class="form-group">
                 <label for="password">Mật khẩu</label>
-                <input type="password" id="password" name="password" class="form-control" placeholder="Nhập mật khẩu" required>
+                <?= \App\Core\Auth::passwordInput('password', 'password', 'Nhập mật khẩu', true) ?>
             </div>
 
             <button type="submit" class="btn btn-primary btn-block">

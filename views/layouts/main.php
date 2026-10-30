@@ -14,17 +14,26 @@
             <span class="brand-name">KTX ĐHQG-HCM</span>
             <span class="badge-uni">VNU-HCM</span>
         </a>
-        <ul class="nav-links">
-            <li><a href="<?= url('/') ?>">Trang chủ</a></li>
+        <ul class="nav-links">   
+            <li><a href="<?= url('/') ?>" style="font-weight: 600; color: #2563eb;">Trang chủ</a></li>         
             <?php if (\App\Core\Auth::check()): ?>
                 <?php if (\App\Core\Auth::isSinhVien()): ?>
+                    <li><a href="<?= url('/') ?>" style="font-weight: 600; color: #2563eb;">Trang chủ</a></li>
                     <li><a href="<?= url('student/dashboard') ?>">Cổng sinh viên</a></li>
                     <li><a href="<?= url('student/profile') ?>">Hồ sơ sinh viên</a></li>
                     <li><a href="<?= url('student/payments') ?>">Thanh toán</a></li>
                 <?php elseif (\App\Core\Auth::isNhanVien()): ?>
-                    <li><a href="<?= url('staff/dashboard') ?>">BQL cụm nhà</a></li>
+                    <li><a href="<?= url('/') ?>" style="font-weight: 600; color: #2563eb;">Trang chủ</a></li>
+                    <li><a href="<?= url('staff/dashboard') ?>">BQL Cụm</a></li>
+                    <li><a href="<?= url('staff/rooms') ?>">Sơ đồ phòng</a></li>
+                    <li><a href="<?= url('staff/applications') ?>">Xét duyệt 72h</a></li>
+                    <li><a href="<?= url('staff/utilities') ?>">Điện nước</a></li>
+                    <li><a href="<?= url('staff/requests') ?>">Đơn 1 cửa</a></li>
+                    <li><a href="<?= url('staff/maintenance') ?>">Bảo trì</a></li>
+                    <li><a href="<?= url('staff/discipline') ?>">An ninh</a></li>
                 <?php elseif (\App\Core\Auth::isQuanTriVien()): ?>
-                    <li><a href="<?= url('admin/dashboard') ?>" style="font-weight: 600;">Dashboard</a></li>
+                    <li><a href="<?= url('/') ?>" style="font-weight: 600; color: #2563eb;">Trang chủ</a></li>
+                    <li><a href="<?= url('admin/dashboard') ?>">Dashboard</a></li>
                     <li><a href="<?= url('admin/users') ?>">Cán bộ</a></li>
                     <li><a href="<?= url('admin/rooms') ?>">Phòng ở</a></li>
                     <li><a href="<?= url('admin/periods') ?>">Đợt 72h</a></li>
@@ -38,9 +47,10 @@
                 </li>
                 <li><a href="<?= url('logout') ?>" class="btn btn-primary btn-sm" style="color:white">Đăng xuất</a></li>
             <?php else: ?>
-                <li><a href="<?= url('student/profile') ?>">Hồ sơ SV</a></li>
+                <!-- <li><a href="<?= url('student/profile') ?>">Hồ sơ SV</a></li>
                 <li><a href="<?= url('student/payments') ?>">Thanh toán</a></li>
-                <li><a href="<?= url('admin/dashboard') ?>" style="font-weight: 600; color: #2563eb;">Admin KTX</a></li>
+                <li><a href="<?= url('staff/dashboard') ?>" style="font-weight: 600; color: #059669;">BQL KTX</a></li>
+                <li><a href="<?= url('admin/dashboard') ?>" style="font-weight: 600; color: #2563eb;">Admin KTX</a></li> -->
                 <li><a href="<?= url('login') ?>" class="btn btn-primary btn-sm" style="color:white">Đăng nhập</a></li>
             <?php endif; ?>
         </ul>
@@ -54,6 +64,7 @@
         <p>© <?= date('Y') ?> Trung tâm Quản lý Ký túc xá Đại học Quốc gia TP.HCM</p>
         <p class="footer-sub">Hệ thống quản lý nội trú - Kiến trúc MVC</p>
     </footer>
+    <script src="<?= asset('js/main.js') ?>"></script>
 </body>
 
 </html>

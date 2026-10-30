@@ -60,6 +60,12 @@ Router::get('/student/payments', 'Student\PaymentController@index');
 
 // Staff Routes
 Router::get('/staff/dashboard', 'Staff\DashboardController@index', [AuthMiddleware::class]);
+Router::get('/staff/rooms', 'Staff\DashboardController@rooms', [AuthMiddleware::class]);
+Router::get('/staff/applications', 'Staff\DashboardController@applications', [AuthMiddleware::class]);
+Router::get('/staff/utilities', 'Staff\DashboardController@utilities', [AuthMiddleware::class]);
+Router::get('/staff/requests', 'Staff\DashboardController@requests', [AuthMiddleware::class]);
+Router::get('/staff/maintenance', 'Staff\DashboardController@maintenance', [AuthMiddleware::class]);
+Router::get('/staff/discipline', 'Staff\DashboardController@discipline', [AuthMiddleware::class]);
 Router::post('/staff/approve-application', 'Staff\DashboardController@approveApplication', [AuthMiddleware::class]);
 
 // Admin Routes
