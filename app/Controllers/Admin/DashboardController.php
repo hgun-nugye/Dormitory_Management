@@ -9,14 +9,16 @@ use App\Core\Request;
 use App\Core\Session;
 
 /**
- * Controller: Quản trị viên (Toàn quyền hệ thống)
- * Quản trị toàn diện:
- * 1. Phân quyền & Quản lý tài khoản cán bộ (Trưởng khu, Trưởng cụm, Nhân viên)
- * 2. Cơ sở vật chất KTX (Khu, Cụm, Tòa, Phòng, Giường)
- * 3. Cấu hình Đợt đăng ký & Giữ chỗ 72h
- * 4. Danh mục Loại phòng & Đơn giá chuẩn
- * 5. Danh mục Trường ĐH & Chỉ tiêu
- * 6. Giám sát Tài chính & Nhật ký Giao dịch
+ * Controller: Quản trị viên (Toàn quyền quản trị hệ thống)
+ * Các phân hệ quản trị chính:
+ * 1. Phân quyền & Quản lý tài khoản cán bộ (Trưởng khu, Trưởng cụm, Trưởng tòa, Quản lý KTX)
+ * 2. Cấu hình Đợt đăng ký tuyển sinh & Giữ chỗ 72h
+ * 3. Danh mục Loại phòng & Đơn giá lưu trú chuẩn
+ * 4. Danh mục Trường Đại học liên kết & Chỉ tiêu đào tạo
+ * 5. Giám sát Tài chính & Nhật ký Giao dịch thanh toán
+ * 
+ * Lưu ý: Nghiệp vụ quản lý Hạ tầng KTX (Khu, Cụm, Tòa, Phòng, Giường)
+ * đã được chuyển giao hoàn toàn sang phân hệ Cán bộ BQL KTX (Staff).
  */
 class DashboardController extends Controller
 {
@@ -24,16 +26,16 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Thống kê toàn hệ thống
+        // 1. Thống kê toàn hệ thống dành cho Quản trị viên
         $stats = [
             'total_students' => 0,
             'active_residents' => 0,
-            'total_rooms' => 0,
-            'total_beds' => 0,
-            'occupied_beds' => 0,
+            'total_periods' => 0,
+            'total_universities' => 0,
             'pending_applications' => 0,
             'pending_maintenance' => 0,
-            'total_staff' => 0
+            'total_staff' => 0,
+            'total_transactions' => 0
         ];
 
         $canBoList = [];
@@ -45,12 +47,12 @@ class DashboardController extends Controller
         try {
             $stats['total_students'] = Database::fetch("SELECT COUNT(*) AS total FROM SinhVien")['total'] ?? 0;
             $stats['active_residents'] = Database::fetch("SELECT COUNT(*) AS total FROM HopDongNoiTru WHERE TrangThaiHopDong = 'Đang hiệu lực'")['total'] ?? 0;
-            $stats['total_rooms'] = Database::fetch("SELECT COUNT(*) AS total FROM Phong")['total'] ?? 0;
-            $stats['total_beds'] = Database::fetch("SELECT COUNT(*) AS total FROM Giuong")['total'] ?? 0;
-            $stats['occupied_beds'] = Database::fetch("SELECT COUNT(*) AS total FROM Giuong WHERE TrangThaiGiuong = 'Đã có người ở'")['total'] ?? 0;
+            $stats['total_periods'] = Database::fetch("SELECT COUNT(*) AS total FROM DotDangKy")['total'] ?? 0;
+            $stats['total_universities'] = Database::fetch("SELECT COUNT(*) AS total FROM TruongDaiHoc")['total'] ?? 0;
             $stats['pending_applications'] = Database::fetch("SELECT COUNT(*) AS total FROM HoSoDangKy WHERE TrangThaiHoSo = 'Chờ duyệt'")['total'] ?? 0;
             $stats['pending_maintenance'] = Database::fetch("SELECT COUNT(*) AS total FROM PhieuBaoHong WHERE TrangThaiSua = 'Chờ xử lý'")['total'] ?? 0;
             $stats['total_staff'] = Database::fetch("SELECT COUNT(*) AS total FROM NhanVien")['total'] ?? 0;
+            $stats['total_transactions'] = Database::fetch("SELECT COUNT(*) AS total FROM GiaoDichThanhToan")['total'] ?? 0;
 
             // Danh sách cán bộ & phân quyền
             $canBoList = Database::fetchAll("
@@ -243,7 +245,7 @@ class DashboardController extends Controller
             ");
         } catch (\Throwable $e) {
             $cumNhaList = [];
-        $toaNhaList = [];
+            $toaNhaList = [];
         }
 
         $flashSuccess = Session::flash('success');
@@ -540,18 +542,181 @@ class DashboardController extends Controller
         $this->redirect('admin/users');
     }
 
-    public function periods(): void
-    {
-        $this->view('admin.periods', ['user' => Auth::user()]);
-    }
-
-    public function roomTypes(): void
-    {
-        $this->view('admin.room_types', ['user' => Auth::user()]);
-    }
-
     public function universities(): void
     {
-        $this->view('admin.universities', ['user' => Auth::user()]);
+        $user = Auth::user();
+
+        $universityList = [];
+        try {
+            $universityList = Database::fetchAll("
+                SELECT t.*, COUNT(sv.MaSinhVien) AS TongSinhVien
+                FROM TruongDaiHoc t
+                LEFT JOIN SinhVien sv ON t.MaTruong = sv.MaTruong
+                GROUP BY t.MaTruong, t.TenTruong, t.SoNamDaoTaoChuan, t.ThuocDHQGHCM, t.DangHopTac
+                ORDER BY t.ThuocDHQGHCM DESC, t.MaTruong ASC
+            ");
+        } catch (\Throwable $e) {
+            $universityList = [];
+        }
+
+        $flashSuccess = Session::flash('success');
+        $flashError = Session::flash('error');
+        $flashWarning = Session::flash('warning');
+
+        $this->view('admin.universities', [
+            'user' => $user,
+            'universityList' => $universityList,
+            'flashSuccess' => $flashSuccess,
+            'flashError' => $flashError,
+            'flashWarning' => $flashWarning
+        ]);
+    }
+
+    public function saveUniversity(): void
+    {
+        $request = new Request();
+        $isEdit = (int)$request->input('isEdit', 0);
+        $maTruong = strtoupper(trim((string)$request->input('maTruong', '')));
+        $tenTruong = trim((string)$request->input('tenTruong', ''));
+        $soNamDaoTao = (float)$request->input('soNamDaoTaoChuan', 4.0);
+        $thuocDHQGHCM = (int)$request->input('thuocDHQGHCM', 1);
+        $dangHopTac = (int)$request->input('dangHopTac', 1);
+
+        if (empty($maTruong) || empty($tenTruong)) {
+            Session::flash('error', 'Vui lòng nhập đầy đủ Mã trường và Tên trường Đại học!');
+            $this->redirect('admin/universities');
+            return;
+        }
+
+        if ($soNamDaoTao <= 0 || $soNamDaoTao > 10) {
+            Session::flash('error', 'Thời gian đào tạo chuẩn không hợp lệ (từ 1.0 đến 10.0 năm)!');
+            $this->redirect('admin/universities');
+            return;
+        }
+
+        try {
+            if ($isEdit === 1) {
+                // ==================== CẬP NHẬT (UPDATE) ====================
+                $existing = Database::fetch("SELECT * FROM TruongDaiHoc WHERE MaTruong = :ma", ['ma' => $maTruong]);
+                if (!$existing) {
+                    Session::flash('error', "Không tìm thấy trường Đại học '{$maTruong}' để cập nhật!");
+                    $this->redirect('admin/universities');
+                    return;
+                }
+
+                Database::execute("
+                    UPDATE TruongDaiHoc 
+                    SET TenTruong = :ten, SoNamDaoTaoChuan = :nam, ThuocDHQGHCM = :thuoc, DangHopTac = :hoptac
+                    WHERE MaTruong = :ma
+                ", [
+                    'ten' => $tenTruong,
+                    'nam' => $soNamDaoTao,
+                    'thuoc' => $thuocDHQGHCM,
+                    'hoptac' => $dangHopTac,
+                    'ma' => $maTruong
+                ]);
+
+                Session::flash('success', "Đã cập nhật thông tin trường Đại học '{$tenTruong}' ({$maTruong}) thành công!");
+            } else {
+                // ==================== THÊM MỚI (CREATE) ====================
+                $dup = Database::fetch("SELECT MaTruong FROM TruongDaiHoc WHERE MaTruong = :ma", ['ma' => $maTruong]);
+                if ($dup) {
+                    Session::flash('error', "Mã trường '{$maTruong}' đã tồn tại trong hệ thống. Vui lòng chọn mã khác!");
+                    $this->redirect('admin/universities');
+                    return;
+                }
+
+                Database::execute("
+                    INSERT INTO TruongDaiHoc (MaTruong, TenTruong, SoNamDaoTaoChuan, ThuocDHQGHCM, DangHopTac)
+                    VALUES (:ma, :ten, :nam, :thuoc, :hoptac)
+                ", [
+                    'ma' => $maTruong,
+                    'ten' => $tenTruong,
+                    'nam' => $soNamDaoTao,
+                    'thuoc' => $thuocDHQGHCM,
+                    'hoptac' => $dangHopTac
+                ]);
+
+                Session::flash('success', "Đã thêm mới trường Đại học '{$tenTruong}' ({$maTruong}) thành công!");
+            }
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Lỗi lưu dữ liệu: ' . $e->getMessage());
+        }
+
+        $this->redirect('admin/universities');
+    }
+
+    public function toggleUniversityStatus(): void
+    {
+        $request = new Request();
+        $maTruong = trim((string)$request->input('maTruong', ''));
+
+        if (empty($maTruong)) {
+            Session::flash('error', 'Mã trường đại học không hợp lệ!');
+            $this->redirect('admin/universities');
+            return;
+        }
+
+        try {
+            $uni = Database::fetch("SELECT * FROM TruongDaiHoc WHERE MaTruong = :ma", ['ma' => $maTruong]);
+            if (!$uni) {
+                Session::flash('error', 'Không tìm thấy trường đại học cần thao tác!');
+                $this->redirect('admin/universities');
+                return;
+            }
+
+            $newStatus = ((int)$uni['DangHopTac'] === 1) ? 0 : 1;
+            Database::execute("UPDATE TruongDaiHoc SET DangHopTac = :st WHERE MaTruong = :ma", [
+                'st' => $newStatus,
+                'ma' => $maTruong
+            ]);
+
+            $stText = ($newStatus === 1) ? 'TIẾP TỤC HỢP TÁC' : 'TẠM DỪNG TIẾP NHẬN';
+            Session::flash('success', "Đã chuyển trạng thái trường '{$uni['TenTruong']}' sang {$stText} thành công!");
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Lỗi cập nhật trạng thái: ' . $e->getMessage());
+        }
+
+        $this->redirect('admin/universities');
+    }
+
+    public function deleteUniversity(): void
+    {
+        $request = new Request();
+        $maTruong = trim((string)$request->input('maTruong', ''));
+
+        if (empty($maTruong)) {
+            Session::flash('error', 'Mã trường đại học không hợp lệ!');
+            $this->redirect('admin/universities');
+            return;
+        }
+
+        try {
+            $uni = Database::fetch("SELECT * FROM TruongDaiHoc WHERE MaTruong = :ma", ['ma' => $maTruong]);
+            if (!$uni) {
+                Session::flash('error', 'Không tìm thấy trường đại học cần xóa!');
+                $this->redirect('admin/universities');
+                return;
+            }
+
+            // Kiểm tra ràng buộc bảo toàn dữ liệu sinh viên
+            $svCheck = Database::fetch("SELECT COUNT(*) AS total FROM SinhVien WHERE MaTruong = :ma", ['ma' => $maTruong]);
+            $svCount = (int)($svCheck['total'] ?? 0);
+
+            if ($svCount > 0) {
+                // Bảo toàn dữ liệu: Không xóa vật lý khi đã có sinh viên liên kết, tự động chuyển sang tạm dừng tiếp nhận
+                Database::execute("UPDATE TruongDaiHoc SET DangHopTac = 0 WHERE MaTruong = :ma", [
+                    'ma' => $maTruong
+                ]);
+                Session::flash('warning', "Trường '{$uni['TenTruong']}' ({$maTruong}) đang có {$svCount} sinh viên trong hệ thống KTX. Để bảo toàn lịch sử dữ liệu nội trú, hệ thống đã tự động chuyển sang trạng thái TẠM DỪNG TIẾP NHẬN thay vì xóa vật lý!");
+            } else {
+                Database::execute("DELETE FROM TruongDaiHoc WHERE MaTruong = :ma", ['ma' => $maTruong]);
+                Session::flash('success', "Đã xóa hoàn toàn trường Đại học '{$uni['TenTruong']}' ({$maTruong}) khỏi hệ thống!");
+            }
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Lỗi khi xóa trường đại học: ' . $e->getMessage());
+        }
+
+        $this->redirect('admin/universities');
     }
 }

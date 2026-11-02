@@ -7,7 +7,7 @@ ob_start();
     <div class="page-header" style="margin-bottom: 24px;">
         <div>
             <h1 class="page-title">Quản trị hệ thống KTX ĐHQG-HCM</h1>
-            <p class="page-subtitle">Bảng điều khiển trung tâm &bull; Toàn quyền quản trị cơ sở vật chất, nhân sự và tài chính toàn KTX</p>
+            <p class="page-subtitle">Bảng điều khiển trung tâm &bull; Toàn quyền quản trị tài khoản cán bộ, đợt tuyển sinh, loại phòng và tài chính toàn hệ thống</p>
         </div>
         <div>
             <span class="badge badge-info" style="font-size: 0.85rem; padding: 6px 14px;">
@@ -29,9 +29,9 @@ ob_start();
             <div class="stat-sub">Đang lưu trú nội trú</div>
         </div>
         <div class="card stat-card" style="border-left: 4px solid #7c3aed;">
-            <div class="stat-label">Tổng sức chứa giường</div>
-            <div class="stat-val" style="color: #6d28d9;"><?= number_format($stats['total_beds'] ?? 0) ?></div>
-            <div class="stat-sub">Khu A và Khu B</div>
+            <div class="stat-label">Đợt tuyển sinh KTX</div>
+            <div class="stat-val" style="color: #6d28d9;"><?= number_format($stats['total_periods'] ?? count($dotDangKyList ?? [])) ?></div>
+            <div class="stat-sub">Cấu hình đăng ký & giữ chỗ 72h</div>
         </div>
         <div class="card stat-card" style="border-left: 4px solid #f59e0b;">
             <div class="stat-label">Cán bộ Ban Quản lý</div>

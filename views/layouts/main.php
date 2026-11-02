@@ -39,9 +39,6 @@
                     <!-- <li><a href="<?= url('/') ?>" style="font-weight: 600; color: #2563eb;">Trang chủ</a></li> -->
                     <li><a href="<?= url('admin/dashboard') ?>">Dashboard</a></li>
                     <li><a href="<?= url('admin/users') ?>">Cán bộ</a></li>
-                    <li><a href="<?= url('staff/zones') ?>">Hạ tầng KTX</a></li>
-                    <li><a href="<?= url('admin/periods') ?>">Đợt 72h</a></li>
-                    <li><a href="<?= url('admin/room-types') ?>">Loại phòng</a></li>
                     <li><a href="<?= url('admin/universities') ?>">Trường ĐH</a></li>
                 <?php endif; ?>
                 <li>
@@ -66,7 +63,6 @@
 
     <footer>
         <p>© <?= date('Y') ?> Trung tâm Quản lý Ký túc xá Đại học Quốc gia TP.HCM</p>
-        <p class="footer-sub">Hệ thống quản lý nội trú - Kiến trúc MVC</p>
     </footer>
 
     <!-- Reusable Confirmation Modal -->
