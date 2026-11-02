@@ -7,7 +7,7 @@ ob_start();
     <div class="page-header" style="margin-bottom: 24px;">
         <div>
             <h1 class="page-title">Quản trị hệ thống KTX ĐHQG-HCM</h1>
-            <p class="page-subtitle">Bảng điều khiển trung tâm &bull; Toàn quyền quản trị cơ sở vật chất, nhân sự và tài chính toàn KTX</p>
+            <p class="page-subtitle">Bảng điều khiển trung tâm &bull; Toàn quyền quản trị tài khoản cán bộ, đợt tuyển sinh, loại phòng và tài chính toàn hệ thống</p>
         </div>
         <div>
             <span class="badge badge-info" style="font-size: 0.85rem; padding: 6px 14px;">
@@ -29,9 +29,9 @@ ob_start();
             <div class="stat-sub">Đang lưu trú nội trú</div>
         </div>
         <div class="card stat-card" style="border-left: 4px solid #7c3aed;">
-            <div class="stat-label">Tổng sức chứa giường</div>
-            <div class="stat-val" style="color: #6d28d9;"><?= number_format($stats['total_beds'] ?? 0) ?></div>
-            <div class="stat-sub">Khu A và Khu B</div>
+            <div class="stat-label">Đợt tuyển sinh KTX</div>
+            <div class="stat-val" style="color: #6d28d9;"><?= number_format($stats['total_periods'] ?? count($dotDangKyList ?? [])) ?></div>
+            <div class="stat-sub">Cấu hình đăng ký & giữ chỗ 72h</div>
         </div>
         <div class="card stat-card" style="border-left: 4px solid #f59e0b;">
             <div class="stat-label">Cán bộ Ban Quản lý</div>
@@ -87,52 +87,10 @@ ob_start();
         </div>
     </div>
 
-    <!-- PHÂN HỆ 2: CƠ SỞ VẬT CHẤT & HẠ TẦNG KTX -->
-    <div id="co-so-vat-chat" class="card" style="margin-bottom: 24px;">
-        <div class="card-title">
-            <span>2. Danh mục Cụm nhà, Tòa nhà & Sức chứa phòng</span>
-            <a href="<?= url('admin/rooms') ?>" class="btn btn-primary btn-sm" style="border-radius: 6px; text-decoration: none;">
-                + Thêm tòa / cụm & phòng
-            </a>
-        </div>
-        <div class="table-responsive">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Mã cụm</th>
-                        <th>Tên cụm nhà</th>
-                        <th>Khu KTX</th>
-                        <th>Số tòa nhà</th>
-                        <th>Tổng số phòng</th>
-                        <th>Tổng sức chứa giường</th>
-                        <th style="text-align: right;">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($cumNhaList as $c): ?>
-                        <tr>
-                            <td><b><?= htmlspecialchars($c['MaCum']) ?></b></td>
-                            <td><?= htmlspecialchars($c['TenCum']) ?></td>
-                            <td><span class="badge badge-info"><?= htmlspecialchars($c['TenKhu'] ?? 'Khu A') ?></span></td>
-                            <td><b><?= $c['TongToa'] ?></b> tòa</td>
-                            <td><b><?= $c['TongPhong'] ?></b> phòng</td>
-                            <td><b><?= $c['TongGiuong'] ?></b> giường</td>
-                            <td style="text-align: right;">
-                                <a href="<?= url('admin/rooms') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; text-decoration: none;">
-                                    Cấu hình phòng
-                                </a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- PHÂN HỆ 3: CẤU HÌNH ĐỢT ĐĂNG KÝ & HẠN GIỮ CHỖ 72H -->
+    <!-- PHÂN HỆ 2: CẤU HÌNH ĐỢT ĐĂNG KÝ & HẠN GIỮ CHỖ 72H -->
     <div id="dot-dang-ky" class="card" style="margin-bottom: 24px;">
         <div class="card-title">
-            <span>3. Cấu hình đợt đăng ký lưu trú & Hạn định giữ chỗ</span>
+            <span>2. Cấu hình đợt đăng ký lưu trú & Hạn định giữ chỗ</span>
             <a href="<?= url('admin/periods') ?>" class="btn btn-primary btn-sm" style="border-radius: 6px; text-decoration: none;">
                 + Mở đợt đăng ký mới
             </a>
@@ -174,10 +132,10 @@ ob_start();
         </div>
     </div>
 
-    <!-- PHÂN HỆ 4: DANH MỤC LOẠI PHÒNG & ĐƠN GIÁ CHUẨN -->
+    <!-- PHÂN HỆ 3: DANH MỤC LOẠI PHÒNG & ĐƠN GIÁ CHUẨN -->
     <div id="loai-phong" class="card" style="margin-bottom: 24px;">
         <div class="card-title">
-            <span>4. Danh mục Loại phòng & Đơn giá lưu trú chuẩn</span>
+            <span>3. Danh mục Loại phòng & Đơn giá lưu trú chuẩn</span>
             <a href="<?= url('admin/room-types') ?>" class="btn btn-primary btn-sm" style="border-radius: 6px; text-decoration: none;">
                 + Thêm loại phòng
             </a>
@@ -214,10 +172,10 @@ ob_start();
         </div>
     </div>
 
-    <!-- PHÂN HỆ 5: TRƯỜNG ĐẠI HỌC THÀNH VIÊN -->
+    <!-- PHÂN HỆ 4: TRƯỜNG ĐẠI HỌC THÀNH VIÊN -->
     <div id="truong-hoc" class="card" style="margin-bottom: 24px;">
         <div class="card-title">
-            <span>5. Danh mục Trường Đại học liên kết & Chỉ tiêu</span>
+            <span>4. Danh mục Trường Đại học liên kết & Chỉ tiêu</span>
             <a href="<?= url('admin/universities') ?>" class="btn btn-primary btn-sm" style="border-radius: 6px; text-decoration: none;">
                 + Thêm trường
             </a>
@@ -258,10 +216,10 @@ ob_start();
         </div>
     </div>
 
-    <!-- PHÂN HỆ 6: GIÁM SÁT TÀI CHÍNH & GIAO DỊCH TOÀN HỆ THỐNG -->
+    <!-- PHÂN HỆ 5: GIÁM SÁT TÀI CHÍNH & GIAO DỊCH TOÀN HỆ THỐNG -->
     <div id="tai-chinh" class="card">
         <div class="card-title">
-            <span>6. Nhật ký giao dịch tài chính toàn hệ thống</span>
+            <span>5. Nhật ký giao dịch tài chính toàn hệ thống</span>
             <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px;" onclick="alert('Xuất báo cáo tài chính toàn hệ thống ra Excel')">
                 Xuất báo cáo tài chính
             </button>

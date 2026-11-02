@@ -9,14 +9,16 @@ use App\Core\Request;
 use App\Core\Session;
 
 /**
- * Controller: Quản trị viên (Toàn quyền hệ thống)
- * Quản trị toàn diện:
- * 1. Phân quyền & Quản lý tài khoản cán bộ (Trưởng khu, Trưởng cụm, Nhân viên)
- * 2. Cơ sở vật chất KTX (Khu, Cụm, Tòa, Phòng, Giường)
- * 3. Cấu hình Đợt đăng ký & Giữ chỗ 72h
- * 4. Danh mục Loại phòng & Đơn giá chuẩn
- * 5. Danh mục Trường ĐH & Chỉ tiêu
- * 6. Giám sát Tài chính & Nhật ký Giao dịch
+ * Controller: Quản trị viên (Toàn quyền quản trị hệ thống)
+ * Các phân hệ quản trị chính:
+ * 1. Phân quyền & Quản lý tài khoản cán bộ (Trưởng khu, Trưởng cụm, Trưởng tòa, Quản lý KTX)
+ * 2. Cấu hình Đợt đăng ký tuyển sinh & Giữ chỗ 72h
+ * 3. Danh mục Loại phòng & Đơn giá lưu trú chuẩn
+ * 4. Danh mục Trường Đại học liên kết & Chỉ tiêu đào tạo
+ * 5. Giám sát Tài chính & Nhật ký Giao dịch thanh toán
+ * 
+ * Lưu ý: Nghiệp vụ quản lý Hạ tầng KTX (Khu, Cụm, Tòa, Phòng, Giường)
+ * đã được chuyển giao hoàn toàn sang phân hệ Cán bộ BQL KTX (Staff).
  */
 class DashboardController extends Controller
 {
@@ -24,20 +26,19 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Thống kê toàn hệ thống
+        // 1. Thống kê toàn hệ thống dành cho Quản trị viên
         $stats = [
             'total_students' => 0,
             'active_residents' => 0,
-            'total_rooms' => 0,
-            'total_beds' => 0,
-            'occupied_beds' => 0,
+            'total_periods' => 0,
+            'total_universities' => 0,
             'pending_applications' => 0,
             'pending_maintenance' => 0,
-            'total_staff' => 0
+            'total_staff' => 0,
+            'total_transactions' => 0
         ];
 
         $canBoList = [];
-        $cumNhaList = [];
         $dotDangKyList = [];
         $loaiPhongList = [];
         $truongList = [];
@@ -46,12 +47,12 @@ class DashboardController extends Controller
         try {
             $stats['total_students'] = Database::fetch("SELECT COUNT(*) AS total FROM SinhVien")['total'] ?? 0;
             $stats['active_residents'] = Database::fetch("SELECT COUNT(*) AS total FROM HopDongNoiTru WHERE TrangThaiHopDong = 'Đang hiệu lực'")['total'] ?? 0;
-            $stats['total_rooms'] = Database::fetch("SELECT COUNT(*) AS total FROM Phong")['total'] ?? 0;
-            $stats['total_beds'] = Database::fetch("SELECT COUNT(*) AS total FROM Giuong")['total'] ?? 0;
-            $stats['occupied_beds'] = Database::fetch("SELECT COUNT(*) AS total FROM Giuong WHERE TrangThaiGiuong = 'Đã có người ở'")['total'] ?? 0;
+            $stats['total_periods'] = Database::fetch("SELECT COUNT(*) AS total FROM DotDangKy")['total'] ?? 0;
+            $stats['total_universities'] = Database::fetch("SELECT COUNT(*) AS total FROM TruongDaiHoc")['total'] ?? 0;
             $stats['pending_applications'] = Database::fetch("SELECT COUNT(*) AS total FROM HoSoDangKy WHERE TrangThaiHoSo = 'Chờ duyệt'")['total'] ?? 0;
             $stats['pending_maintenance'] = Database::fetch("SELECT COUNT(*) AS total FROM PhieuBaoHong WHERE TrangThaiSua = 'Chờ xử lý'")['total'] ?? 0;
             $stats['total_staff'] = Database::fetch("SELECT COUNT(*) AS total FROM NhanVien")['total'] ?? 0;
+            $stats['total_transactions'] = Database::fetch("SELECT COUNT(*) AS total FROM GiaoDichThanhToan")['total'] ?? 0;
 
             // Danh sách cán bộ & phân quyền
             $canBoList = Database::fetchAll("
@@ -64,20 +65,6 @@ class DashboardController extends Controller
                         ORDER BY tk.MaTaiKhoan DESC
                         LIMIT 5
                     ");
-            // Danh mục cụm nhà & hạ tầng
-            $cumNhaList = Database::fetchAll("
-                SELECT c.*, k.TenKhu,
-                       COUNT(DISTINCT tn.MaToaNha) AS TongToa,
-                       COUNT(DISTINCT p.MaPhong) AS TongPhong,
-                       COUNT(DISTINCT g.MaGiuong) AS TongGiuong
-                FROM CumNha c
-                JOIN KhuKTX k ON c.MaKhu = k.MaKhu
-                LEFT JOIN ToaNha tn ON c.MaCum = tn.MaCum
-                LEFT JOIN Phong p ON tn.MaToaNha = p.MaToaNha
-                LEFT JOIN Giuong g ON p.MaPhong = g.MaPhong
-                GROUP BY c.MaCum
-                ORDER BY c.MaKhu, c.MaCum
-            ");
 
             // Đợt đăng ký 72h
             $dotDangKyList = Database::fetchAll("SELECT * FROM DotDangKy ORDER BY MaDot DESC LIMIT 5");
@@ -110,14 +97,6 @@ class DashboardController extends Controller
             ];
         }
 
-        if (empty($cumNhaList)) {
-            $cumNhaList = [
-                ['MaCum' => 'AG', 'TenCum' => 'Cụm nhà A.G', 'TenKhu' => 'Khu A', 'TongToa' => 4, 'TongPhong' => 120, 'TongGiuong' => 480],
-                ['MaCum' => 'AH', 'TenCum' => 'Cụm nhà A.H', 'TenKhu' => 'Khu A', 'TongToa' => 3, 'TongPhong' => 90, 'TongGiuong' => 360],
-                ['MaCum' => 'BC', 'TenCum' => 'Cụm nhà B.C', 'TenKhu' => 'Khu B', 'TongToa' => 6, 'TongPhong' => 180, 'TongGiuong' => 720]
-            ];
-        }
-
         if (empty($dotDangKyList)) {
             $dotDangKyList = [
                 ['TenDot' => 'Đăng ký nội trú năm học 2026-2027', 'NamHoc' => '2026-2027', 'ThoiGianMoCong' => '2026-06-01 08:00', 'ThoiGianDongCong' => '2026-10-31 23:59', 'SoGioGiuCho' => 72]
@@ -145,7 +124,6 @@ class DashboardController extends Controller
             'user' => $user,
             'stats' => $stats,
             'canBoList' => $canBoList,
-            'cumNhaList' => $cumNhaList,
             'dotDangKyList' => $dotDangKyList,
             'loaiPhongList' => $loaiPhongList,
             'truongList' => $truongList,
@@ -251,6 +229,7 @@ class DashboardController extends Controller
 
         // 4. Danh mục Cụm nhà
         $cumNhaList = [];
+        $toaNhaList = [];
         try {
             $cumNhaList = Database::fetchAll("
                 SELECT c.*, k.TenKhu 
@@ -258,8 +237,15 @@ class DashboardController extends Controller
                 JOIN KhuKTX k ON c.MaKhu = k.MaKhu 
                 ORDER BY c.MaKhu ASC, c.MaCum ASC
             ");
+            $toaNhaList = Database::fetchAll("
+                SELECT t.MaToaNha, t.TenToaNha, c.TenCum, c.MaKhu
+                FROM ToaNha t
+                JOIN CumNha c ON t.MaCum = c.MaCum
+                ORDER BY c.MaKhu ASC, c.MaCum ASC, t.MaToaNha ASC
+            ");
         } catch (\Throwable $e) {
             $cumNhaList = [];
+            $toaNhaList = [];
         }
 
         $flashSuccess = Session::flash('success');
@@ -272,6 +258,7 @@ class DashboardController extends Controller
             'allStaff' => $allStaff,
             'vaitroList' => $vaitroList,
             'cumNhaList' => $cumNhaList,
+            'toaNhaList' => $toaNhaList,
             'flashSuccess' => $flashSuccess,
             'flashError' => $flashError,
             'flashWarning' => $flashWarning
@@ -555,23 +542,910 @@ class DashboardController extends Controller
         $this->redirect('admin/users');
     }
 
-    public function rooms(): void
+    /**
+     * Xuất danh sách cán bộ quản trị hệ thống ra file CSV / Excel (có UTF-8 BOM)
+     * Hỗ trợ xuất theo kết quả bộ lọc hiện tại (danh sách ID hoặc điều kiện lọc)
+     */
+    public function exportUsers(): void
     {
-        $this->view('admin.rooms', ['user' => Auth::user()]);
+        $request = new Request();
+        $idsParam = $request->input('ids');
+        $keyword = trim((string)$request->input('keyword', ''));
+        $role = trim((string)$request->input('role', ''));
+        $status = $request->input('status');
+
+        try {
+            $whereClause = "WHERE tk.MaVaiTro NOT IN ('SINH_VIEN', 'TRUONG_PHONG')";
+            $params = [];
+            $isFiltered = false;
+
+            if (!empty($idsParam)) {
+                $rawIds = is_array($idsParam) ? $idsParam : explode(',', (string)$idsParam);
+                $cleanIds = array_filter(array_map('intval', $rawIds), fn($id) => $id > 0);
+                if (!empty($cleanIds)) {
+                    $inPlaceholders = implode(',', $cleanIds);
+                    $whereClause .= " AND tk.MaTaiKhoan IN ($inPlaceholders)";
+                    $isFiltered = true;
+                }
+            } else {
+                if (!empty($role)) {
+                    $whereClause .= " AND tk.MaVaiTro = :role";
+                    $params['role'] = $role;
+                    $isFiltered = true;
+                }
+                if ($status !== null && $status !== '') {
+                    $whereClause .= " AND tk.DangHoatDong = :status";
+                    $params['status'] = (int)$status;
+                    $isFiltered = true;
+                }
+                if (!empty($keyword)) {
+                    $whereClause .= " AND (tk.TenDangNhap LIKE :kw OR nv.HoVaTen LIKE :kw OR nv.SoDienThoai LIKE :kw OR nv.Email LIKE :kw)";
+                    $params['kw'] = "%{$keyword}%";
+                    $isFiltered = true;
+                }
+            }
+
+            $sql = "
+                SELECT tk.MaTaiKhoan, tk.TenDangNhap, tk.MaVaiTro, tk.MaCumQuanLy, tk.DangHoatDong, tk.NgayTao,
+                       vt.TenVaiTro, nv.MaNhanVien, nv.HoVaTen, nv.ChucVu, nv.SoDienThoai, nv.Email,
+                       cn.TenCum, k.TenKhu
+                FROM TaiKhoan tk
+                JOIN VaiTro vt ON tk.MaVaiTro = vt.MaVaiTro
+                LEFT JOIN NhanVien nv ON tk.MaTaiKhoan = nv.MaTaiKhoan
+                LEFT JOIN CumNha cn ON tk.MaCumQuanLy = cn.MaCum
+                LEFT JOIN KhuKTX k ON cn.MaKhu = k.MaKhu
+                {$whereClause}
+                ORDER BY tk.MaTaiKhoan ASC
+            ";
+
+            $userList = Database::fetchAll($sql, $params);
+
+            $filenamePrefix = $isFiltered ? 'DS_CanBo_KTX_Filtered_' : 'DS_CanBo_KTX_';
+            $filename = $filenamePrefix . date('Ymd_His') . '.csv';
+            header('Content-Type: text/csv; charset=UTF-8');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+
+            $output = fopen('php://output', 'w');
+            // Ghi UTF-8 BOM để Microsoft Excel đọc tiếng Việt chuẩn xác
+            fwrite($output, "\xEF\xBB\xBF");
+
+            // Tiêu đề cột
+            fputcsv($output, [
+                'STT',
+                'Mã tài khoản',
+                'Tên đăng nhập',
+                'Họ và tên cán bộ',
+                'Chức vụ',
+                'Mã vai trò',
+                'Tên vai trò',
+                'Phạm vi phụ trách',
+                'Số điện thoại',
+                'Email',
+                'Trạng thái hoạt động',
+                'Ngày tạo tài khoản'
+            ]);
+
+            $stt = 1;
+            foreach ($userList as $u) {
+                $scopeLabel = 'Toàn hệ thống KTX';
+                if ($u['MaCumQuanLy'] === 'KHU_A') {
+                    $scopeLabel = 'Toàn bộ Khu A';
+                } elseif ($u['MaCumQuanLy'] === 'KHU_B') {
+                    $scopeLabel = 'Toàn bộ Khu B';
+                } elseif (!empty($u['TenToaNha'])) {
+                    $scopeLabel = $u['TenToaNha'] . ' (' . $u['MaCumQuanLy'] . ')';
+                } elseif (!empty($u['TenCum'])) {
+                    $scopeLabel = $u['TenCum'] . ' (' . ($u['TenKhu'] ?? 'KTX') . ')';
+                } elseif (!empty($u['MaCumQuanLy'])) {
+                    $scopeLabel = 'Phạm vi: ' . $u['MaCumQuanLy'];
+                } elseif ($u['MaVaiTro'] === 'TRUONG_KHU') {
+                    $scopeLabel = 'Toàn bộ Khu KTX';
+                }
+
+                $statusLabel = ((int)($u['DangHoatDong'] ?? 1) === 1) ? 'Đang hoạt động' : 'Đã khóa';
+                $ngayTao = !empty($u['NgayTao']) ? date('d/m/Y H:i', strtotime($u['NgayTao'])) : '';
+
+                fputcsv($output, [
+                    $stt++,
+                    $u['MaTaiKhoan'],
+                    $u['TenDangNhap'],
+                    $u['HoVaTen'] ?? '',
+                    $u['ChucVu'] ?? '',
+                    $u['MaVaiTro'],
+                    $u['TenVaiTro'] ?? $u['MaVaiTro'],
+                    $scopeLabel,
+                    $u['SoDienThoai'] ?? '',
+                    $u['Email'] ?? '',
+                    $statusLabel,
+                    $ngayTao
+                ]);
+            }
+
+            fclose($output);
+            exit;
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Lỗi khi xuất danh sách cán bộ: ' . $e->getMessage());
+            $this->redirect('admin/users');
+        }
     }
 
-    public function periods(): void
+    /**
+     * Tải file mẫu CSV để nhập danh sách cán bộ
+     */
+    public function downloadUserTemplate(): void
     {
-        $this->view('admin.periods', ['user' => Auth::user()]);
+        $filename = 'Mau_Import_CanBo_KTX.csv';
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+        fwrite($output, "\xEF\xBB\xBF");
+
+        // Headers
+        fputcsv($output, [
+            'TenDangNhap',
+            'HoVaTen',
+            'MatKhau',
+            'MaVaiTro',
+            'MaCumQuanLy',
+            'SoDienThoai',
+            'Email',
+            'ChucVu'
+        ]);
+
+        // Dữ liệu mẫu minh họa
+        fputcsv($output, [
+            'NV_MAU01',
+            'Nguyễn Văn An',
+            'Demo@123',
+            'TRUONG_CUM',
+            'AG',
+            '0901234567',
+            'an.nguyen@qlktx.vn',
+            'Trưởng cụm nhà AG'
+        ]);
+        fputcsv($output, [
+            'NV_MAU02',
+            'Trần Thị Mai',
+            'Demo@123',
+            'TRUONG_TOA',
+            'BA',
+            '0912345678',
+            'mai.tran@qlktx.vn',
+            'Trưởng tòa nhà BA.01'
+        ]);
+        fputcsv($output, [
+            'NV_MAU03',
+            'Lê Hoàng Nam',
+            '',
+            'NV_THUONG',
+            '',
+            '0923456789',
+            'nam.le@qlktx.vn',
+            'Kỹ thuật điện nước'
+        ]);
+
+        fclose($output);
+        exit;
     }
 
-    public function roomTypes(): void
+    /**
+     * Nhập danh sách cán bộ từ file CSV
+     */
+    public function importUsers(): void
     {
-        $this->view('admin.room_types', ['user' => Auth::user()]);
+        $request = new Request();
+        $overwrite = (bool)$request->input('overwriteExisting', false);
+
+        if (!isset($_FILES['importFile']) || $_FILES['importFile']['error'] !== UPLOAD_ERR_OK) {
+            Session::flash('error', 'Vui lòng chọn tệp CSV hợp lệ để nhập danh sách cán bộ!');
+            $this->redirect('admin/users');
+            return;
+        }
+
+        $file = $_FILES['importFile'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, ['csv', 'txt'])) {
+            Session::flash('error', 'Hệ thống chỉ hỗ trợ tệp định dạng CSV (.csv) hoặc văn bản (.txt)!');
+            $this->redirect('admin/users');
+            return;
+        }
+
+        $handle = fopen($file['tmp_name'], 'r');
+        if (!$handle) {
+            Session::flash('error', 'Không thể mở tệp tải lên để đọc dữ liệu!');
+            $this->redirect('admin/users');
+            return;
+        }
+
+        try {
+            // Đọc dòng tiêu đề (header)
+            $firstLine = fgets($handle);
+            if ($firstLine === false) {
+                fclose($handle);
+                Session::flash('error', 'Tệp tải lên rỗng!');
+                $this->redirect('admin/users');
+                return;
+            }
+
+            // Xóa UTF-8 BOM nếu có
+            $firstLine = preg_replace('/^\xEF\xBB\xBF/', '', $firstLine);
+
+            $delimiter = (substr_count($firstLine, ';') > substr_count($firstLine, ',')) ? ';' : ',';
+            $headers = str_getcsv(trim($firstLine), $delimiter);
+
+            // Nhận diện cột linh hoạt
+            $colMap = [];
+            foreach ($headers as $idx => $h) {
+                $clean = strtolower(trim($h));
+                $clean = str_replace([' ', '_', '-', '.'], '', $clean);
+                if (in_array($clean, ['tendangnhap', 'username', 'mand', 'manhanvien', 'manv', 'taikhoan'])) {
+                    $colMap['username'] = $idx;
+                } elseif (in_array($clean, ['hovaten', 'hoten', 'ten', 'fullname', 'name', 'canbo'])) {
+                    $colMap['fullname'] = $idx;
+                } elseif (in_array($clean, ['matkhau', 'password', 'mk'])) {
+                    $colMap['password'] = $idx;
+                } elseif (in_array($clean, ['mavaitro', 'vaitro', 'role', 'roleid', 'quyen'])) {
+                    $colMap['role'] = $idx;
+                } elseif (in_array($clean, ['macumquanly', 'macum', 'cum', 'phamvi', 'cumquanly', 'cluster'])) {
+                    $colMap['cluster'] = $idx;
+                } elseif (in_array($clean, ['sodienthoai', 'sdt', 'phone', 'dienthoai', 'tel'])) {
+                    $colMap['phone'] = $idx;
+                } elseif (in_array($clean, ['email', 'mail'])) {
+                    $colMap['email'] = $idx;
+                } elseif (in_array($clean, ['chucvu', 'vitri', 'position', 'chucdanh'])) {
+                    $colMap['position'] = $idx;
+                }
+            }
+
+            if (!isset($colMap['username']) || !isset($colMap['fullname']) || !isset($colMap['role'])) {
+                fclose($handle);
+                Session::flash('error', 'Tệp CSV không đúng định dạng. Cần có tối thiểu các cột: TenDangNhap, HoVaTen, MaVaiTro!');
+                $this->redirect('admin/users');
+                return;
+            }
+
+            // Lấy danh sách vai trò hợp lệ
+            $rolesDb = Database::fetchAll("SELECT MaVaiTro FROM VaiTro WHERE MaVaiTro NOT IN ('SINH_VIEN', 'TRUONG_PHONG')");
+            $validRoles = array_column($rolesDb, 'MaVaiTro');
+
+            // Lấy danh sách cụm nhà hợp lệ
+            $cumsDb = Database::fetchAll("SELECT MaCum FROM CumNha");
+            $validCums = array_column($cumsDb, 'MaCum');
+
+            $createdCount = 0;
+            $updatedCount = 0;
+            $skippedCount = 0;
+            $errorRows = [];
+            $rowNum = 1;
+
+            while (($data = fgetcsv($handle, 4096, $delimiter)) !== false) {
+                $rowNum++;
+                if (empty($data) || (count($data) === 1 && trim($data[0]) === '')) {
+                    continue;
+                }
+
+                $username = isset($colMap['username'], $data[$colMap['username']]) ? trim($data[$colMap['username']]) : '';
+                $fullname = isset($colMap['fullname'], $data[$colMap['fullname']]) ? trim($data[$colMap['fullname']]) : '';
+                $password = isset($colMap['password'], $data[$colMap['password']]) ? trim($data[$colMap['password']]) : '';
+                $role = isset($colMap['role'], $data[$colMap['role']]) ? strtoupper(trim($data[$colMap['role']])) : '';
+                $cluster = isset($colMap['cluster'], $data[$colMap['cluster']]) ? trim($data[$colMap['cluster']]) : '';
+                $phone = isset($colMap['phone'], $data[$colMap['phone']]) ? trim($data[$colMap['phone']]) : '';
+                $email = isset($colMap['email'], $data[$colMap['email']]) ? trim($data[$colMap['email']]) : '';
+                $position = isset($colMap['position'], $data[$colMap['position']]) ? trim($data[$colMap['position']]) : '';
+
+                if (empty($username) || empty($fullname)) {
+                    $errorRows[] = "Dòng {$rowNum}: Thiếu tên đăng nhập hoặc họ tên cán bộ.";
+                    continue;
+                }
+
+                if (empty($role) || !in_array($role, $validRoles)) {
+                    $errorRows[] = "Dòng {$rowNum} ({$username}): Mã vai trò '{$role}' không hợp lệ trong hệ thống.";
+                    continue;
+                }
+
+                // Chuẩn hóa cụm quản lý
+                if (empty($cluster) || in_array($cluster, ['ALL', 'KHU_A', 'KHU_B'])) {
+                    $cluster = null;
+                } elseif (!in_array($cluster, $validCums)) {
+                    $cluster = null;
+                }
+
+                // Kiểm tra tài khoản đã tồn tại chưa
+                $existing = Database::fetch("SELECT * FROM TaiKhoan WHERE TenDangNhap = :u", ['u' => $username]);
+
+                if ($existing) {
+                    if ($overwrite) {
+                        Database::execute("
+                            UPDATE TaiKhoan 
+                            SET MaVaiTro = :role, MaCumQuanLy = :cum
+                            WHERE MaTaiKhoan = :id
+                        ", [
+                            'role' => $role,
+                            'cum' => $cluster,
+                            'id' => $existing['MaTaiKhoan']
+                        ]);
+
+                        Database::execute("
+                            INSERT INTO NhanVien (MaNhanVien, MaTaiKhoan, HoVaTen, SoDienThoai, Email, ChucVu)
+                            VALUES (:maNV, :id, :ten, :sdt, :email, :chucVu)
+                            ON DUPLICATE KEY UPDATE HoVaTen = VALUES(HoVaTen), SoDienThoai = VALUES(SoDienThoai), Email = VALUES(Email), ChucVu = VALUES(ChucVu)
+                        ", [
+                            'maNV' => $username,
+                            'id' => $existing['MaTaiKhoan'],
+                            'ten' => $fullname,
+                            'sdt' => $phone,
+                            'email' => $email,
+                            'chucVu' => $position
+                        ]);
+
+                        $updatedCount++;
+                    } else {
+                        $skippedCount++;
+                    }
+                } else {
+                    $passToUse = !empty($password) ? $password : 'Demo@123';
+                    $hash = Auth::hashPassword($passToUse);
+
+                    Database::execute("
+                        INSERT INTO TaiKhoan (TenDangNhap, MatKhauMaHoa, MaVaiTro, MaCumQuanLy, DangHoatDong)
+                        VALUES (:u, :p, :role, :cum, 1)
+                    ", [
+                        'u' => $username,
+                        'p' => $hash,
+                        'role' => $role,
+                        'cum' => $cluster
+                    ]);
+                    $newId = (int)Database::lastInsertId();
+
+                    Database::execute("
+                        INSERT INTO NhanVien (MaNhanVien, MaTaiKhoan, HoVaTen, SoDienThoai, Email, ChucVu)
+                        VALUES (:maNV, :id, :ten, :sdt, :email, :chucVu)
+                        ON DUPLICATE KEY UPDATE MaTaiKhoan = VALUES(MaTaiKhoan), HoVaTen = VALUES(HoVaTen), SoDienThoai = VALUES(SoDienThoai), Email = VALUES(Email), ChucVu = VALUES(ChucVu)
+                    ", [
+                        'maNV' => $username,
+                        'id' => $newId,
+                        'ten' => $fullname,
+                        'sdt' => $phone,
+                        'email' => $email,
+                        'chucVu' => $position
+                    ]);
+
+                    $createdCount++;
+                }
+            }
+
+            fclose($handle);
+
+            $msg = "Nhập dữ liệu hoàn tất: Đã tạo mới <b>{$createdCount}</b> cán bộ, Cập nhật <b>{$updatedCount}</b> cán bộ, Bỏ qua <b>{$skippedCount}</b> tài khoản đã tồn tại.";
+            if (!empty($errorRows)) {
+                $errorDetails = implode('<br>', array_slice($errorRows, 0, 5));
+                if (count($errorRows) > 5) {
+                    $errorDetails .= '<br>...và ' . (count($errorRows) - 5) . ' dòng lỗi khác.';
+                }
+                Session::flash('warning', $msg . '<br><div style="margin-top:6px;"><b>Chi tiết cảnh báo dòng dữ liệu:</b><br>' . $errorDetails . '</div>');
+            } else {
+                Session::flash('success', $msg);
+            }
+        } catch (\Throwable $e) {
+            if (isset($handle) && is_resource($handle)) {
+                fclose($handle);
+            }
+            Session::flash('error', 'Lỗi trong quá trình đọc và nhập file CSV: ' . $e->getMessage());
+        }
+
+        $this->redirect('admin/users');
     }
 
     public function universities(): void
     {
-        $this->view('admin.universities', ['user' => Auth::user()]);
+        $user = Auth::user();
+
+        $universityList = [];
+        try {
+            $universityList = Database::fetchAll("
+                SELECT t.*, COUNT(sv.MaSinhVien) AS TongSinhVien
+                FROM TruongDaiHoc t
+                LEFT JOIN SinhVien sv ON t.MaTruong = sv.MaTruong
+                GROUP BY t.MaTruong, t.TenTruong, t.SoNamDaoTaoChuan, t.ThuocDHQGHCM, t.DangHopTac
+                ORDER BY t.ThuocDHQGHCM DESC, t.MaTruong ASC
+            ");
+        } catch (\Throwable $e) {
+            $universityList = [];
+        }
+
+        $flashSuccess = Session::flash('success');
+        $flashError = Session::flash('error');
+        $flashWarning = Session::flash('warning');
+
+        $this->view('admin.universities', [
+            'user' => $user,
+            'universityList' => $universityList,
+            'flashSuccess' => $flashSuccess,
+            'flashError' => $flashError,
+            'flashWarning' => $flashWarning
+        ]);
+    }
+
+    public function saveUniversity(): void
+    {
+        $request = new Request();
+        $isEdit = (int)$request->input('isEdit', 0);
+        $maTruong = strtoupper(trim((string)$request->input('maTruong', '')));
+        $tenTruong = trim((string)$request->input('tenTruong', ''));
+        $soNamDaoTao = (float)$request->input('soNamDaoTaoChuan', 4.0);
+        $thuocDHQGHCM = (int)$request->input('thuocDHQGHCM', 1);
+        $dangHopTac = (int)$request->input('dangHopTac', 1);
+
+        if (empty($maTruong) || empty($tenTruong)) {
+            Session::flash('error', 'Vui lòng nhập đầy đủ Mã trường và Tên trường Đại học!');
+            $this->redirect('admin/universities');
+            return;
+        }
+
+        if ($soNamDaoTao <= 0 || $soNamDaoTao > 10) {
+            Session::flash('error', 'Thời gian đào tạo chuẩn không hợp lệ (từ 1.0 đến 10.0 năm)!');
+            $this->redirect('admin/universities');
+            return;
+        }
+
+        try {
+            if ($isEdit === 1) {
+                // ==================== CẬP NHẬT (UPDATE) ====================
+                $existing = Database::fetch("SELECT * FROM TruongDaiHoc WHERE MaTruong = :ma", ['ma' => $maTruong]);
+                if (!$existing) {
+                    Session::flash('error', "Không tìm thấy trường Đại học '{$maTruong}' để cập nhật!");
+                    $this->redirect('admin/universities');
+                    return;
+                }
+
+                Database::execute("
+                    UPDATE TruongDaiHoc 
+                    SET TenTruong = :ten, SoNamDaoTaoChuan = :nam, ThuocDHQGHCM = :thuoc, DangHopTac = :hoptac
+                    WHERE MaTruong = :ma
+                ", [
+                    'ten' => $tenTruong,
+                    'nam' => $soNamDaoTao,
+                    'thuoc' => $thuocDHQGHCM,
+                    'hoptac' => $dangHopTac,
+                    'ma' => $maTruong
+                ]);
+
+                Session::flash('success', "Đã cập nhật thông tin trường Đại học '{$tenTruong}' ({$maTruong}) thành công!");
+            } else {
+                // ==================== THÊM MỚI (CREATE) ====================
+                $dup = Database::fetch("SELECT MaTruong FROM TruongDaiHoc WHERE MaTruong = :ma", ['ma' => $maTruong]);
+                if ($dup) {
+                    Session::flash('error', "Mã trường '{$maTruong}' đã tồn tại trong hệ thống. Vui lòng chọn mã khác!");
+                    $this->redirect('admin/universities');
+                    return;
+                }
+
+                Database::execute("
+                    INSERT INTO TruongDaiHoc (MaTruong, TenTruong, SoNamDaoTaoChuan, ThuocDHQGHCM, DangHopTac)
+                    VALUES (:ma, :ten, :nam, :thuoc, :hoptac)
+                ", [
+                    'ma' => $maTruong,
+                    'ten' => $tenTruong,
+                    'nam' => $soNamDaoTao,
+                    'thuoc' => $thuocDHQGHCM,
+                    'hoptac' => $dangHopTac
+                ]);
+
+                Session::flash('success', "Đã thêm mới trường Đại học '{$tenTruong}' ({$maTruong}) thành công!");
+            }
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Lỗi lưu dữ liệu: ' . $e->getMessage());
+        }
+
+        $this->redirect('admin/universities');
+    }
+
+    public function toggleUniversityStatus(): void
+    {
+        $request = new Request();
+        $maTruong = trim((string)$request->input('maTruong', ''));
+
+        if (empty($maTruong)) {
+            Session::flash('error', 'Mã trường đại học không hợp lệ!');
+            $this->redirect('admin/universities');
+            return;
+        }
+
+        try {
+            $uni = Database::fetch("SELECT * FROM TruongDaiHoc WHERE MaTruong = :ma", ['ma' => $maTruong]);
+            if (!$uni) {
+                Session::flash('error', 'Không tìm thấy trường đại học cần thao tác!');
+                $this->redirect('admin/universities');
+                return;
+            }
+
+            $newStatus = ((int)$uni['DangHopTac'] === 1) ? 0 : 1;
+            Database::execute("UPDATE TruongDaiHoc SET DangHopTac = :st WHERE MaTruong = :ma", [
+                'st' => $newStatus,
+                'ma' => $maTruong
+            ]);
+
+            $stText = ($newStatus === 1) ? 'TIẾP TỤC HỢP TÁC' : 'TẠM DỪNG TIẾP NHẬN';
+            Session::flash('success', "Đã chuyển trạng thái trường '{$uni['TenTruong']}' sang {$stText} thành công!");
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Lỗi cập nhật trạng thái: ' . $e->getMessage());
+        }
+
+        $this->redirect('admin/universities');
+    }
+
+    public function deleteUniversity(): void
+    {
+        $request = new Request();
+        $maTruong = trim((string)$request->input('maTruong', ''));
+
+        if (empty($maTruong)) {
+            Session::flash('error', 'Mã trường đại học không hợp lệ!');
+            $this->redirect('admin/universities');
+            return;
+        }
+
+        try {
+            $uni = Database::fetch("SELECT * FROM TruongDaiHoc WHERE MaTruong = :ma", ['ma' => $maTruong]);
+            if (!$uni) {
+                Session::flash('error', 'Không tìm thấy trường đại học cần xóa!');
+                $this->redirect('admin/universities');
+                return;
+            }
+
+            // Kiểm tra ràng buộc bảo toàn dữ liệu sinh viên
+            $svCheck = Database::fetch("SELECT COUNT(*) AS total FROM SinhVien WHERE MaTruong = :ma", ['ma' => $maTruong]);
+            $svCount = (int)($svCheck['total'] ?? 0);
+
+            if ($svCount > 0) {
+                // Bảo toàn dữ liệu: Không xóa vật lý khi đã có sinh viên liên kết, tự động chuyển sang tạm dừng tiếp nhận
+                Database::execute("UPDATE TruongDaiHoc SET DangHopTac = 0 WHERE MaTruong = :ma", [
+                    'ma' => $maTruong
+                ]);
+                Session::flash('warning', "Trường '{$uni['TenTruong']}' ({$maTruong}) đang có {$svCount} sinh viên trong hệ thống KTX. Để bảo toàn lịch sử dữ liệu nội trú, hệ thống đã tự động chuyển sang trạng thái TẠM DỪNG TIẾP NHẬN thay vì xóa vật lý!");
+            } else {
+                Database::execute("DELETE FROM TruongDaiHoc WHERE MaTruong = :ma", ['ma' => $maTruong]);
+                Session::flash('success', "Đã xóa hoàn toàn trường Đại học '{$uni['TenTruong']}' ({$maTruong}) khỏi hệ thống!");
+            }
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Lỗi khi xóa trường đại học: ' . $e->getMessage());
+        }
+
+        $this->redirect('admin/universities');
+    }
+
+    /**
+     * Xuất danh sách trường đại học ra file CSV / Excel (có UTF-8 BOM)
+     * Hỗ trợ xuất theo kết quả lọc (danh sách mã trường hoặc điều kiện tìm kiếm)
+     */
+    public function exportUniversities(): void
+    {
+        $request = new Request();
+        $codesParam = $request->input('ids'); // client gửi danh sách mã trường phân cách bởi dấu phẩy
+        $keyword = trim((string)$request->input('keyword', ''));
+        $category = $request->input('category');
+        $status = $request->input('status');
+        $duration = $request->input('duration');
+
+        try {
+            $whereConditions = [];
+            $params = [];
+            $isFiltered = false;
+
+            if (!empty($codesParam)) {
+                $rawCodes = is_array($codesParam) ? $codesParam : explode(',', (string)$codesParam);
+                $cleanCodes = array_filter(array_map('trim', $rawCodes), fn($c) => !empty($c));
+                if (!empty($cleanCodes)) {
+                    $placeholders = [];
+                    foreach ($cleanCodes as $idx => $code) {
+                        $pKey = 'code_' . $idx;
+                        $placeholders[] = ':' . $pKey;
+                        $params[$pKey] = $code;
+                    }
+                    $whereConditions[] = "t.MaTruong IN (" . implode(',', $placeholders) . ")";
+                    $isFiltered = true;
+                }
+            } else {
+                if ($category !== null && $category !== '') {
+                    $whereConditions[] = "t.ThuocDHQGHCM = :cat";
+                    $params['cat'] = (int)$category;
+                    $isFiltered = true;
+                }
+                if ($status !== null && $status !== '') {
+                    $whereConditions[] = "t.DangHopTac = :st";
+                    $params['st'] = (int)$status;
+                    $isFiltered = true;
+                }
+                if ($duration !== null && $duration !== '') {
+                    $dur = (float)$duration;
+                    if ($dur >= 5.0) {
+                        $whereConditions[] = "t.SoNamDaoTaoChuan >= 5.0";
+                    } else {
+                        $whereConditions[] = "t.SoNamDaoTaoChuan = :dur";
+                        $params['dur'] = $dur;
+                    }
+                    $isFiltered = true;
+                }
+                if (!empty($keyword)) {
+                    $whereConditions[] = "(t.MaTruong LIKE :kw OR t.TenTruong LIKE :kw)";
+                    $params['kw'] = "%{$keyword}%";
+                    $isFiltered = true;
+                }
+            }
+
+            $whereSql = !empty($whereConditions) ? "WHERE " . implode(' AND ', $whereConditions) : "";
+
+            $sql = "
+                SELECT t.*, COUNT(sv.MaSinhVien) AS TongSinhVien
+                FROM TruongDaiHoc t
+                LEFT JOIN SinhVien sv ON t.MaTruong = sv.MaTruong
+                {$whereSql}
+                GROUP BY t.MaTruong, t.TenTruong, t.SoNamDaoTaoChuan, t.ThuocDHQGHCM, t.DangHopTac
+                ORDER BY t.ThuocDHQGHCM DESC, t.MaTruong ASC
+            ";
+
+            $uniList = Database::fetchAll($sql, $params);
+
+            $filenamePrefix = $isFiltered ? 'DS_TruongDaiHoc_KTX_Filtered_' : 'DS_TruongDaiHoc_KTX_';
+            $filename = $filenamePrefix . date('Ymd_His') . '.csv';
+            header('Content-Type: text/csv; charset=UTF-8');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+
+            $output = fopen('php://output', 'w');
+            fwrite($output, "\xEF\xBB\xBF");
+
+            fputcsv($output, [
+                'STT',
+                'Mã trường',
+                'Tên trường đại học',
+                'Thời gian đào tạo chuẩn (Năm)',
+                'Phân loại đơn vị',
+                'Số sinh viên KTX',
+                'Trạng thái hợp tác'
+            ]);
+
+            $stt = 1;
+            foreach ($uniList as $u) {
+                $isDHQG = ((int)($u['ThuocDHQGHCM'] ?? 0)) === 1;
+                $isPaused = ((int)($u['DangHopTac'] ?? 1)) === 0;
+
+                fputcsv($output, [
+                    $stt++,
+                    $u['MaTruong'],
+                    $u['TenTruong'],
+                    $u['SoNamDaoTaoChuan'],
+                    $isDHQG ? 'Thành viên ĐHQG-HCM' : 'Ngoài ĐHQG-HCM (Liên kết)',
+                    (int)($u['TongSinhVien'] ?? 0),
+                    $isPaused ? 'Tạm dừng tiếp nhận' : 'Đang hợp tác tiếp nhận'
+                ]);
+            }
+
+            fclose($output);
+            exit;
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Lỗi khi xuất danh sách trường: ' . $e->getMessage());
+            $this->redirect('admin/universities');
+        }
+    }
+
+    /**
+     * Tải file mẫu CSV để nhập danh sách trường đại học
+     */
+    public function downloadUniversityTemplate(): void
+    {
+        $filename = 'Mau_Import_TruongDaiHoc_KTX.csv';
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+        fwrite($output, "\xEF\xBB\xBF");
+
+        // Headers
+        fputcsv($output, [
+            'MaTruong',
+            'TenTruong',
+            'SoNamDaoTaoChuan',
+            'ThuocDHQGHCM',
+            'DangHopTac'
+        ]);
+
+        // Dữ liệu mẫu minh họa
+        fputcsv($output, [
+            'BK',
+            'Trường Đại học Bách khoa - ĐHQG-HCM',
+            '4.5',
+            '1',
+            '1'
+        ]);
+        fputcsv($output, [
+            'KHTN',
+            'Trường Đại học Khoa học Tự nhiên - ĐHQG-HCM',
+            '4.0',
+            '1',
+            '1'
+        ]);
+        fputcsv($output, [
+            'HUTECH',
+            'Trường Đại học Công nghệ TP.HCM',
+            '4.0',
+            '0',
+            '1'
+        ]);
+
+        fclose($output);
+        exit;
+    }
+
+    /**
+     * Nhập danh sách trường đại học từ file CSV
+     */
+    public function importUniversities(): void
+    {
+        $request = new Request();
+        $overwrite = (bool)$request->input('overwriteExisting', false);
+
+        if (!isset($_FILES['importFile']) || $_FILES['importFile']['error'] !== UPLOAD_ERR_OK) {
+            Session::flash('error', 'Vui lòng chọn tệp CSV hợp lệ để nhập danh sách trường!');
+            $this->redirect('admin/universities');
+            return;
+        }
+
+        $file = $_FILES['importFile'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, ['csv', 'txt'])) {
+            Session::flash('error', 'Hệ thống chỉ hỗ trợ tệp định dạng CSV (.csv) hoặc văn bản (.txt)!');
+            $this->redirect('admin/universities');
+            return;
+        }
+
+        $handle = fopen($file['tmp_name'], 'r');
+        if (!$handle) {
+            Session::flash('error', 'Không thể mở tệp tải lên để đọc dữ liệu!');
+            $this->redirect('admin/universities');
+            return;
+        }
+
+        try {
+            $firstLine = fgets($handle);
+            if ($firstLine === false) {
+                fclose($handle);
+                Session::flash('error', 'Tệp tải lên rỗng!');
+                $this->redirect('admin/universities');
+                return;
+            }
+
+            // Xóa UTF-8 BOM
+            $firstLine = preg_replace('/^\xEF\xBB\xBF/', '', $firstLine);
+
+            $delimiter = (substr_count($firstLine, ';') > substr_count($firstLine, ',')) ? ';' : ',';
+            $headers = str_getcsv(trim($firstLine), $delimiter);
+
+            // Nhận diện cột linh hoạt
+            $colMap = [];
+            foreach ($headers as $idx => $h) {
+                $clean = strtolower(trim($h));
+                $clean = str_replace([' ', '_', '-', '.'], '', $clean);
+                if (in_array($clean, ['matruong', 'code', 'ma', 'matruongdaihoc', 'id'])) {
+                    $colMap['code'] = $idx;
+                } elseif (in_array($clean, ['tentruong', 'name', 'ten', 'tentruongdaihoc', 'truong'])) {
+                    $colMap['name'] = $idx;
+                } elseif (in_array($clean, ['sonamdaotaochuan', 'sonam', 'duration', 'daotao', 'sonamdaotao'])) {
+                    $colMap['duration'] = $idx;
+                } elseif (in_array($clean, ['thuocdhqghcm', 'thuocdhqg', 'dhqg', 'isdhqg', 'phanloai', 'thanhvien'])) {
+                    $colMap['dhqg'] = $idx;
+                } elseif (in_array($clean, ['danghoptac', 'hoptac', 'trangthai', 'status', 'tiepnhan'])) {
+                    $colMap['status'] = $idx;
+                }
+            }
+
+            if (!isset($colMap['code']) || !isset($colMap['name'])) {
+                fclose($handle);
+                Session::flash('error', 'Tệp CSV không đúng định dạng. Cần có tối thiểu 2 cột: MaTruong, TenTruong!');
+                $this->redirect('admin/universities');
+                return;
+            }
+
+            $createdCount = 0;
+            $updatedCount = 0;
+            $skippedCount = 0;
+            $errorRows = [];
+            $rowNum = 1;
+
+            while (($data = fgetcsv($handle, 4096, $delimiter)) !== false) {
+                $rowNum++;
+                if (empty($data) || (count($data) === 1 && trim($data[0]) === '')) {
+                    continue;
+                }
+
+                $code = isset($colMap['code'], $data[$colMap['code']]) ? strtoupper(trim($data[$colMap['code']])) : '';
+                $name = isset($colMap['name'], $data[$colMap['name']]) ? trim($data[$colMap['name']]) : '';
+                $rawDuration = isset($colMap['duration'], $data[$colMap['duration']]) ? trim($data[$colMap['duration']]) : '4.0';
+                $rawDhqg = isset($colMap['dhqg'], $data[$colMap['dhqg']]) ? trim($data[$colMap['dhqg']]) : '';
+                $rawStatus = isset($colMap['status'], $data[$colMap['status']]) ? trim($data[$colMap['status']]) : '1';
+
+                if (empty($code) || empty($name)) {
+                    $errorRows[] = "Dòng {$rowNum}: Thiếu Mã trường hoặc Tên trường Đại học.";
+                    continue;
+                }
+
+                $duration = floatval(str_replace(',', '.', $rawDuration));
+                if ($duration <= 0 || $duration > 10.0) {
+                    $duration = 4.0;
+                }
+
+                $isDhqg = 0;
+                if ($rawDhqg === '1' || strtolower($rawDhqg) === 'true' || stripos($rawDhqg, 'đhqg') !== false || stripos($rawDhqg, 'thành viên') !== false || stripos($name, 'đhqg') !== false) {
+                    $isDhqg = 1;
+                }
+
+                $status = 1;
+                if ($rawStatus === '0' || strtolower($rawStatus) === 'false' || stripos($rawStatus, 'tạm dừng') !== false || stripos($rawStatus, 'dừng') !== false) {
+                    $status = 0;
+                }
+
+                // Kiểm tra xem trường đã tồn tại chưa
+                $existing = Database::fetch("SELECT * FROM TruongDaiHoc WHERE MaTruong = :ma", ['ma' => $code]);
+
+                if ($existing) {
+                    if ($overwrite) {
+                        Database::execute("
+                            UPDATE TruongDaiHoc 
+                            SET TenTruong = :ten, SoNamDaoTaoChuan = :dur, ThuocDHQGHCM = :dhqg, DangHopTac = :st
+                            WHERE MaTruong = :ma
+                        ", [
+                            'ten' => $name,
+                            'dur' => $duration,
+                            'dhqg' => $isDhqg,
+                            'st' => $status,
+                            'ma' => $code
+                        ]);
+                        $updatedCount++;
+                    } else {
+                        $skippedCount++;
+                    }
+                } else {
+                    Database::execute("
+                        INSERT INTO TruongDaiHoc (MaTruong, TenTruong, SoNamDaoTaoChuan, ThuocDHQGHCM, DangHopTac)
+                        VALUES (:ma, :ten, :dur, :dhqg, :st)
+                    ", [
+                        'ma' => $code,
+                        'ten' => $name,
+                        'dur' => $duration,
+                        'dhqg' => $isDhqg,
+                        'st' => $status
+                    ]);
+                    $createdCount++;
+                }
+            }
+
+            fclose($handle);
+
+            $msg = "Nhập dữ liệu hoàn tất: Đã thêm mới <b>{$createdCount}</b> trường, Cập nhật <b>{$updatedCount}</b> trường, Bỏ qua <b>{$skippedCount}</b> trường đã có.";
+            if (!empty($errorRows)) {
+                $errorDetails = implode('<br>', array_slice($errorRows, 0, 5));
+                if (count($errorRows) > 5) {
+                    $errorDetails .= '<br>...và ' . (count($errorRows) - 5) . ' dòng lỗi khác.';
+                }
+                Session::flash('warning', $msg . '<br><div style="margin-top:6px;"><b>Chi tiết cảnh báo dòng dữ liệu:</b><br>' . $errorDetails . '</div>');
+            } else {
+                Session::flash('success', $msg);
+            }
+        } catch (\Throwable $e) {
+            if (isset($handle) && is_resource($handle)) {
+                fclose($handle);
+            }
+            Session::flash('error', 'Lỗi trong quá trình đọc và nhập file CSV: ' . $e->getMessage());
+        }
+
+        $this->redirect('admin/universities');
     }
 }

@@ -29,7 +29,6 @@ ob_start();
         <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;">
             <a href="<?= url('admin/dashboard') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">📊 Dashboard</a>
             <a href="<?= url('admin/users') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">👥 Cán bộ & Phân quyền</a>
-            <a href="<?= url('admin/rooms') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">🏢 Phòng & Giường</a>
             <a href="<?= url('admin/periods') ?>" class="btn btn-primary btn-sm" style="border-radius: 6px;">📅 Đợt đăng ký 72h</a>
             <a href="<?= url('admin/room-types') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">💰 Loại phòng & Giá</a>
             <a href="<?= url('admin/universities') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">🎓 Trường Đại học</a>
