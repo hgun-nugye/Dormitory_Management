@@ -197,12 +197,14 @@ ob_start();
                                 </td>
                                 <td>
                                     <?php 
-                                        $gioConLai = (int)($act['SoGioConLai'] ?? 0);
-                                        if ($gioConLai > 24): 
+                                        $phutConLai = (int)($act['SoPhutConLai'] ?? 0);
+                                        $gio = floor($phutConLai / 60);
+                                        $phut = $phutConLai % 60;
+                                        if ($phutConLai > 24 * 60): 
                                     ?>
-                                        <span class="badge badge-info">Còn <?= $gioConLai ?> giờ</span>
-                                    <?php elseif ($gioConLai > 0): ?>
-                                        <span class="badge badge-warning">Còn <?= $gioConLai ?> giờ</span>
+                                        <span class="badge badge-info">Còn <?= $gio ?> giờ <?= $phut ?>p</span>
+                                    <?php elseif ($phutConLai > 0): ?>
+                                        <span class="badge badge-warning">Còn <?= $gio ?> giờ <?= $phut ?>p</span>
                                     <?php else: ?>
                                         <span class="badge badge-danger" style="background:#fee2e2; color:#991b1b;">Đã quá hạn</span>
                                     <?php endif; ?>

@@ -123,6 +123,7 @@ class DashboardController extends Controller {
             $active72hApplications = Database::fetchAll("
                 SELECT hs.*, sv.HoVaTen, sv.MSSVTaiTruong, p.SoPhong, tn.TenToaNha, g.KyHieuGiuong,
                        hd.SoTienPhaiDong, hd.TrangThai AS TrangThaiHoaDon,
+                       TIMESTAMPDIFF(MINUTE, NOW(), hs.HanChotThanhToan) AS SoPhutConLai,
                        TIMESTAMPDIFF(HOUR, NOW(), hs.HanChotThanhToan) AS SoGioConLai
                 FROM HoSoDangKy hs
                 JOIN SinhVien sv ON hs.MaSinhVien = sv.MaSinhVien

@@ -10,6 +10,7 @@ if (session_status() === PHP_SESSION_NONE) {
 // 1. Load Helpers & Environment
 require_once dirname(__DIR__) . '/app/Helpers/functions.php';
 load_env(dirname(__DIR__) . '/.env');
+date_default_timezone_set(config('app.timezone', 'Asia/Ho_Chi_Minh'));
 
 // Cấu hình báo lỗi theo môi trường (.env)
 $isDebug = function_exists('config') ? (bool)config('app.debug') : (filter_var($_ENV['APP_DEBUG'] ?? false, FILTER_VALIDATE_BOOLEAN));

@@ -26,7 +26,10 @@ class AutoReleaseService {
                 return ['success' => false, 'message' => 'Hồ sơ đã được xử lý trước đó'];
             }
 
-            $hanChot = date('Y-m-d H:i:s', strtotime("+{$soGioGiuCho} hours"));
+            $tz = new \DateTimeZone(function_exists('config') ? config('app.timezone', 'Asia/Ho_Chi_Minh') : 'Asia/Ho_Chi_Minh');
+            $nowDate = new \DateTime('now', $tz);
+            $nowDate->modify("+{$soGioGiuCho} hours");
+            $hanChot = $nowDate->format('Y-m-d H:i:s');
 
             Database::execute(
                 "UPDATE HoSoDangKy 
