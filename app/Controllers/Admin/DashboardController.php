@@ -37,7 +37,6 @@ class DashboardController extends Controller
         ];
 
         $canBoList = [];
-        $cumNhaList = [];
         $dotDangKyList = [];
         $loaiPhongList = [];
         $truongList = [];
@@ -64,20 +63,6 @@ class DashboardController extends Controller
                         ORDER BY tk.MaTaiKhoan DESC
                         LIMIT 5
                     ");
-            // Danh mục cụm nhà & hạ tầng
-            $cumNhaList = Database::fetchAll("
-                SELECT c.*, k.TenKhu,
-                       COUNT(DISTINCT tn.MaToaNha) AS TongToa,
-                       COUNT(DISTINCT p.MaPhong) AS TongPhong,
-                       COUNT(DISTINCT g.MaGiuong) AS TongGiuong
-                FROM CumNha c
-                JOIN KhuKTX k ON c.MaKhu = k.MaKhu
-                LEFT JOIN ToaNha tn ON c.MaCum = tn.MaCum
-                LEFT JOIN Phong p ON tn.MaToaNha = p.MaToaNha
-                LEFT JOIN Giuong g ON p.MaPhong = g.MaPhong
-                GROUP BY c.MaCum
-                ORDER BY c.MaKhu, c.MaCum
-            ");
 
             // Đợt đăng ký 72h
             $dotDangKyList = Database::fetchAll("SELECT * FROM DotDangKy ORDER BY MaDot DESC LIMIT 5");
@@ -110,14 +95,6 @@ class DashboardController extends Controller
             ];
         }
 
-        if (empty($cumNhaList)) {
-            $cumNhaList = [
-                ['MaCum' => 'AG', 'TenCum' => 'Cụm nhà A.G', 'TenKhu' => 'Khu A', 'TongToa' => 4, 'TongPhong' => 120, 'TongGiuong' => 480],
-                ['MaCum' => 'AH', 'TenCum' => 'Cụm nhà A.H', 'TenKhu' => 'Khu A', 'TongToa' => 3, 'TongPhong' => 90, 'TongGiuong' => 360],
-                ['MaCum' => 'BC', 'TenCum' => 'Cụm nhà B.C', 'TenKhu' => 'Khu B', 'TongToa' => 6, 'TongPhong' => 180, 'TongGiuong' => 720]
-            ];
-        }
-
         if (empty($dotDangKyList)) {
             $dotDangKyList = [
                 ['TenDot' => 'Đăng ký nội trú năm học 2026-2027', 'NamHoc' => '2026-2027', 'ThoiGianMoCong' => '2026-06-01 08:00', 'ThoiGianDongCong' => '2026-10-31 23:59', 'SoGioGiuCho' => 72]
@@ -145,7 +122,6 @@ class DashboardController extends Controller
             'user' => $user,
             'stats' => $stats,
             'canBoList' => $canBoList,
-            'cumNhaList' => $cumNhaList,
             'dotDangKyList' => $dotDangKyList,
             'loaiPhongList' => $loaiPhongList,
             'truongList' => $truongList,
@@ -553,11 +529,6 @@ class DashboardController extends Controller
         }
 
         $this->redirect('admin/users');
-    }
-
-    public function rooms(): void
-    {
-        $this->view('admin.rooms', ['user' => Auth::user()]);
     }
 
     public function periods(): void

@@ -28,6 +28,7 @@
                 <?php elseif (\App\Core\Auth::isNhanVien()): ?>
                     <li><a href="<?= url('/') ?>" style="font-weight: 600; color: #2563eb;">Trang chủ</a></li>
                     <li><a href="<?= url('staff/dashboard') ?>">BQL Cụm</a></li>
+                    <li><a href="<?= url('staff/zones') ?>">Khu & Cụm</a></li>
                     <li><a href="<?= url('staff/rooms') ?>">Sơ đồ phòng</a></li>
                     <li><a href="<?= url('staff/applications') ?>">Xét duyệt 72h</a></li>
                     <li><a href="<?= url('staff/utilities') ?>">Điện nước</a></li>
@@ -38,7 +39,6 @@
                     <li><a href="<?= url('/') ?>" style="font-weight: 600; color: #2563eb;">Trang chủ</a></li>
                     <li><a href="<?= url('admin/dashboard') ?>">Dashboard</a></li>
                     <li><a href="<?= url('admin/users') ?>">Cán bộ</a></li>
-                    <li><a href="<?= url('admin/rooms') ?>">Phòng ở</a></li>
                     <li><a href="<?= url('admin/periods') ?>">Đợt 72h</a></li>
                     <li><a href="<?= url('admin/room-types') ?>">Loại phòng</a></li>
                     <li><a href="<?= url('admin/universities') ?>">Trường ĐH</a></li>

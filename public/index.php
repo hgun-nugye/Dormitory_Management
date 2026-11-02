@@ -60,6 +60,17 @@ Router::get('/student/payments', 'Student\PaymentController@index');
 
 // Staff Routes
 Router::get('/staff/dashboard', 'Staff\DashboardController@index', [AuthMiddleware::class]);
+Router::get('/staff/zones', 'Staff\DashboardController@zones', [AuthMiddleware::class]);
+Router::post('/staff/zones/save-khu', 'Staff\DashboardController@saveKhu', [AuthMiddleware::class]);
+Router::post('/staff/zones/delete-khu', 'Staff\DashboardController@deleteKhu', [AuthMiddleware::class]);
+Router::post('/staff/zones/save-cum', 'Staff\DashboardController@saveCum', [AuthMiddleware::class]);
+Router::post('/staff/zones/delete-cum', 'Staff\DashboardController@deleteCum', [AuthMiddleware::class]);
+Router::post('/staff/zones/save-toa', 'Staff\DashboardController@saveToa', [AuthMiddleware::class]);
+Router::post('/staff/zones/delete-toa', 'Staff\DashboardController@deleteToa', [AuthMiddleware::class]);
+Router::post('/staff/zones/save-room', 'Staff\DashboardController@saveRoom', [AuthMiddleware::class]);
+Router::post('/staff/zones/delete-room', 'Staff\DashboardController@deleteRoom', [AuthMiddleware::class]);
+Router::post('/staff/zones/approve-proposal', 'Staff\DashboardController@approveProposal', [AuthMiddleware::class]);
+Router::post('/staff/zones/reject-proposal', 'Staff\DashboardController@rejectProposal', [AuthMiddleware::class]);
 Router::get('/staff/rooms', 'Staff\DashboardController@rooms', [AuthMiddleware::class]);
 Router::get('/staff/applications', 'Staff\DashboardController@applications', [AuthMiddleware::class]);
 Router::get('/staff/utilities', 'Staff\DashboardController@utilities', [AuthMiddleware::class]);
@@ -75,7 +86,7 @@ Router::post('/admin/users/save', 'Admin\DashboardController@saveUser');
 Router::post('/admin/users/reset-password', 'Admin\DashboardController@resetPassword');
 Router::post('/admin/users/toggle-status', 'Admin\DashboardController@toggleUserStatus');
 Router::post('/admin/users/delete', 'Admin\DashboardController@deleteUser');
-Router::get('/admin/rooms', 'Admin\DashboardController@rooms');
+
 Router::get('/admin/periods', 'Admin\DashboardController@periods');
 Router::get('/admin/room-types', 'Admin\DashboardController@roomTypes');
 Router::get('/admin/universities', 'Admin\DashboardController@universities');
