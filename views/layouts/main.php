@@ -39,6 +39,7 @@
                     <!-- <li><a href="<?= url('/') ?>" style="font-weight: 600; color: #2563eb;">Trang chủ</a></li> -->
                     <li><a href="<?= url('admin/dashboard') ?>">Dashboard</a></li>
                     <li><a href="<?= url('admin/users') ?>">Cán bộ</a></li>
+                    <li><a href="<?= url('staff/zones') ?>">Hạ tầng KTX</a></li>
                     <li><a href="<?= url('admin/periods') ?>">Đợt 72h</a></li>
                     <li><a href="<?= url('admin/room-types') ?>">Loại phòng</a></li>
                     <li><a href="<?= url('admin/universities') ?>">Trường ĐH</a></li>

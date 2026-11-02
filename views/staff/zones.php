@@ -19,7 +19,6 @@ ob_start();
                     <span class="badge <?= htmlspecialchars($scope['badgeClass'] ?? 'badge-primary') ?>" style="font-size: 0.8rem; padding: 4px 10px;">
                         <i class="fa-solid fa-building-user" style="margin-right: 6px;"></i> <?= htmlspecialchars($scope['title'] ?? 'Cán bộ quản trị') ?>
                     </span>
-                    <span style="font-size: 0.8rem; color: var(--text-muted);">&bull; Cấu hình và tra cứu trực tiếp toàn bộ dữ liệu</span>
                 </p>
             </div>
             <div>
@@ -56,7 +55,7 @@ ob_start();
         <div style="font-weight: 700; color: #1e293b; font-size: 0.95rem; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 8px;">
                 <i class="fa-solid fa-sitemap" style="color: var(--primary);"></i>
-                <span>Bộ lọc Tra cứu Phân cấp Hạ tầng (Chọn từ trên xuống: Mã Cụm &rarr; Mã Tòa &rarr; Mã Phòng)</span>
+                <span>Tra cứu</span>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
                 <span id="filterSummaryBadge" class="badge badge-info" style="font-size: 0.775rem;">Đang hiển thị tất cả</span>
@@ -122,15 +121,51 @@ ob_start();
     <div style="display: flex; gap: 12px; margin-bottom: 22px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; flex-wrap: wrap;">
         <button type="button" class="tab-btn active" id="tabBtnPhong" onclick="switchZoneTab('phong')" style="background:none; border:none; padding: 10px 18px; font-size: 0.95rem; font-weight: 700; cursor: pointer; border-radius: 8px; color: var(--primary); background: #eff6ff;">
             <i class="fa-solid fa-door-open" style="margin-right: 6px;"></i> Danh mục Phòng ở (<span id="tabCountPhong"><?= count($phongList ?? []) ?></span>)
+            <?php if (!empty($scope['canCreatePhong']) && !empty($scope['canUpdatePhong'])): ?>
+                <span class="badge badge-success" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Toàn quyền</span>
+            <?php elseif (!empty($scope['canCreatePhong']) || !empty($scope['canDeletePhong'])): ?>
+                <span class="badge badge-primary" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Thêm & Xóa (CD)</span>
+            <?php elseif (!empty($scope['canUpdatePhong'])): ?>
+                <span class="badge badge-warning" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Cập nhật (RU)</span>
+            <?php else: ?>
+                <span class="badge" style="font-size:0.65rem; margin-left:6px; padding:2px 6px; background:#e2e8f0; color:#64748b;">Xem</span>
+            <?php endif; ?>
         </button>
         <button type="button" class="tab-btn" id="tabBtnToa" onclick="switchZoneTab('toa')" style="background:none; border:none; padding: 10px 18px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 8px; color: var(--text-secondary);">
             <i class="fa-solid fa-building" style="margin-right: 6px;"></i> Danh mục Tòa nhà (<span id="tabCountToa"><?= count($toaList ?? []) ?></span>)
+            <?php if (!empty($scope['canCreateToa']) && !empty($scope['canUpdateToa'])): ?>
+                <span class="badge badge-success" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Toàn quyền</span>
+            <?php elseif (!empty($scope['canCreateToa']) || !empty($scope['canDeleteToa'])): ?>
+                <span class="badge badge-primary" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Thêm & Xóa (CD)</span>
+            <?php elseif (!empty($scope['canUpdateToa'])): ?>
+                <span class="badge badge-warning" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Cập nhật (RU)</span>
+            <?php else: ?>
+                <span class="badge" style="font-size:0.65rem; margin-left:6px; padding:2px 6px; background:#e2e8f0; color:#64748b;">Xem</span>
+            <?php endif; ?>
         </button>
         <button type="button" class="tab-btn" id="tabBtnCum" onclick="switchZoneTab('cum')" style="background:none; border:none; padding: 10px 18px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 8px; color: var(--text-secondary);">
             <i class="fa-solid fa-sitemap" style="margin-right: 6px;"></i> Danh mục Cụm nhà (<span id="tabCountCum"><?= count($cumList ?? []) ?></span>)
+            <?php if (!empty($scope['canCreateCum']) && !empty($scope['canUpdateCum'])): ?>
+                <span class="badge badge-success" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Toàn quyền</span>
+            <?php elseif (!empty($scope['canCreateCum']) || !empty($scope['canDeleteCum'])): ?>
+                <span class="badge badge-primary" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Thêm & Xóa (CD)</span>
+            <?php elseif (!empty($scope['canUpdateCum'])): ?>
+                <span class="badge badge-warning" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Cập nhật (RU)</span>
+            <?php else: ?>
+                <span class="badge" style="font-size:0.65rem; margin-left:6px; padding:2px 6px; background:#e2e8f0; color:#64748b;">Xem</span>
+            <?php endif; ?>
         </button>
         <button type="button" class="tab-btn" id="tabBtnKhu" onclick="switchZoneTab('khu')" style="background:none; border:none; padding: 10px 18px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 8px; color: var(--text-secondary);">
             <i class="fa-solid fa-layer-group" style="margin-right: 6px;"></i> Danh mục Khu KTX (<?= count($khuList ?? []) ?>)
+            <?php if (!empty($scope['canCreateKhu']) && !empty($scope['canUpdateKhu'])): ?>
+                <span class="badge badge-success" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Toàn quyền</span>
+            <?php elseif (!empty($scope['canCreateKhu']) || !empty($scope['canDeleteKhu'])): ?>
+                <span class="badge badge-primary" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Thêm & Xóa (CD)</span>
+            <?php elseif (!empty($scope['canUpdateKhu'])): ?>
+                <span class="badge badge-warning" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Cập nhật (RU)</span>
+            <?php else: ?>
+                <span class="badge" style="font-size:0.65rem; margin-left:6px; padding:2px 6px; background:#e2e8f0; color:#64748b;">Xem</span>
+            <?php endif; ?>
         </button>
     </div>
 
@@ -138,11 +173,157 @@ ob_start();
     <!-- TAB 1: DANH MỤC PHÒNG Ở & FORM THÊM / SỬA PHÒNG -->
     <!-- ===================================================================== -->
     <div id="tabContentPhong" style="display: block;">
-        <!-- FORM THÊM / SỬA PHÒNG Ở (CÓ SELECT PHÂN CẤP CỤM -> TÒA) -->
-        <div class="card" id="cardFormRoom" style="margin-bottom: 24px;">
-            <div class="card-title" id="titleFormRoom">
-                <i class="fa-solid fa-plus-circle" style="color: var(--primary); margin-right: 8px;"></i>
-                <span>Thêm mới Phòng ở & Khởi tạo giường tự động</span>
+        <!-- BẢNG DANH SÁCH PHÒNG Ở -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                <div>
+                    <span>Danh sách Phòng ở & Sơ đồ giường</span>
+                    <span class="badge badge-info" id="roomCountBadge"><?= count($phongList ?? []) ?> phòng</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <?php if (!empty($scope['canCreatePhong'])): ?>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="showCreateRoomForm()" style="border-radius: 6px; font-weight: 600; padding: 7px 14px;">
+                            <i class="fa-solid fa-plus-circle" style="margin-right: 6px;"></i> + Thêm phòng mới
+                        </button>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <?php if (!empty($phongList)): ?>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Mã phòng</th>
+                                <th>Cụm & Tòa nhà</th>
+                                <th>Số phòng & Tầng</th>
+                                <th>Loại phòng</th>
+                                <th>Sĩ số</th>
+                                <th>Sơ đồ giường</th>
+                                <th>Tình trạng</th>
+                                <th style="text-align: right;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($phongList as $p): ?>
+                                <?php
+                                $maxCap = (int)($p['SoGiuongToiDa'] ?? 4);
+                                $occupied = (int)($p['SoSVDangO'] ?? 0);
+                                $vacant = (int)($p['SoGiuongTrong'] ?? 0);
+                                $percent = $maxCap > 0 ? min(100, round(($occupied / $maxCap) * 100)) : 0;
+                                $beds = $giuongByPhong[$p['MaPhong']] ?? [];
+                                ?>
+                                <tr class="room-row"
+                                    data-cum="<?= htmlspecialchars($p['MaCum']) ?>"
+                                    data-toa="<?= htmlspecialchars($p['MaToaNha']) ?>"
+                                    data-phong="<?= htmlspecialchars($p['MaPhong']) ?>">
+                                    <td><b style="color: var(--primary); font-size: 0.95rem;"><?= htmlspecialchars($p['MaPhong']) ?></b></td>
+                                    <td>
+                                        <div><b><?= htmlspecialchars($p['TenToaNha']) ?></b></div>
+                                        <div style="font-size: 0.775rem; color: var(--text-muted);"><?= htmlspecialchars($p['TenCum']) ?></div>
+                                    </td>
+                                    <td>
+                                        <div>Phòng <b><?= htmlspecialchars($p['SoPhong']) ?></b></div>
+                                        <div style="font-size: 0.775rem; color: var(--text-muted);">Tầng <?= (int)$p['Tang'] ?></div>
+                                    </td>
+                                    <td>
+                                        <div><b><?= htmlspecialchars($p['MaLoaiPhong']) ?></b></div>
+                                        <div style="font-size: 0.775rem; color: var(--text-secondary);"><?= $maxCap ?> giường &bull; <?= number_format($p['DonGiaLuuTruChuan'] ?? 0, 0, ',', '.') ?> đ</div>
+                                    </td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                            <b><?= $occupied ?> / <?= $maxCap ?></b>
+                                            <span style="font-size: 0.75rem; color: var(--text-muted);">(<?= $percent ?>%)</span>
+                                        </div>
+                                        <div style="width: 70px; height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: 4px;">
+                                            <div style="width: <?= $percent ?>%; height: 100%; background: <?= $percent >= 100 ? '#dc2626' : '#2563eb' ?>;"></div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div style="display: flex; gap: 4px; flex-wrap: wrap; max-width: 160px;">
+                                            <?php foreach ($beds as $bg): ?>
+                                                <?php
+                                                $bgClass = 'background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;';
+                                                $icon = 'fa-regular fa-circle';
+                                                if (str_contains($bg['TrangThaiGiuong'], 'ở') || str_contains($bg['TrangThaiGiuong'], 'người')) {
+                                                    $bgClass = 'background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd;';
+                                                    $icon = 'fa-solid fa-user';
+                                                } elseif ($bg['TrangThaiGiuong'] === 'Bảo trì') {
+                                                    $bgClass = 'background: #fef3c7; color: #92400e; border: 1px solid #fde68a;';
+                                                    $icon = 'fa-solid fa-wrench';
+                                                }
+                                                ?>
+                                                <span title="<?= htmlspecialchars($bg['KyHieuGiuong']) ?>: <?= htmlspecialchars($bg['TrangThaiGiuong']) ?>"
+                                                    style="display: inline-flex; align-items: center; gap: 2px; font-size: 0.675rem; padding: 2px 4px; border-radius: 4px; font-weight: 600; <?= $bgClass ?>">
+                                                    <i class="<?= $icon ?>" style="font-size: 0.6rem;"></i> <?= htmlspecialchars($bg['KyHieuGiuong']) ?>
+                                                </span>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <?php if ($p['TrangThaiPhong'] === 'Bảo trì'): ?>
+                                            <span class="badge badge-warning">Bảo trì</span>
+                                        <?php elseif ($vacant <= 0): ?>
+                                            <span class="badge badge-danger">Đầy</span>
+                                        <?php else: ?>
+                                            <span class="badge badge-success">Còn <?= $vacant ?> chỗ</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td style="text-align: right; white-space: nowrap;">
+                                        <?php
+                                        $canEditThisRoom = !empty($scope['canUpdatePhong']);
+                                        $canDeleteThisRoom = !empty($scope['canDeletePhong']) && ($scope['level'] === 'FULL' || empty($scope['maToa']) || $scope['maToa'] === $p['MaToaNha']);
+                                        ?>
+                                        <?php if ($canEditThisRoom || $canDeleteThisRoom): ?>
+                                            <?php if ($canEditThisRoom): ?>
+                                                <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px; margin-right: 4px;"
+                                                    data-item="<?= htmlspecialchars(json_encode($p, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"
+                                                    onclick='editRoom(this)'
+                                                    title="Sửa phòng ở">
+                                                    <i class="fa-solid fa-pen-to-square" style="margin-right: 6px;"></i> Sửa
+                                                </button>
+                                            <?php endif; ?>
+                                            <?php if ($canDeleteThisRoom): ?>
+                                                <button type="button" class="btn btn-outline btn-sm"
+                                                    style="border-radius: 6px; color: #dc2626; border-color: #fecaca; background: #fff;"
+                                                    data-ma="<?= htmlspecialchars($p['MaPhong'], ENT_QUOTES) ?>"
+                                                    data-occupied="<?= $occupied ?>"
+                                                    onclick="handleDeleteRoom(this)"
+                                                    title="Xóa phòng ở">
+                                                    <i class="fa-solid fa-trash-can" style="margin-right: 6px;"></i> Xóa
+                                                </button>
+                                            <?php endif; ?>
+                                        <?php else: ?>
+                                            <span class="badge" style="background: #f1f5f9; color: #64748b; font-size: 0.775rem;">
+                                                <i class="fa-solid fa-eye" style="margin-right: 4px;"></i> Chỉ xem
+                                            </span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                            <tr id="noMatchPhongRow" style="display: none;">
+                                <td colspan="8" style="text-align: center; padding: 28px; color: var(--text-muted);">
+                                    <i class="fa-solid fa-circle-info" style="margin-right: 6px;"></i> Không tìm thấy Phòng ở nào khớp với lựa chọn phân cấp hiện tại.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else: ?>
+                <p class="text-muted" style="padding: 20px 0; font-size: 0.9rem;">Chưa có dữ liệu phòng ở trong phạm vi.</p>
+            <?php endif; ?>
+        </div>
+
+        <!-- FORM THÊM / SỬA PHÒNG Ở (HIỂN THỊ BÊN DƯỚI KHI BẤM THÊM / SỬA) -->
+        <div class="card" id="cardFormRoom" style="display: none; margin-top: 20px; margin-bottom: 24px; border: 2px solid #bfdbfe;">
+            <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <div id="titleFormRoom">
+                    <i class="fa-solid fa-plus-circle" style="color: var(--primary); margin-right: 8px;"></i>
+                    <span>Thêm mới Phòng ở & Khởi tạo giường tự động</span>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="hideRoomForm()" style="border-radius: 6px; border: none; color: var(--text-muted); cursor: pointer;" title="Đóng biểu mẫu">
+                    <i class="fa-solid fa-xmark" style="font-size: 1.1rem;"></i>
+                </button>
             </div>
 
             <form action="<?= url('staff/zones/save-room') ?>" method="POST" id="formRoom">
@@ -232,130 +413,11 @@ ob_start();
                     <button type="button" class="btn btn-outline" style="border-radius: 6px; padding: 10px 18px;" onclick="resetFormRoom()">
                         <i class="fa-solid fa-rotate-left" style="margin-right: 6px;"></i> Làm mới Form
                     </button>
+                    <button type="button" class="btn btn-outline" style="border-radius: 6px; padding: 10px 18px; color: #dc2626; border-color: #fecaca;" onclick="hideRoomForm()">
+                        <i class="fa-solid fa-xmark" style="margin-right: 6px;"></i> Đóng Form
+                    </button>
                 </div>
             </form>
-        </div>
-
-        <!-- BẢNG DANH SÁCH PHÒNG Ở -->
-        <div class="card">
-            <div class="card-title" style="flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
-                <div>
-                    <span>Danh sách Phòng ở & Sơ đồ giường</span>
-                    <span class="badge badge-info" id="roomCountBadge"><?= count($phongList ?? []) ?> phòng</span>
-                </div>
-                <div style="font-size: 0.85rem; color: var(--text-muted);">
-                    <i class="fa-solid fa-circle-info" style="margin-right: 4px;"></i> Dữ liệu tự động lọc theo bộ chọn phân cấp Cụm &rarr; Tòa &rarr; Phòng ở trên.
-                </div>
-            </div>
-
-            <?php if (!empty($phongList)): ?>
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Mã phòng</th>
-                                <th>Cụm & Tòa nhà</th>
-                                <th>Số phòng & Tầng</th>
-                                <th>Loại phòng</th>
-                                <th>Sĩ số</th>
-                                <th>Sơ đồ giường</th>
-                                <th>Tình trạng</th>
-                                <th style="text-align: right;">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($phongList as $p): ?>
-                                <?php
-                                $maxCap = (int)($p['SoGiuongToiDa'] ?? 4);
-                                $occupied = (int)($p['SoSVDangO'] ?? 0);
-                                $vacant = (int)($p['SoGiuongTrong'] ?? 0);
-                                $percent = $maxCap > 0 ? min(100, round(($occupied / $maxCap) * 100)) : 0;
-                                $beds = $giuongByPhong[$p['MaPhong']] ?? [];
-                                ?>
-                                <tr class="room-row"
-                                    data-cum="<?= htmlspecialchars($p['MaCum']) ?>"
-                                    data-toa="<?= htmlspecialchars($p['MaToaNha']) ?>"
-                                    data-phong="<?= htmlspecialchars($p['MaPhong']) ?>">
-                                    <td><b style="color: var(--primary); font-size: 0.95rem;"><?= htmlspecialchars($p['MaPhong']) ?></b></td>
-                                    <td>
-                                        <div><b><?= htmlspecialchars($p['TenToaNha']) ?></b></div>
-                                        <div style="font-size: 0.775rem; color: var(--text-muted);"><?= htmlspecialchars($p['TenCum']) ?></div>
-                                    </td>
-                                    <td>
-                                        <div>Phòng <b><?= htmlspecialchars($p['SoPhong']) ?></b></div>
-                                        <div style="font-size: 0.775rem; color: var(--text-muted);">Tầng <?= (int)$p['Tang'] ?></div>
-                                    </td>
-                                    <td>
-                                        <div><b><?= htmlspecialchars($p['MaLoaiPhong']) ?></b></div>
-                                        <div style="font-size: 0.775rem; color: var(--text-secondary);"><?= $maxCap ?> giường &bull; <?= number_format($p['DonGiaLuuTruChuan'] ?? 0, 0, ',', '.') ?> đ</div>
-                                    </td>
-                                    <td>
-                                        <div style="display: flex; align-items: center; gap: 6px;">
-                                            <b><?= $occupied ?> / <?= $maxCap ?></b>
-                                            <span style="font-size: 0.75rem; color: var(--text-muted);">(<?= $percent ?>%)</span>
-                                        </div>
-                                        <div style="width: 70px; height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: 4px;">
-                                            <div style="width: <?= $percent ?>%; height: 100%; background: <?= $percent >= 100 ? '#dc2626' : '#2563eb' ?>;"></div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div style="display: flex; gap: 4px; flex-wrap: wrap; max-width: 160px;">
-                                            <?php foreach ($beds as $bg): ?>
-                                                <?php
-                                                $bgClass = 'background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;';
-                                                $icon = 'fa-regular fa-circle';
-                                                if (str_contains($bg['TrangThaiGiuong'], 'ở') || str_contains($bg['TrangThaiGiuong'], 'người')) {
-                                                    $bgClass = 'background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd;';
-                                                    $icon = 'fa-solid fa-user';
-                                                } elseif ($bg['TrangThaiGiuong'] === 'Bảo trì') {
-                                                    $bgClass = 'background: #fef3c7; color: #92400e; border: 1px solid #fde68a;';
-                                                    $icon = 'fa-solid fa-wrench';
-                                                }
-                                                ?>
-                                                <span title="<?= htmlspecialchars($bg['KyHieuGiuong']) ?>: <?= htmlspecialchars($bg['TrangThaiGiuong']) ?>"
-                                                    style="display: inline-flex; align-items: center; gap: 2px; font-size: 0.675rem; padding: 2px 4px; border-radius: 4px; font-weight: 600; <?= $bgClass ?>">
-                                                    <i class="<?= $icon ?>" style="font-size: 0.6rem;"></i> <?= htmlspecialchars($bg['KyHieuGiuong']) ?>
-                                                </span>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <?php if ($p['TrangThaiPhong'] === 'Bảo trì'): ?>
-                                            <span class="badge badge-warning">Bảo trì</span>
-                                        <?php elseif ($vacant <= 0): ?>
-                                            <span class="badge badge-danger">Đầy</span>
-                                        <?php else: ?>
-                                            <span class="badge badge-success">Còn <?= $vacant ?> chỗ</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td style="text-align: right; white-space: nowrap;">
-                                        <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px; margin-right: 4px;"
-                                            onclick='editRoom(<?= json_encode($p, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)'
-                                            title="Sửa phòng ở">
-                                            <i class="fa-solid fa-pen-to-square" style="margin-right: 6px;"></i> Sửa
-                                        </button>
-                                        <button type="button" class="btn btn-outline btn-sm"
-                                            style="border-radius: 6px; color: #dc2626; border-color: #fecaca; background: #fff;"
-                                            data-ma="<?= htmlspecialchars($p['MaPhong'], ENT_QUOTES) ?>"
-                                            data-occupied="<?= $occupied ?>"
-                                            onclick="handleDeleteRoom(this)"
-                                            title="Xóa phòng ở">
-                                            <i class="fa-solid fa-trash-can" style="margin-right: 6px;"></i> Xóa
-                                        </button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                            <tr id="noMatchPhongRow" style="display: none;">
-                                <td colspan="8" style="text-align: center; padding: 28px; color: var(--text-muted);">
-                                    <i class="fa-solid fa-circle-info" style="margin-right: 6px;"></i> Không tìm thấy Phòng ở nào khớp với lựa chọn phân cấp hiện tại.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            <?php else: ?>
-                <p class="text-muted" style="padding: 20px 0; font-size: 0.9rem;">Chưa có dữ liệu phòng ở trong phạm vi.</p>
-            <?php endif; ?>
         </div>
     </div>
 
@@ -363,11 +425,122 @@ ob_start();
     <!-- TAB 2: DANH MỤC TÒA NHÀ & FORM THÊM / SỬA TÒA NHÀ -->
     <!-- ===================================================================== -->
     <div id="tabContentToa" style="display: none;">
-        <!-- FORM THÊM / SỬA TÒA NHÀ -->
-        <div class="card" id="cardFormToa" style="margin-bottom: 24px;">
-            <div class="card-title" id="titleFormToa">
-                <i class="fa-solid fa-plus-circle" style="color: var(--primary); margin-right: 8px;"></i>
-                <span>Thêm mới Tòa nhà lưu trú</span>
+        <!-- BẢNG DANH SÁCH TÒA NHÀ TRONG PHẠM VI -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                <div>
+                    <span>Danh sách Tòa nhà lưu trú</span>
+                    <span class="badge badge-info" id="toaCountBadge"><?= count($toaList ?? []) ?> tòa</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <?php if (!empty($scope['canCreateToa'])): ?>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="showCreateToaForm()" style="border-radius: 6px; font-weight: 600; padding: 7px 14px;">
+                            <i class="fa-solid fa-plus-circle" style="margin-right: 6px;"></i> + Thêm tòa nhà mới
+                        </button>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <?php if (!empty($toaList)): ?>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Mã tòa</th>
+                                <th>Tên Tòa & Cụm</th>
+                                <th>Khu KTX</th>
+                                <th>Số tầng</th>
+                                <th>Giới tính</th>
+                                <th>Quy mô phòng</th>
+                                <th>Trạng thái</th>
+                                <th style="text-align: right;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($toaList as $t): ?>
+                                <tr class="toa-row" data-cum="<?= htmlspecialchars($t['MaCum']) ?>" data-toa="<?= htmlspecialchars($t['MaToaNha']) ?>">
+                                    <td><b style="color: var(--primary);"><?= htmlspecialchars($t['MaToaNha']) ?></b></td>
+                                    <td>
+                                        <div><b><?= htmlspecialchars($t['TenToaNha']) ?></b></div>
+                                        <div style="font-size: 0.775rem; color: var(--text-muted);"><?= htmlspecialchars($t['TenCum']) ?></div>
+                                    </td>
+                                    <td><span class="badge badge-info" style="font-size: 0.75rem;">Khu <?= htmlspecialchars($t['MaKhu'] ?? '') ?></span></td>
+                                    <td><?= (int)$t['TongSoTang'] ?> tầng</td>
+                                    <td>
+                                        <?php if ($t['GioiTinhQuyDinh'] === 'Nam'): ?>
+                                            <span style="color: #2563eb; font-weight: 600;"><i class="fa-solid fa-mars" style="margin-right: 4px;"></i> Nam</span>
+                                        <?php elseif ($t['GioiTinhQuyDinh'] === 'Nữ'): ?>
+                                            <span style="color: #db2777; font-weight: 600;"><i class="fa-solid fa-venus" style="margin-right: 4px;"></i> Nữ</span>
+                                        <?php else: ?>
+                                            <span style="color: #059669; font-weight: 600;"><i class="fa-solid fa-venus-mars" style="margin-right: 4px;"></i> <?= htmlspecialchars($t['GioiTinhQuyDinh']) ?></span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <div><b><?= (int)($t['TongPhong'] ?? 0) ?></b> phòng</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);"><?= (int)($t['TongGiuong'] ?? 0) ?> giường</div>
+                                    </td>
+                                    <td>
+                                        <?php if ($t['TrangThaiToaNha'] === 'Đang hoạt động'): ?>
+                                            <span class="badge badge-success">Hoạt động</span>
+                                        <?php else: ?>
+                                            <span class="badge badge-warning">Tạm đóng</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td style="text-align: right; white-space: nowrap;">
+                                        <?php
+                                        $canEditThisToa = !empty($scope['canUpdateToa']) && ($scope['level'] === 'FULL' || empty($scope['maToa']) || $scope['maToa'] === $t['MaToaNha']);
+                                        $canDeleteThisToa = !empty($scope['canDeleteToa']) && ($scope['level'] === 'FULL' || ($scope['level'] === 'CUM' && $scope['maCum'] === $t['MaCum']));
+                                        ?>
+                                        <?php if ($canEditThisToa || $canDeleteThisToa): ?>
+                                            <?php if ($canEditThisToa): ?>
+                                                <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px; margin-right: 4px;"
+                                                    data-item="<?= htmlspecialchars(json_encode($t, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"
+                                                    onclick='editToa(this)'
+                                                    title="Sửa thông tin tòa">
+                                                    <i class="fa-solid fa-pen-to-square" style="margin-right: 6px;"></i> Sửa
+                                                </button>
+                                            <?php endif; ?>
+                                            <?php if ($canDeleteThisToa): ?>
+                                                <button type="button" class="btn btn-outline btn-sm"
+                                                    style="border-radius: 6px; color: #dc2626; border-color: #fecaca; background: #fff;"
+                                                    data-ma="<?= htmlspecialchars($t['MaToaNha'], ENT_QUOTES) ?>"
+                                                    data-ten="<?= htmlspecialchars($t['TenToaNha'], ENT_QUOTES) ?>"
+                                                    onclick="handleDeleteToa(this)"
+                                                    title="Xóa tòa nhà">
+                                                    <i class="fa-solid fa-trash-can" style="margin-right: 6px;"></i> Xóa
+                                                </button>
+                                            <?php endif; ?>
+                                        <?php else: ?>
+                                            <span class="badge" style="background: #f1f5f9; color: #64748b; font-size: 0.775rem;">
+                                                <i class="fa-solid fa-eye" style="margin-right: 4px;"></i> Chỉ xem
+                                            </span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                            <tr id="noMatchToaRow" style="display: none;">
+                                <td colspan="8" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                                    <i class="fa-solid fa-circle-info" style="margin-right: 6px;"></i> Không tìm thấy Tòa nhà nào phù hợp với bộ lọc.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else: ?>
+                <p class="text-muted" style="padding: 20px 0; font-size: 0.9rem;">Chưa có Tòa nhà nào trong phạm vi quản lý của bạn.</p>
+            <?php endif; ?>
+        </div>
+
+        <!-- FORM THÊM / SỬA TÒA NHÀ (HIỂN THỊ BÊN DƯỚI KHI BẤM THÊM / SỬA) -->
+        <div class="card" id="cardFormToa" style="display: none; margin-top: 20px; margin-bottom: 24px; border: 2px solid #bfdbfe;">
+            <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <div id="titleFormToa">
+                    <i class="fa-solid fa-plus-circle" style="color: var(--primary); margin-right: 8px;"></i>
+                    <span>Thêm mới Tòa nhà lưu trú</span>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="hideToaForm()" style="border-radius: 6px; border: none; color: var(--text-muted); cursor: pointer;" title="Đóng biểu mẫu">
+                    <i class="fa-solid fa-xmark" style="font-size: 1.1rem;"></i>
+                </button>
             </div>
 
             <form action="<?= url('staff/zones/save-toa') ?>" method="POST" id="formToa">
@@ -439,92 +612,11 @@ ob_start();
                     <button type="button" class="btn btn-outline" style="border-radius: 6px; padding: 10px 18px;" onclick="resetFormToa()">
                         <i class="fa-solid fa-rotate-left" style="margin-right: 6px;"></i> Làm mới Form
                     </button>
+                    <button type="button" class="btn btn-outline" style="border-radius: 6px; padding: 10px 18px; color: #dc2626; border-color: #fecaca;" onclick="hideToaForm()">
+                        <i class="fa-solid fa-xmark" style="margin-right: 6px;"></i> Đóng Form
+                    </button>
                 </div>
             </form>
-        </div>
-
-        <!-- BẢNG DANH SÁCH TÒA NHÀ TRONG PHẠM VI -->
-        <div class="card">
-            <div class="card-title" style="flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
-                <div>
-                    <span>Danh sách Tòa nhà lưu trú</span>
-                    <span class="badge badge-info" id="toaCountBadge"><?= count($toaList ?? []) ?> tòa</span>
-                </div>
-            </div>
-
-            <?php if (!empty($toaList)): ?>
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Mã tòa</th>
-                                <th>Tên Tòa & Cụm</th>
-                                <th>Khu KTX</th>
-                                <th>Số tầng</th>
-                                <th>Giới tính</th>
-                                <th>Quy mô phòng</th>
-                                <th>Trạng thái</th>
-                                <th style="text-align: right;">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($toaList as $t): ?>
-                                <tr class="toa-row" data-cum="<?= htmlspecialchars($t['MaCum']) ?>" data-toa="<?= htmlspecialchars($t['MaToaNha']) ?>">
-                                    <td><b style="color: var(--primary);"><?= htmlspecialchars($t['MaToaNha']) ?></b></td>
-                                    <td>
-                                        <div><b><?= htmlspecialchars($t['TenToaNha']) ?></b></div>
-                                        <div style="font-size: 0.775rem; color: var(--text-muted);"><?= htmlspecialchars($t['TenCum']) ?></div>
-                                    </td>
-                                    <td><span class="badge badge-info" style="font-size: 0.75rem;">Khu <?= htmlspecialchars($t['MaKhu'] ?? '') ?></span></td>
-                                    <td><?= (int)$t['TongSoTang'] ?> tầng</td>
-                                    <td>
-                                        <?php if ($t['GioiTinhQuyDinh'] === 'Nam'): ?>
-                                            <span style="color: #2563eb; font-weight: 600;"><i class="fa-solid fa-mars" style="margin-right: 4px;"></i> Nam</span>
-                                        <?php elseif ($t['GioiTinhQuyDinh'] === 'Nữ'): ?>
-                                            <span style="color: #db2777; font-weight: 600;"><i class="fa-solid fa-venus" style="margin-right: 4px;"></i> Nữ</span>
-                                        <?php else: ?>
-                                            <span style="color: #059669; font-weight: 600;"><i class="fa-solid fa-venus-mars" style="margin-right: 4px;"></i> <?= htmlspecialchars($t['GioiTinhQuyDinh']) ?></span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <div><b><?= (int)($t['TongPhong'] ?? 0) ?></b> phòng</div>
-                                        <div style="font-size: 0.75rem; color: var(--text-muted);"><?= (int)($t['TongGiuong'] ?? 0) ?> giường</div>
-                                    </td>
-                                    <td>
-                                        <?php if ($t['TrangThaiToaNha'] === 'Đang hoạt động'): ?>
-                                            <span class="badge badge-success">Hoạt động</span>
-                                        <?php else: ?>
-                                            <span class="badge badge-warning">Tạm đóng</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td style="text-align: right; white-space: nowrap;">
-                                        <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px; margin-right: 4px;"
-                                            onclick='editToa(<?= json_encode($t, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)'
-                                            title="Sửa thông tin tòa">
-                                            <i class="fa-solid fa-pen-to-square" style="margin-right: 6px;"></i> Sửa
-                                        </button>
-                                        <button type="button" class="btn btn-outline btn-sm"
-                                            style="border-radius: 6px; color: #dc2626; border-color: #fecaca; background: #fff;"
-                                            data-ma="<?= htmlspecialchars($t['MaToaNha'], ENT_QUOTES) ?>"
-                                            data-ten="<?= htmlspecialchars($t['TenToaNha'], ENT_QUOTES) ?>"
-                                            onclick="handleDeleteToa(this)"
-                                            title="Xóa tòa nhà">
-                                            <i class="fa-solid fa-trash-can" style="margin-right: 6px;"></i> Xóa
-                                        </button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                            <tr id="noMatchToaRow" style="display: none;">
-                                <td colspan="8" style="text-align: center; padding: 24px; color: var(--text-muted);">
-                                    <i class="fa-solid fa-circle-info" style="margin-right: 6px;"></i> Không tìm thấy Tòa nhà nào phù hợp với bộ lọc.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            <?php else: ?>
-                <p class="text-muted" style="padding: 20px 0; font-size: 0.9rem;">Chưa có Tòa nhà nào trong phạm vi quản lý của bạn.</p>
-            <?php endif; ?>
         </div>
     </div>
 
@@ -532,11 +624,106 @@ ob_start();
     <!-- TAB 3: DANH MỤC CỤM NHÀ & FORM THÊM / SỬA CỤM NHÀ -->
     <!-- ===================================================================== -->
     <div id="tabContentCum" style="display: none;">
-        <!-- FORM CỤM NHÀ -->
-        <div class="card" id="cardFormCum" style="margin-bottom: 24px;">
-            <div class="card-title" id="titleFormCum">
-                <i class="fa-solid fa-plus-circle" style="color: var(--primary); margin-right: 8px;"></i>
-                <span>Thêm mới / Cập nhật Cụm nhà</span>
+        <!-- BẢNG DANH SÁCH CỤM NHÀ -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                <div>
+                    <span>Danh mục Cụm nhà phụ trách</span>
+                    <span class="badge badge-info" id="cumCountBadge"><?= count($cumList ?? []) ?> cụm</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <?php if (!empty($scope['canCreateCum'])): ?>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="showCreateCumForm()" style="border-radius: 6px; font-weight: 600; padding: 7px 14px;">
+                            <i class="fa-solid fa-plus-circle" style="margin-right: 6px;"></i> + Thêm cụm nhà mới
+                        </button>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <?php if (!empty($cumList)): ?>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Mã cụm</th>
+                                <th>Tên Cụm nhà</th>
+                                <th>Khu KTX</th>
+                                <th>Văn phòng BQL</th>
+                                <th>Trưởng Ban quản lý</th>
+                                <th>Quy mô phụ trách</th>
+                                <th style="text-align: right;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($cumList as $c): ?>
+                                <tr class="cum-row" data-cum="<?= htmlspecialchars($c['MaCum']) ?>">
+                                    <td><b style="color: var(--primary);"><?= htmlspecialchars($c['MaCum']) ?></b></td>
+                                    <td><b><?= htmlspecialchars($c['TenCum']) ?></b></td>
+                                    <td><span class="badge badge-info" style="font-size: 0.75rem;">Khu <?= htmlspecialchars($c['MaKhu']) ?></span></td>
+                                    <td><?= htmlspecialchars($c['ViTriVanPhong'] ?? 'Chưa cập nhật') ?></td>
+                                    <td>
+                                        <div><b><?= htmlspecialchars($c['HoTenTruongCum'] ?? 'Chưa phân công') ?></b></div>
+                                        <div style="font-size: 0.775rem; color: var(--text-muted);"><?= htmlspecialchars($c['SoDienThoaiCum'] ?? '') ?></div>
+                                    </td>
+                                    <td>
+                                        <div><b><?= (int)($c['TongToa'] ?? 0) ?></b> tòa nhà &bull; <b><?= (int)($c['TongPhong'] ?? 0) ?></b> phòng</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);"><?= (int)($c['TongGiuong'] ?? 0) ?> giường</div>
+                                    </td>
+                                    <td style="text-align: right; white-space: nowrap;">
+                                        <?php
+                                        $canEditThisCum = !empty($scope['canUpdateCum']) && ($scope['level'] === 'FULL' || empty($scope['maCum']) || $scope['maCum'] === $c['MaCum']);
+                                        $canDeleteThisCum = !empty($scope['canDeleteCum']) && ($scope['level'] === 'FULL' || ($scope['level'] === 'KHU' && $scope['maKhu'] === $c['MaKhu']));
+                                        ?>
+                                        <?php if ($canEditThisCum || $canDeleteThisCum): ?>
+                                            <?php if ($canEditThisCum): ?>
+                                                <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px; margin-right: 4px;"
+                                                    data-item="<?= htmlspecialchars(json_encode($c, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"
+                                                    onclick='editCum(this)'
+                                                    title="Sửa thông tin cụm">
+                                                    <i class="fa-solid fa-pen-to-square" style="margin-right: 6px;"></i> Sửa
+                                                </button>
+                                            <?php endif; ?>
+                                            <?php if ($canDeleteThisCum): ?>
+                                                <button type="button" class="btn btn-outline btn-sm"
+                                                    style="border-radius: 6px; color: #dc2626; border-color: #fecaca; background: #fff;"
+                                                    data-ma="<?= htmlspecialchars($c['MaCum'], ENT_QUOTES) ?>"
+                                                    data-ten="<?= htmlspecialchars($c['TenCum'], ENT_QUOTES) ?>"
+                                                    onclick="handleDeleteCum(this)"
+                                                    title="Xóa cụm nhà">
+                                                    <i class="fa-solid fa-trash-can" style="margin-right: 6px;"></i> Xóa
+                                                </button>
+                                            <?php endif; ?>
+                                        <?php else: ?>
+                                            <span class="badge" style="background: #f1f5f9; color: #64748b; font-size: 0.775rem;">
+                                                <i class="fa-solid fa-eye" style="margin-right: 4px;"></i> Chỉ xem
+                                            </span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                            <tr id="noMatchCumRow" style="display: none;">
+                                <td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                                    <i class="fa-solid fa-circle-info" style="margin-right: 6px;"></i> Không tìm thấy Cụm nhà nào phù hợp với bộ lọc.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else: ?>
+                <p class="text-muted" style="padding: 20px 0; font-size: 0.9rem;">Chưa có dữ liệu cụm nhà trong phạm vi.</p>
+            <?php endif; ?>
+        </div>
+
+        <!-- FORM CỤM NHÀ (HIỂN THỊ BÊN DƯỚI KHI BẤM THÊM / SỬA) -->
+        <div class="card" id="cardFormCum" style="display: none; margin-top: 20px; margin-bottom: 24px; border: 2px solid #bfdbfe;">
+            <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <div id="titleFormCum">
+                    <i class="fa-solid fa-plus-circle" style="color: var(--primary); margin-right: 8px;"></i>
+                    <span>Thêm mới / Cập nhật Cụm nhà</span>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="hideCumForm()" style="border-radius: 6px; border: none; color: var(--text-muted); cursor: pointer;" title="Đóng biểu mẫu">
+                    <i class="fa-solid fa-xmark" style="font-size: 1.1rem;"></i>
+                </button>
             </div>
 
             <form action="<?= url('staff/zones/save-cum') ?>" method="POST" id="formCum">
@@ -609,74 +796,11 @@ ob_start();
                     <button type="button" class="btn btn-outline" style="border-radius: 6px; padding: 10px 18px;" onclick="resetFormCum()">
                         <i class="fa-solid fa-rotate-left" style="margin-right: 6px;"></i> Làm mới Form
                     </button>
+                    <button type="button" class="btn btn-outline" style="border-radius: 6px; padding: 10px 18px; color: #dc2626; border-color: #fecaca;" onclick="hideCumForm()">
+                        <i class="fa-solid fa-xmark" style="margin-right: 6px;"></i> Đóng Form
+                    </button>
                 </div>
             </form>
-        </div>
-
-        <!-- BẢNG DANH SÁCH CỤM NHÀ -->
-        <div class="card">
-            <div class="card-title" style="margin-bottom: 16px;">
-                <span>Danh mục Cụm nhà phụ trách</span>
-                <span class="badge badge-info" id="cumCountBadge"><?= count($cumList ?? []) ?> cụm</span>
-            </div>
-
-            <?php if (!empty($cumList)): ?>
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Mã cụm</th>
-                                <th>Tên Cụm nhà</th>
-                                <th>Khu KTX</th>
-                                <th>Văn phòng BQL</th>
-                                <th>Trưởng Ban quản lý</th>
-                                <th>Quy mô phụ trách</th>
-                                <th style="text-align: right;">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($cumList as $c): ?>
-                                <tr class="cum-row" data-cum="<?= htmlspecialchars($c['MaCum']) ?>">
-                                    <td><b style="color: var(--primary);"><?= htmlspecialchars($c['MaCum']) ?></b></td>
-                                    <td><b><?= htmlspecialchars($c['TenCum']) ?></b></td>
-                                    <td><span class="badge badge-info" style="font-size: 0.75rem;">Khu <?= htmlspecialchars($c['MaKhu']) ?></span></td>
-                                    <td><?= htmlspecialchars($c['ViTriVanPhong'] ?? 'Chưa cập nhật') ?></td>
-                                    <td>
-                                        <div><b><?= htmlspecialchars($c['HoTenTruongCum'] ?? 'Chưa phân công') ?></b></div>
-                                        <div style="font-size: 0.775rem; color: var(--text-muted);"><?= htmlspecialchars($c['SoDienThoaiCum'] ?? '') ?></div>
-                                    </td>
-                                    <td>
-                                        <div><b><?= (int)($c['TongToa'] ?? 0) ?></b> tòa nhà &bull; <b><?= (int)($c['TongPhong'] ?? 0) ?></b> phòng</div>
-                                        <div style="font-size: 0.75rem; color: var(--text-muted);"><?= (int)($c['TongGiuong'] ?? 0) ?> giường</div>
-                                    </td>
-                                    <td style="text-align: right; white-space: nowrap;">
-                                        <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px; margin-right: 4px;"
-                                            onclick='editCum(<?= json_encode($c, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)'
-                                            title="Sửa thông tin cụm">
-                                            <i class="fa-solid fa-pen-to-square" style="margin-right: 6px;"></i> Sửa
-                                        </button>
-                                        <button type="button" class="btn btn-outline btn-sm"
-                                            style="border-radius: 6px; color: #dc2626; border-color: #fecaca; background: #fff;"
-                                            data-ma="<?= htmlspecialchars($c['MaCum'], ENT_QUOTES) ?>"
-                                            data-ten="<?= htmlspecialchars($c['TenCum'], ENT_QUOTES) ?>"
-                                            onclick="handleDeleteCum(this)"
-                                            title="Xóa cụm nhà">
-                                            <i class="fa-solid fa-trash-can" style="margin-right: 6px;"></i> Xóa
-                                        </button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                            <tr id="noMatchCumRow" style="display: none;">
-                                <td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">
-                                    <i class="fa-solid fa-circle-info" style="margin-right: 6px;"></i> Không tìm thấy Cụm nhà nào phù hợp với bộ lọc.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            <?php else: ?>
-                <p class="text-muted" style="padding: 20px 0; font-size: 0.9rem;">Chưa có dữ liệu cụm nhà trong phạm vi.</p>
-            <?php endif; ?>
         </div>
     </div>
 
@@ -684,10 +808,96 @@ ob_start();
     <!-- TAB 4: DANH MỤC KHU KTX & FORM KHU KTX -->
     <!-- ===================================================================== -->
     <div id="tabContentKhu" style="display: none;">
-        <div class="card" id="cardFormKhu" style="margin-bottom: 24px;">
-            <div class="card-title" id="titleFormKhu">
-                <i class="fa-solid fa-plus-circle" style="color: var(--primary); margin-right: 8px;"></i>
-                <span>Cấu hình Khu KTX</span>
+        <!-- BẢNG DANH SÁCH KHU KTX -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                <div>
+                    <span>Danh sách Khu KTX ĐHQG-HCM</span>
+                    <span class="badge badge-info"><?= count($khuList ?? []) ?> khu</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <?php if (!empty($scope['canCreateKhu'])): ?>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="showCreateKhuForm()" style="border-radius: 6px; font-weight: 600; padding: 7px 14px;">
+                            <i class="fa-solid fa-plus-circle" style="margin-right: 6px;"></i> + Thêm khu KTX mới
+                        </button>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <?php if (!empty($khuList)): ?>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Mã khu</th>
+                                <th>Tên Khu KTX</th>
+                                <th>Địa chỉ</th>
+                                <th>Hotline trực ban</th>
+                                <th>Quy mô trực thuộc</th>
+                                <th style="text-align: right;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($khuList as $k): ?>
+                                <tr>
+                                    <td><b style="color: var(--primary); font-size: 1.05rem;">Khu <?= htmlspecialchars($k['MaKhu']) ?></b></td>
+                                    <td><b><?= htmlspecialchars($k['TenKhu']) ?></b></td>
+                                    <td><?= htmlspecialchars($k['DiaChi'] ?? 'Chưa cập nhật') ?></td>
+                                    <td><?= htmlspecialchars($k['SoDienThoaiTruc'] ?? 'Chưa cập nhật') ?></td>
+                                    <td>
+                                        <div><b><?= (int)($k['TongCum'] ?? 0) ?></b> cụm &bull; <b><?= (int)($k['TongToa'] ?? 0) ?></b> tòa</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);"><?= (int)($k['TongPhong'] ?? 0) ?> phòng ở</div>
+                                    </td>
+                                    <td style="text-align: right; white-space: nowrap;">
+                                        <?php
+                                        $canEditThisKhu = !empty($scope['canUpdateKhu']) && ($scope['level'] === 'FULL' || empty($scope['maKhu']) || $scope['maKhu'] === $k['MaKhu']);
+                                        $canDeleteThisKhu = !empty($scope['canDeleteKhu']);
+                                        ?>
+                                        <?php if ($canEditThisKhu || $canDeleteThisKhu): ?>
+                                            <?php if ($canEditThisKhu): ?>
+                                                <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px; margin-right: 4px;"
+                                                    data-item="<?= htmlspecialchars(json_encode($k, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"
+                                                    onclick='editKhu(this)'
+                                                    title="Sửa thông tin khu">
+                                                    <i class="fa-solid fa-pen-to-square" style="margin-right: 6px;"></i> Sửa
+                                                </button>
+                                            <?php endif; ?>
+                                            <?php if ($canDeleteThisKhu): ?>
+                                                <button type="button" class="btn btn-outline btn-sm"
+                                                    style="border-radius: 6px; color: #dc2626; border-color: #fecaca; background: #fff;"
+                                                    data-ma="<?= htmlspecialchars($k['MaKhu'], ENT_QUOTES) ?>"
+                                                    data-ten="<?= htmlspecialchars($k['TenKhu'], ENT_QUOTES) ?>"
+                                                    onclick="handleDeleteKhu(this)"
+                                                    title="Xóa khu KTX">
+                                                    <i class="fa-solid fa-trash-can" style="margin-right: 6px;"></i> Xóa
+                                                </button>
+                                            <?php endif; ?>
+                                        <?php else: ?>
+                                            <span class="badge" style="background: #f1f5f9; color: #64748b; font-size: 0.775rem;">
+                                                <i class="fa-solid fa-eye" style="margin-right: 4px;"></i> Chỉ xem
+                                            </span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else: ?>
+                <p class="text-muted" style="padding: 20px 0; font-size: 0.9rem;">Chưa có dữ liệu Khu KTX.</p>
+            <?php endif; ?>
+        </div>
+
+        <!-- FORM KHU KTX (HIỂN THỊ BÊN DƯỚI KHI BẤM THÊM / SỬA) -->
+        <div class="card" id="cardFormKhu" style="display: none; margin-top: 20px; margin-bottom: 24px; border: 2px solid #bfdbfe;">
+            <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <div id="titleFormKhu">
+                    <i class="fa-solid fa-plus-circle" style="color: var(--primary); margin-right: 8px;"></i>
+                    <span>Cấu hình Khu KTX</span>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="hideKhuForm()" style="border-radius: 6px; border: none; color: var(--text-muted); cursor: pointer;" title="Đóng biểu mẫu">
+                    <i class="fa-solid fa-xmark" style="font-size: 1.1rem;"></i>
+                </button>
             </div>
 
             <form action="<?= url('staff/zones/save-khu') ?>" method="POST" id="formKhu">
@@ -733,64 +943,11 @@ ob_start();
                     <button type="button" class="btn btn-outline" style="border-radius: 6px; padding: 10px 18px;" onclick="resetFormKhu()">
                         <i class="fa-solid fa-rotate-left" style="margin-right: 6px;"></i> Làm mới Form
                     </button>
+                    <button type="button" class="btn btn-outline" style="border-radius: 6px; padding: 10px 18px; color: #dc2626; border-color: #fecaca;" onclick="hideKhuForm()">
+                        <i class="fa-solid fa-xmark" style="margin-right: 6px;"></i> Đóng Form
+                    </button>
                 </div>
             </form>
-        </div>
-
-        <!-- BẢNG DANH SÁCH KHU KTX -->
-        <div class="card">
-            <div class="card-title" style="margin-bottom: 16px;">
-                <span>Danh sách Khu KTX ĐHQG-HCM</span>
-                <span class="badge badge-info"><?= count($khuList ?? []) ?> khu</span>
-            </div>
-
-            <?php if (!empty($khuList)): ?>
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Mã khu</th>
-                                <th>Tên Khu KTX</th>
-                                <th>Địa chỉ</th>
-                                <th>Hotline trực ban</th>
-                                <th>Quy mô trực thuộc</th>
-                                <th style="text-align: right;">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($khuList as $k): ?>
-                                <tr>
-                                    <td><b style="color: var(--primary); font-size: 1.05rem;">Khu <?= htmlspecialchars($k['MaKhu']) ?></b></td>
-                                    <td><b><?= htmlspecialchars($k['TenKhu']) ?></b></td>
-                                    <td><?= htmlspecialchars($k['DiaChi'] ?? 'Chưa cập nhật') ?></td>
-                                    <td><?= htmlspecialchars($k['SoDienThoaiTruc'] ?? 'Chưa cập nhật') ?></td>
-                                    <td>
-                                        <div><b><?= (int)($k['TongCum'] ?? 0) ?></b> cụm &bull; <b><?= (int)($k['TongToa'] ?? 0) ?></b> tòa</div>
-                                        <div style="font-size: 0.75rem; color: var(--text-muted);"><?= (int)($k['TongPhong'] ?? 0) ?> phòng ở</div>
-                                    </td>
-                                    <td style="text-align: right; white-space: nowrap;">
-                                        <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px; margin-right: 4px;"
-                                            onclick='editKhu(<?= json_encode($k, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)'
-                                            title="Sửa thông tin khu">
-                                            <i class="fa-solid fa-pen-to-square" style="margin-right: 6px;"></i> Sửa
-                                        </button>
-                                        <button type="button" class="btn btn-outline btn-sm"
-                                            style="border-radius: 6px; color: #dc2626; border-color: #fecaca; background: #fff;"
-                                            data-ma="<?= htmlspecialchars($k['MaKhu'], ENT_QUOTES) ?>"
-                                            data-ten="<?= htmlspecialchars($k['TenKhu'], ENT_QUOTES) ?>"
-                                            onclick="handleDeleteKhu(this)"
-                                            title="Xóa khu KTX">
-                                            <i class="fa-solid fa-trash-can" style="margin-right: 6px;"></i> Xóa
-                                        </button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php else: ?>
-                <p class="text-muted" style="padding: 20px 0; font-size: 0.9rem;">Chưa có dữ liệu Khu KTX.</p>
-            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -1100,6 +1257,12 @@ ob_start();
     }
 
     function editRoom(room) {
+        if (room instanceof HTMLElement) {
+            room = JSON.parse(room.getAttribute('data-item'));
+        } else if (typeof room === 'string') {
+            room = JSON.parse(room);
+        }
+
         document.getElementById('roomIsEdit').value = '1';
         document.getElementById('titleFormRoom').innerHTML = '<i class="fa-solid fa-pen-to-square" style="color: var(--primary); margin-right: 8px;"></i> <span>Chỉnh sửa phòng ở: ' + room.MaPhong + '</span>';
 
@@ -1129,9 +1292,14 @@ ob_start();
 
         document.getElementById('btnSubmitRoom').innerHTML = '<i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i> Cập nhật phòng';
         switchZoneTab('phong');
-        document.getElementById('cardFormRoom').scrollIntoView({
-            behavior: 'smooth'
-        });
+        const card = document.getElementById('cardFormRoom');
+        if (card) {
+            card.style.display = 'block';
+            card.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
     }
 
     function resetFormRoom() {
@@ -1154,6 +1322,14 @@ ob_start();
 
         document.getElementById('titleFormRoom').innerHTML = '<i class="fa-solid fa-plus-circle" style="color: var(--primary); margin-right: 8px;"></i> <span>Thêm mới Phòng ở & Khởi tạo giường tự động</span>';
         document.getElementById('btnSubmitRoom').innerHTML = '<i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i> Lưu phòng & Sinh giường';
+
+        <?php if ($scope['level'] === 'TOA' && !empty($scope['maToa'])): ?>
+            document.getElementById('roomFormToa').value = '<?= $scope['maToa'] ?>';
+            document.getElementById('roomFormCum').value = '<?= $scope['maCum'] ?>';
+        <?php elseif ($scope['level'] === 'CUM' && !empty($scope['maCum'])): ?>
+            document.getElementById('roomFormCum').value = '<?= $scope['maCum'] ?>';
+            onRoomFormCumChange();
+        <?php endif; ?>
     }
 
     function handleDeleteRoom(btn) {
@@ -1184,6 +1360,12 @@ ob_start();
     // =========================================================================
 
     function editToa(toa) {
+        if (toa instanceof HTMLElement) {
+            toa = JSON.parse(toa.getAttribute('data-item'));
+        } else if (typeof toa === 'string') {
+            toa = JSON.parse(toa);
+        }
+
         document.getElementById('toaIsEdit').value = '1';
         document.getElementById('titleFormToa').innerHTML = '<i class="fa-solid fa-pen-to-square" style="color: var(--primary); margin-right: 8px;"></i> <span>Chỉnh sửa Tòa nhà: ' + toa.TenToaNha + ' (' + toa.MaToaNha + ')</span>';
 
@@ -1202,9 +1384,14 @@ ob_start();
 
         document.getElementById('btnSubmitToa').innerHTML = '<i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i> Cập nhật Tòa nhà';
         switchZoneTab('toa');
-        document.getElementById('cardFormToa').scrollIntoView({
-            behavior: 'smooth'
-        });
+        const card = document.getElementById('cardFormToa');
+        if (card) {
+            card.style.display = 'block';
+            card.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
     }
 
     function resetFormToa() {
@@ -1219,6 +1406,10 @@ ob_start();
 
         document.getElementById('titleFormToa').innerHTML = '<i class="fa-solid fa-plus-circle" style="color: var(--primary); margin-right: 8px;"></i> <span>Thêm mới Tòa nhà lưu trú</span>';
         document.getElementById('btnSubmitToa').innerHTML = '<i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i> Lưu Tòa nhà';
+
+        <?php if ($scope['level'] === 'CUM' && !empty($scope['maCum'])): ?>
+            document.getElementById('toaMaCum').value = '<?= $scope['maCum'] ?>';
+        <?php endif; ?>
     }
 
     function handleDeleteToa(btn) {
@@ -1250,6 +1441,12 @@ ob_start();
     }
 
     function editCum(cum) {
+        if (cum instanceof HTMLElement) {
+            cum = JSON.parse(cum.getAttribute('data-item'));
+        } else if (typeof cum === 'string') {
+            cum = JSON.parse(cum);
+        }
+
         document.getElementById('cumIsEdit').value = '1';
         document.getElementById('titleFormCum').innerHTML = '<i class="fa-solid fa-pen-to-square" style="color: var(--primary); margin-right: 8px;"></i> <span>Chỉnh sửa Cụm nhà: ' + cum.TenCum + ' (' + cum.MaCum + ')</span>';
 
@@ -1273,9 +1470,14 @@ ob_start();
 
         document.getElementById('btnSubmitCum').innerHTML = '<i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i> Cập nhật Cụm nhà';
         switchZoneTab('cum');
-        document.getElementById('cardFormCum').scrollIntoView({
-            behavior: 'smooth'
-        });
+        const card = document.getElementById('cardFormCum');
+        if (card) {
+            card.style.display = 'block';
+            card.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
     }
 
     function resetFormCum() {
@@ -1290,6 +1492,10 @@ ob_start();
 
         document.getElementById('titleFormCum').innerHTML = '<i class="fa-solid fa-plus-circle" style="color: var(--primary); margin-right: 8px;"></i> <span>Thêm mới / Cập nhật Cụm nhà</span>';
         document.getElementById('btnSubmitCum').innerHTML = '<i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i> Lưu Cụm nhà';
+
+        <?php if ($scope['level'] === 'KHU' && !empty($scope['maKhu'])): ?>
+            document.getElementById('cumMaKhu').value = '<?= $scope['maKhu'] ?>';
+        <?php endif; ?>
     }
 
     function handleDeleteCum(btn) {
@@ -1311,6 +1517,12 @@ ob_start();
     }
 
     function editKhu(khu) {
+        if (khu instanceof HTMLElement) {
+            khu = JSON.parse(khu.getAttribute('data-item'));
+        } else if (typeof khu === 'string') {
+            khu = JSON.parse(khu);
+        }
+
         document.getElementById('khuIsEdit').value = '1';
         document.getElementById('titleFormKhu').innerHTML = '<i class="fa-solid fa-pen-to-square" style="color: var(--primary); margin-right: 8px;"></i> <span>Chỉnh sửa Khu KTX: ' + khu.TenKhu + '</span>';
 
@@ -1327,9 +1539,14 @@ ob_start();
 
         document.getElementById('btnSubmitKhu').innerHTML = '<i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i> Cập nhật Khu KTX';
         switchZoneTab('khu');
-        document.getElementById('cardFormKhu').scrollIntoView({
-            behavior: 'smooth'
-        });
+        const card = document.getElementById('cardFormKhu');
+        if (card) {
+            card.style.display = 'block';
+            card.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
     }
 
     function resetFormKhu() {
@@ -1363,6 +1580,82 @@ ob_start();
             }
         });
     }
+    // =========================================================================
+    // ĐÓNG / MỞ CÁC FORM THÊM MỚI (CHỈ HIỂN THỊ KHI NHẤN BUTTON THÊM MỚI)
+    // =========================================================================
+    function showCreateRoomForm() {
+        resetFormRoom();
+        const card = document.getElementById('cardFormRoom');
+        if (card) {
+            card.style.display = 'block';
+            card.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    }
+
+    function hideRoomForm() {
+        const card = document.getElementById('cardFormRoom');
+        if (card) card.style.display = 'none';
+    }
+
+    function showCreateToaForm() {
+        resetFormToa();
+        const card = document.getElementById('cardFormToa');
+        if (card) {
+            card.style.display = 'block';
+            card.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    }
+
+    function hideToaForm() {
+        const card = document.getElementById('cardFormToa');
+        if (card) card.style.display = 'none';
+    }
+
+    function showCreateCumForm() {
+        resetFormCum();
+        const card = document.getElementById('cardFormCum');
+        if (card) {
+            card.style.display = 'block';
+            card.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    }
+
+    function hideCumForm() {
+        const card = document.getElementById('cardFormCum');
+        if (card) card.style.display = 'none';
+    }
+
+    function showCreateKhuForm() {
+        resetFormKhu();
+        const card = document.getElementById('cardFormKhu');
+        if (card) {
+            card.style.display = 'block';
+            card.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    }
+
+    function hideKhuForm() {
+        const card = document.getElementById('cardFormKhu');
+        if (card) card.style.display = 'none';
+    }
+
+    // Tự động mở đúng Tab mặc định theo phân quyền của cán bộ khi tải trang
+    document.addEventListener('DOMContentLoaded', function() {
+        const initialTab = '<?= $scope["defaultTab"] ?? "phong" ?>';
+        switchZoneTab(initialTab);
+    });
 </script>
 
 <?php

@@ -55,8 +55,9 @@ class Auth
         }
         $ma = $user['MaVaiTro'] ?? '';
         $ten = $user['VaiTro'] ?? '';
-        return in_array($ma, ['NhanVien', 'NV_THUONG', 'TRUONG_CUM', 'TRUONG_KHU', 'NV_QUAN_LY_KTX'], true)
+        return in_array($ma, ['NhanVien', 'NV_THUONG', 'TRUONG_TOA', 'TRUONG_CUM', 'TRUONG_KHU', 'NV_QUAN_LY_KTX'], true)
             || str_contains(mb_strtolower($ten), 'nhân viên')
+            || str_contains(mb_strtolower($ten), 'trưởng tòa')
             || str_contains(mb_strtolower($ten), 'trưởng cụm')
             || str_contains(mb_strtolower($ten), 'trưởng khu');
     }
@@ -198,7 +199,7 @@ HTML;
                 $user['profile'] = $sv;
                 $user['HoVaTen'] = $sv['HoVaTen'];
             }
-        } elseif (in_array($maVT, ['NhanVien', 'NV_THUONG', 'TRUONG_CUM', 'TRUONG_KHU', 'NV_QUAN_LY_KTX'], true) || str_contains($tenVT, 'nhân viên')) {
+        } elseif (in_array($maVT, ['NhanVien', 'NV_THUONG', 'TRUONG_TOA', 'TRUONG_CUM', 'TRUONG_KHU', 'NV_QUAN_LY_KTX'], true) || str_contains($tenVT, 'nhân viên') || str_contains($tenVT, 'trưởng')) {
             $nv = Database::fetch(
                 "SELECT *
                  FROM NhanVien

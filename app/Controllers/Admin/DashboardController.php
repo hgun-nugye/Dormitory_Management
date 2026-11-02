@@ -227,6 +227,7 @@ class DashboardController extends Controller
 
         // 4. Danh mục Cụm nhà
         $cumNhaList = [];
+        $toaNhaList = [];
         try {
             $cumNhaList = Database::fetchAll("
                 SELECT c.*, k.TenKhu 
@@ -234,8 +235,15 @@ class DashboardController extends Controller
                 JOIN KhuKTX k ON c.MaKhu = k.MaKhu 
                 ORDER BY c.MaKhu ASC, c.MaCum ASC
             ");
+            $toaNhaList = Database::fetchAll("
+                SELECT t.MaToaNha, t.TenToaNha, c.TenCum, c.MaKhu
+                FROM ToaNha t
+                JOIN CumNha c ON t.MaCum = c.MaCum
+                ORDER BY c.MaKhu ASC, c.MaCum ASC, t.MaToaNha ASC
+            ");
         } catch (\Throwable $e) {
             $cumNhaList = [];
+        $toaNhaList = [];
         }
 
         $flashSuccess = Session::flash('success');
@@ -248,6 +256,7 @@ class DashboardController extends Controller
             'allStaff' => $allStaff,
             'vaitroList' => $vaitroList,
             'cumNhaList' => $cumNhaList,
+            'toaNhaList' => $toaNhaList,
             'flashSuccess' => $flashSuccess,
             'flashError' => $flashError,
             'flashWarning' => $flashWarning
