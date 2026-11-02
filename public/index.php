@@ -82,6 +82,10 @@ Router::post('/staff/approve-application', 'Staff\DashboardController@approveApp
 // Admin Routes
 Router::get('/admin/dashboard', 'Admin\DashboardController@index');
 Router::get('/admin/users', 'Admin\DashboardController@users');
+Router::get('/admin/users/export', 'Admin\DashboardController@exportUsers');
+Router::post('/admin/users/export', 'Admin\DashboardController@exportUsers');
+Router::get('/admin/users/template', 'Admin\DashboardController@downloadUserTemplate');
+Router::post('/admin/users/import', 'Admin\DashboardController@importUsers');
 Router::post('/admin/users/save', 'Admin\DashboardController@saveUser');
 Router::post('/admin/users/reset-password', 'Admin\DashboardController@resetPassword');
 Router::post('/admin/users/toggle-status', 'Admin\DashboardController@toggleUserStatus');
