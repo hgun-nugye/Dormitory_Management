@@ -18,6 +18,7 @@ class Database {
 
             try {
                 self::$instance = new PDO($dsn, $config['username'], $config['password'], $config['options']);
+                self::$instance->exec("SET time_zone = '+07:00'");
             } catch (PDOException $e) {
                 throw new Exception("Lỗi kết nối CSDL: " . $e->getMessage());
             }

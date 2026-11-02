@@ -26,7 +26,10 @@ class AutoReleaseService {
                 return ['success' => false, 'message' => 'Hồ sơ đã được xử lý trước đó'];
             }
 
-            $hanChot = date('Y-m-d H:i:s', strtotime("+{$soGioGiuCho} hours"));
+            $tz = new \DateTimeZone(function_exists('config') ? config('app.timezone', 'Asia/Ho_Chi_Minh') : 'Asia/Ho_Chi_Minh');
+            $nowDate = new \DateTime('now', $tz);
+            $nowDate->modify("+{$soGioGiuCho} hours");
+            $hanChot = $nowDate->format('Y-m-d H:i:s');
 
             Database::execute(
                 "UPDATE HoSoDangKy 
@@ -56,7 +59,8 @@ class AutoReleaseService {
                     ['maGiuong' => $hoso['MaGiuong']]
                 );
 
-                $tienPhong = ($phong['DonGiaLuuTruChuan'] ?? 650000) * 5; // Tính tạm kỳ 5 tháng
+                $donGiaThang = ($phong['DonGiaLuuTruChuan'] ?? 650000) + ($phong['DonGiaDichVuTangThem'] ?? 0);
+                $tienPhong = $donGiaThang * 5; // Tính tạm kỳ 5 tháng
                 Database::execute(
                     "INSERT INTO HoaDon (MaHoaDon, MaSinhVien, MaPhong, LoaiHoaDon, SoTienPhaiDong, NgayTao, HanThanhToan, TrangThai)
                      VALUES (:maHD, :maSV, :maPhong, 'Lệ phí chỗ ở học kỳ', :soTien, NOW(), :hanChot, 'Chưa thanh toán')",
@@ -70,6 +74,14 @@ class AutoReleaseService {
                 );
             }
 
+            // Đảm bảo trạng thái giường là 'Đang giữ chỗ'
+            if (!empty($hoso['MaGiuong'])) {
+                Database::execute(
+                    "UPDATE Giuong SET TrangThaiGiuong = 'Đang giữ chỗ' WHERE MaGiuong = :maGiuong AND TrangThaiGiuong = 'Trống'",
+                    ['maGiuong' => $hoso['MaGiuong']]
+                );
+            }
+
             Database::commit();
 
             return [
@@ -80,6 +92,63 @@ class AutoReleaseService {
         } catch (Exception $e) {
             Database::rollBack();
             return ['success' => false, 'message' => 'Lỗi khi duyệt hồ sơ: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Cán bộ từ chối hồ sơ: giải phóng giường về lại 'Trống'
+     */
+    public static function rejectApplication(string $maHoSo, int $nguoiTuChoiTaiKhoanId, string $lyDo = ''): array {
+        Database::beginTransaction();
+        try {
+            $hoso = Database::fetch("SELECT * FROM HoSoDangKy WHERE MaHoSo = :maHoSo FOR UPDATE", ['maHoSo' => $maHoSo]);
+            if (!$hoso) {
+                Database::rollBack();
+                return ['success' => false, 'message' => 'Không tìm thấy hồ sơ'];
+            }
+
+            if (!in_array($hoso['TrangThaiHoSo'], ['Chờ duyệt', 'Chờ thanh toán'], true)) {
+                Database::rollBack();
+                return ['success' => false, 'message' => 'Hồ sơ này không thể từ chối vì đã ở trạng thái: ' . $hoso['TrangThaiHoSo']];
+            }
+
+            Database::execute(
+                "UPDATE HoSoDangKy 
+                 SET TrangThaiHoSo = 'Đã từ chối',
+                     NguoiDuyet = :nguoiDuyet,
+                     ThoiGianDuyet = NOW(),
+                     GhiChuTuChoi = :lyDo
+                 WHERE MaHoSo = :maHoSo",
+                [
+                    'nguoiDuyet' => $nguoiTuChoiTaiKhoanId,
+                    'lyDo' => $lyDo ?: 'Cán bộ quản lý từ chối hồ sơ',
+                    'maHoSo' => $maHoSo
+                ]
+            );
+
+            // Hoàn trả trạng thái giường về 'Trống'
+            if (!empty($hoso['MaGiuong'])) {
+                Database::execute(
+                    "UPDATE Giuong SET TrangThaiGiuong = 'Trống' WHERE MaGiuong = :maGiuong",
+                    ['maGiuong' => $hoso['MaGiuong']]
+                );
+            }
+
+            // Hủy hóa đơn liên quan (nếu chưa thanh toán)
+            Database::execute(
+                "UPDATE HoaDon SET TrangThai = 'Đã hủy' WHERE MaHoaDon = :maHD AND TrangThai = 'Chưa thanh toán'",
+                ['maHD' => 'HD-' . $maHoSo]
+            );
+
+            Database::commit();
+
+            return [
+                'success' => true,
+                'message' => "Đã từ chối hồ sơ {$maHoSo} và hoàn trả giường về trạng thái Trống."
+            ];
+        } catch (Exception $e) {
+            Database::rollBack();
+            return ['success' => false, 'message' => 'Lỗi khi từ chối hồ sơ: ' . $e->getMessage()];
         }
     }
 

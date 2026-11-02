@@ -10,6 +10,7 @@ if (session_status() === PHP_SESSION_NONE) {
 // 1. Load Helpers & Environment
 require_once dirname(__DIR__) . '/app/Helpers/functions.php';
 load_env(dirname(__DIR__) . '/.env');
+date_default_timezone_set(config('app.timezone', 'Asia/Ho_Chi_Minh'));
 
 // Cấu hình báo lỗi theo môi trường (.env)
 $isDebug = function_exists('config') ? (bool)config('app.debug') : (filter_var($_ENV['APP_DEBUG'] ?? false, FILTER_VALIDATE_BOOLEAN));
@@ -78,6 +79,7 @@ Router::get('/staff/requests', 'Staff\DashboardController@requests', [AuthMiddle
 Router::get('/staff/maintenance', 'Staff\DashboardController@maintenance', [AuthMiddleware::class]);
 Router::get('/staff/discipline', 'Staff\DashboardController@discipline', [AuthMiddleware::class]);
 Router::post('/staff/approve-application', 'Staff\DashboardController@approveApplication', [AuthMiddleware::class]);
+Router::post('/staff/reject-application', 'Staff\DashboardController@rejectApplication', [AuthMiddleware::class]);
 
 // Admin Routes
 Router::get('/admin/dashboard', 'Admin\DashboardController@index');
