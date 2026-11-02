@@ -542,7 +542,406 @@ class DashboardController extends Controller
         $this->redirect('admin/users');
     }
 
-    public function universities(): void
+    /**
+     * Xuất danh sách cán bộ quản trị hệ thống ra file CSV / Excel (có UTF-8 BOM)
+     * Hỗ trợ xuất theo kết quả bộ lọc hiện tại (danh sách ID hoặc điều kiện lọc)
+     */
+    public function exportUsers(): void
+    {
+        $request = new Request();
+        $idsParam = $request->input('ids');
+        $keyword = trim((string)$request->input('keyword', ''));
+        $role = trim((string)$request->input('role', ''));
+        $status = $request->input('status');
+
+        try {
+            $whereClause = "WHERE tk.MaVaiTro NOT IN ('SINH_VIEN', 'TRUONG_PHONG')";
+            $params = [];
+            $isFiltered = false;
+
+            if (!empty($idsParam)) {
+                $rawIds = is_array($idsParam) ? $idsParam : explode(',', (string)$idsParam);
+                $cleanIds = array_filter(array_map('intval', $rawIds), fn($id) => $id > 0);
+                if (!empty($cleanIds)) {
+                    $inPlaceholders = implode(',', $cleanIds);
+                    $whereClause .= " AND tk.MaTaiKhoan IN ($inPlaceholders)";
+                    $isFiltered = true;
+                }
+            } else {
+                if (!empty($role)) {
+                    $whereClause .= " AND tk.MaVaiTro = :role";
+                    $params['role'] = $role;
+                    $isFiltered = true;
+                }
+                if ($status !== null && $status !== '') {
+                    $whereClause .= " AND tk.DangHoatDong = :status";
+                    $params['status'] = (int)$status;
+                    $isFiltered = true;
+                }
+                if (!empty($keyword)) {
+                    $whereClause .= " AND (tk.TenDangNhap LIKE :kw OR nv.HoVaTen LIKE :kw OR nv.SoDienThoai LIKE :kw OR nv.Email LIKE :kw)";
+                    $params['kw'] = "%{$keyword}%";
+                    $isFiltered = true;
+                }
+            }
+
+            $sql = "
+                SELECT tk.MaTaiKhoan, tk.TenDangNhap, tk.MaVaiTro, tk.MaCumQuanLy, tk.DangHoatDong, tk.NgayTao,
+                       vt.TenVaiTro, nv.MaNhanVien, nv.HoVaTen, nv.ChucVu, nv.SoDienThoai, nv.Email,
+                       cn.TenCum, k.TenKhu
+                FROM TaiKhoan tk
+                JOIN VaiTro vt ON tk.MaVaiTro = vt.MaVaiTro
+                LEFT JOIN NhanVien nv ON tk.MaTaiKhoan = nv.MaTaiKhoan
+                LEFT JOIN CumNha cn ON tk.MaCumQuanLy = cn.MaCum
+                LEFT JOIN KhuKTX k ON cn.MaKhu = k.MaKhu
+                {$whereClause}
+                ORDER BY tk.MaTaiKhoan ASC
+            ";
+
+            $userList = Database::fetchAll($sql, $params);
+
+            $filenamePrefix = $isFiltered ? 'DS_CanBo_KTX_Filtered_' : 'DS_CanBo_KTX_';
+            $filename = $filenamePrefix . date('Ymd_His') . '.csv';
+            header('Content-Type: text/csv; charset=UTF-8');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+
+            $output = fopen('php://output', 'w');
+            // Ghi UTF-8 BOM để Microsoft Excel đọc tiếng Việt chuẩn xác
+            fwrite($output, "\xEF\xBB\xBF");
+
+            // Tiêu đề cột
+            fputcsv($output, [
+                'STT',
+                'Mã tài khoản',
+                'Tên đăng nhập',
+                'Họ và tên cán bộ',
+                'Chức vụ',
+                'Mã vai trò',
+                'Tên vai trò',
+                'Phạm vi phụ trách',
+                'Số điện thoại',
+                'Email',
+                'Trạng thái hoạt động',
+                'Ngày tạo tài khoản'
+            ]);
+
+            $stt = 1;
+            foreach ($userList as $u) {
+                $scopeLabel = 'Toàn hệ thống KTX';
+                if ($u['MaCumQuanLy'] === 'KHU_A') {
+                    $scopeLabel = 'Toàn bộ Khu A';
+                } elseif ($u['MaCumQuanLy'] === 'KHU_B') {
+                    $scopeLabel = 'Toàn bộ Khu B';
+                } elseif (!empty($u['TenToaNha'])) {
+                    $scopeLabel = $u['TenToaNha'] . ' (' . $u['MaCumQuanLy'] . ')';
+                } elseif (!empty($u['TenCum'])) {
+                    $scopeLabel = $u['TenCum'] . ' (' . ($u['TenKhu'] ?? 'KTX') . ')';
+                } elseif (!empty($u['MaCumQuanLy'])) {
+                    $scopeLabel = 'Phạm vi: ' . $u['MaCumQuanLy'];
+                } elseif ($u['MaVaiTro'] === 'TRUONG_KHU') {
+                    $scopeLabel = 'Toàn bộ Khu KTX';
+                }
+
+                $statusLabel = ((int)($u['DangHoatDong'] ?? 1) === 1) ? 'Đang hoạt động' : 'Đã khóa';
+                $ngayTao = !empty($u['NgayTao']) ? date('d/m/Y H:i', strtotime($u['NgayTao'])) : '';
+
+                fputcsv($output, [
+                    $stt++,
+                    $u['MaTaiKhoan'],
+                    $u['TenDangNhap'],
+                    $u['HoVaTen'] ?? '',
+                    $u['ChucVu'] ?? '',
+                    $u['MaVaiTro'],
+                    $u['TenVaiTro'] ?? $u['MaVaiTro'],
+                    $scopeLabel,
+                    $u['SoDienThoai'] ?? '',
+                    $u['Email'] ?? '',
+                    $statusLabel,
+                    $ngayTao
+                ]);
+            }
+
+            fclose($output);
+            exit;
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Lỗi khi xuất danh sách cán bộ: ' . $e->getMessage());
+            $this->redirect('admin/users');
+        }
+    }
+
+    /**
+     * Tải file mẫu CSV để nhập danh sách cán bộ
+     */
+    public function downloadUserTemplate(): void
+    {
+        $filename = 'Mau_Import_CanBo_KTX.csv';
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+        fwrite($output, "\xEF\xBB\xBF");
+
+        // Headers
+        fputcsv($output, [
+            'TenDangNhap',
+            'HoVaTen',
+            'MatKhau',
+            'MaVaiTro',
+            'MaCumQuanLy',
+            'SoDienThoai',
+            'Email',
+            'ChucVu'
+        ]);
+
+        // Dữ liệu mẫu minh họa
+        fputcsv($output, [
+            'NV_MAU01',
+            'Nguyễn Văn An',
+            'Demo@123',
+            'TRUONG_CUM',
+            'AG',
+            '0901234567',
+            'an.nguyen@qlktx.vn',
+            'Trưởng cụm nhà AG'
+        ]);
+        fputcsv($output, [
+            'NV_MAU02',
+            'Trần Thị Mai',
+            'Demo@123',
+            'TRUONG_TOA',
+            'BA',
+            '0912345678',
+            'mai.tran@qlktx.vn',
+            'Trưởng tòa nhà BA.01'
+        ]);
+        fputcsv($output, [
+            'NV_MAU03',
+            'Lê Hoàng Nam',
+            '',
+            'NV_THUONG',
+            '',
+            '0923456789',
+            'nam.le@qlktx.vn',
+            'Kỹ thuật điện nước'
+        ]);
+
+        fclose($output);
+        exit;
+    }
+
+    /**
+     * Nhập danh sách cán bộ từ file CSV
+     */
+    public function importUsers(): void
+    {
+        $request = new Request();
+        $overwrite = (bool)$request->input('overwriteExisting', false);
+
+        if (!isset($_FILES['importFile']) || $_FILES['importFile']['error'] !== UPLOAD_ERR_OK) {
+            Session::flash('error', 'Vui lòng chọn tệp CSV hợp lệ để nhập danh sách cán bộ!');
+            $this->redirect('admin/users');
+            return;
+        }
+
+        $file = $_FILES['importFile'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, ['csv', 'txt'])) {
+            Session::flash('error', 'Hệ thống chỉ hỗ trợ tệp định dạng CSV (.csv) hoặc văn bản (.txt)!');
+            $this->redirect('admin/users');
+            return;
+        }
+
+        $handle = fopen($file['tmp_name'], 'r');
+        if (!$handle) {
+            Session::flash('error', 'Không thể mở tệp tải lên để đọc dữ liệu!');
+            $this->redirect('admin/users');
+            return;
+        }
+
+        try {
+            // Đọc dòng tiêu đề (header)
+            $firstLine = fgets($handle);
+            if ($firstLine === false) {
+                fclose($handle);
+                Session::flash('error', 'Tệp tải lên rỗng!');
+                $this->redirect('admin/users');
+                return;
+            }
+
+            // Xóa UTF-8 BOM nếu có
+            $firstLine = preg_replace('/^\xEF\xBB\xBF/', '', $firstLine);
+
+            $delimiter = (substr_count($firstLine, ';') > substr_count($firstLine, ',')) ? ';' : ',';
+            $headers = str_getcsv(trim($firstLine), $delimiter);
+
+            // Nhận diện cột linh hoạt
+            $colMap = [];
+            foreach ($headers as $idx => $h) {
+                $clean = strtolower(trim($h));
+                $clean = str_replace([' ', '_', '-', '.'], '', $clean);
+                if (in_array($clean, ['tendangnhap', 'username', 'mand', 'manhanvien', 'manv', 'taikhoan'])) {
+                    $colMap['username'] = $idx;
+                } elseif (in_array($clean, ['hovaten', 'hoten', 'ten', 'fullname', 'name', 'canbo'])) {
+                    $colMap['fullname'] = $idx;
+                } elseif (in_array($clean, ['matkhau', 'password', 'mk'])) {
+                    $colMap['password'] = $idx;
+                } elseif (in_array($clean, ['mavaitro', 'vaitro', 'role', 'roleid', 'quyen'])) {
+                    $colMap['role'] = $idx;
+                } elseif (in_array($clean, ['macumquanly', 'macum', 'cum', 'phamvi', 'cumquanly', 'cluster'])) {
+                    $colMap['cluster'] = $idx;
+                } elseif (in_array($clean, ['sodienthoai', 'sdt', 'phone', 'dienthoai', 'tel'])) {
+                    $colMap['phone'] = $idx;
+                } elseif (in_array($clean, ['email', 'mail'])) {
+                    $colMap['email'] = $idx;
+                } elseif (in_array($clean, ['chucvu', 'vitri', 'position', 'chucdanh'])) {
+                    $colMap['position'] = $idx;
+                }
+            }
+
+            if (!isset($colMap['username']) || !isset($colMap['fullname']) || !isset($colMap['role'])) {
+                fclose($handle);
+                Session::flash('error', 'Tệp CSV không đúng định dạng. Cần có tối thiểu các cột: TenDangNhap, HoVaTen, MaVaiTro!');
+                $this->redirect('admin/users');
+                return;
+            }
+
+            // Lấy danh sách vai trò hợp lệ
+            $rolesDb = Database::fetchAll("SELECT MaVaiTro FROM VaiTro WHERE MaVaiTro NOT IN ('SINH_VIEN', 'TRUONG_PHONG')");
+            $validRoles = array_column($rolesDb, 'MaVaiTro');
+
+            // Lấy danh sách cụm nhà hợp lệ
+            $cumsDb = Database::fetchAll("SELECT MaCum FROM CumNha");
+            $validCums = array_column($cumsDb, 'MaCum');
+
+            $createdCount = 0;
+            $updatedCount = 0;
+            $skippedCount = 0;
+            $errorRows = [];
+            $rowNum = 1;
+
+            while (($data = fgetcsv($handle, 4096, $delimiter)) !== false) {
+                $rowNum++;
+                if (empty($data) || (count($data) === 1 && trim($data[0]) === '')) {
+                    continue;
+                }
+
+                $username = isset($colMap['username'], $data[$colMap['username']]) ? trim($data[$colMap['username']]) : '';
+                $fullname = isset($colMap['fullname'], $data[$colMap['fullname']]) ? trim($data[$colMap['fullname']]) : '';
+                $password = isset($colMap['password'], $data[$colMap['password']]) ? trim($data[$colMap['password']]) : '';
+                $role = isset($colMap['role'], $data[$colMap['role']]) ? strtoupper(trim($data[$colMap['role']])) : '';
+                $cluster = isset($colMap['cluster'], $data[$colMap['cluster']]) ? trim($data[$colMap['cluster']]) : '';
+                $phone = isset($colMap['phone'], $data[$colMap['phone']]) ? trim($data[$colMap['phone']]) : '';
+                $email = isset($colMap['email'], $data[$colMap['email']]) ? trim($data[$colMap['email']]) : '';
+                $position = isset($colMap['position'], $data[$colMap['position']]) ? trim($data[$colMap['position']]) : '';
+
+                if (empty($username) || empty($fullname)) {
+                    $errorRows[] = "Dòng {$rowNum}: Thiếu tên đăng nhập hoặc họ tên cán bộ.";
+                    continue;
+                }
+
+                if (empty($role) || !in_array($role, $validRoles)) {
+                    $errorRows[] = "Dòng {$rowNum} ({$username}): Mã vai trò '{$role}' không hợp lệ trong hệ thống.";
+                    continue;
+                }
+
+                // Chuẩn hóa cụm quản lý
+                if (empty($cluster) || in_array($cluster, ['ALL', 'KHU_A', 'KHU_B'])) {
+                    $cluster = null;
+                } elseif (!in_array($cluster, $validCums)) {
+                    $cluster = null;
+                }
+
+                // Kiểm tra tài khoản đã tồn tại chưa
+                $existing = Database::fetch("SELECT * FROM TaiKhoan WHERE TenDangNhap = :u", ['u' => $username]);
+
+                if ($existing) {
+                    if ($overwrite) {
+                        Database::execute("
+                            UPDATE TaiKhoan 
+                            SET MaVaiTro = :role, MaCumQuanLy = :cum
+                            WHERE MaTaiKhoan = :id
+                        ", [
+                            'role' => $role,
+                            'cum' => $cluster,
+                            'id' => $existing['MaTaiKhoan']
+                        ]);
+
+                        Database::execute("
+                            INSERT INTO NhanVien (MaNhanVien, MaTaiKhoan, HoVaTen, SoDienThoai, Email, ChucVu)
+                            VALUES (:maNV, :id, :ten, :sdt, :email, :chucVu)
+                            ON DUPLICATE KEY UPDATE HoVaTen = VALUES(HoVaTen), SoDienThoai = VALUES(SoDienThoai), Email = VALUES(Email), ChucVu = VALUES(ChucVu)
+                        ", [
+                            'maNV' => $username,
+                            'id' => $existing['MaTaiKhoan'],
+                            'ten' => $fullname,
+                            'sdt' => $phone,
+                            'email' => $email,
+                            'chucVu' => $position
+                        ]);
+
+                        $updatedCount++;
+                    } else {
+                        $skippedCount++;
+                    }
+                } else {
+                    $passToUse = !empty($password) ? $password : 'Demo@123';
+                    $hash = Auth::hashPassword($passToUse);
+
+                    Database::execute("
+                        INSERT INTO TaiKhoan (TenDangNhap, MatKhauMaHoa, MaVaiTro, MaCumQuanLy, DangHoatDong)
+                        VALUES (:u, :p, :role, :cum, 1)
+                    ", [
+                        'u' => $username,
+                        'p' => $hash,
+                        'role' => $role,
+                        'cum' => $cluster
+                    ]);
+                    $newId = (int)Database::lastInsertId();
+
+                    Database::execute("
+                        INSERT INTO NhanVien (MaNhanVien, MaTaiKhoan, HoVaTen, SoDienThoai, Email, ChucVu)
+                        VALUES (:maNV, :id, :ten, :sdt, :email, :chucVu)
+                        ON DUPLICATE KEY UPDATE MaTaiKhoan = VALUES(MaTaiKhoan), HoVaTen = VALUES(HoVaTen), SoDienThoai = VALUES(SoDienThoai), Email = VALUES(Email), ChucVu = VALUES(ChucVu)
+                    ", [
+                        'maNV' => $username,
+                        'id' => $newId,
+                        'ten' => $fullname,
+                        'sdt' => $phone,
+                        'email' => $email,
+                        'chucVu' => $position
+                    ]);
+
+                    $createdCount++;
+                }
+            }
+
+            fclose($handle);
+
+            $msg = "Nhập dữ liệu hoàn tất: Đã tạo mới <b>{$createdCount}</b> cán bộ, Cập nhật <b>{$updatedCount}</b> cán bộ, Bỏ qua <b>{$skippedCount}</b> tài khoản đã tồn tại.";
+            if (!empty($errorRows)) {
+                $errorDetails = implode('<br>', array_slice($errorRows, 0, 5));
+                if (count($errorRows) > 5) {
+                    $errorDetails .= '<br>...và ' . (count($errorRows) - 5) . ' dòng lỗi khác.';
+                }
+                Session::flash('warning', $msg . '<br><div style="margin-top:6px;"><b>Chi tiết cảnh báo dòng dữ liệu:</b><br>' . $errorDetails . '</div>');
+            } else {
+                Session::flash('success', $msg);
+            }
+        } catch (\Throwable $e) {
+            if (isset($handle) && is_resource($handle)) {
+                fclose($handle);
+            }
+            Session::flash('error', 'Lỗi trong quá trình đọc và nhập file CSV: ' . $e->getMessage());
+        }
+
+        $this->redirect('admin/users');
+    }
+
+    public function periods(): void
     {
         $user = Auth::user();
 
