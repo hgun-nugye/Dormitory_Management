@@ -18,9 +18,18 @@ ob_start();
                     <strong>Chức năng phân hệ:</strong> Quản trị danh mục các trường đại học thành viên ĐHQG-HCM và các trường đối tác, cấu hình thời gian đào tạo chuẩn và trạng thái hợp tác tiếp nhận sinh viên nội trú.
                 </p>
             </div>
-            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <a href="<?= url('admin/dashboard') ?>" class="btn btn-outline" style="border-radius: 8px;">
-                    &larr; Về trang Quản trị trung tâm
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary" id="btnToggleAddUni" onclick="toggleUniversityForm()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center;">
+                    <i class="fa-solid fa-plus-circle" style="margin-right: 6px;"></i> Thêm trường mới
+                </button>
+                <button type="button" class="btn btn-outline" onclick="openImportUniversityModal()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; color: #2563eb; border-color: #bfdbfe; background: #eff6ff;" title="Nhập danh sách trường đại học từ file CSV">
+                    <i class="fa-solid fa-file-import" style="margin-right: 6px; color: #2563eb;"></i> Nhập file (Import)
+                </button>
+                <button type="button" class="btn btn-outline" id="btnExportUniversities" onclick="exportFilteredUniversities()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; color: #15803d; border-color: #86efac; background: #f0fdf4; cursor: pointer;" title="Xuất danh sách trường theo kết quả lọc hiện tại ra Excel/CSV">
+                    <i class="fa-solid fa-file-excel" style="margin-right: 6px; color: #16a34a;"></i> <span id="btnExportUniText">Xuất Excel (CSV)</span>
+                </button>
+                <a href="<?= url('admin/dashboard') ?>" class="btn btn-outline" style="border-radius: 8px; text-decoration: none;">
+                    &larr; Về Dashboard
                 </a>
             </div>
         </div>
@@ -44,17 +53,6 @@ ob_start();
             <i class="fa-solid fa-circle-xmark" style="margin-right: 6px;"></i> <b>Lỗi:</b> <?= htmlspecialchars($flashError) ?>
         </div>
     <?php endif; ?>
-
-    <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
-        <button type="button"
-            class="btn btn-primary"
-            id="btnToggleAddUni"
-            onclick="toggleUniversityForm()"
-            style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center;">
-            <i class="fa-solid fa-plus-circle" style="margin-right: 6px;"></i>
-            Thêm trường mới
-        </button>
-    </div>
 
     <!-- BIỂU MẪU CRUD: THÊM / CẬP NHẬT TRƯỜNG ĐẠI HỌC (ẨN MẶC ĐỊNH, CHỈ HIỆN KHI CLICK BUTTON HOẶC SỬA) -->
     <div class="card" id="universityFormCard" style="<?= !empty($flashError) ? 'display: block;' : 'display: none;' ?> margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
@@ -348,9 +346,102 @@ ob_start();
                     </tbody>
                 </table>
             </div>
+
+            <!-- THANH PHÂN TRANG (PAGINATION CONTROLS) -->
+            <div id="uniPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                    <span id="uniPaginationInfo" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
+                        Hiển thị 1 - 10 trên tổng số <?= count($universityList ?? []) ?> trường
+                    </span>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <label for="uniPageSize" style="font-size: 0.825rem; color: var(--text-secondary);">Hiển thị:</label>
+                        <select id="uniPageSize" class="btn-outline" onchange="changeUniPageSize(this.value)" style="padding: 4px 8px; border-radius: 6px; font-size: 0.825rem;">
+                            <option value="10" selected>10 / trang</option>
+                            <option value="25">25 / trang</option>
+                            <option value="50">50 / trang</option>
+                            <option value="100">100 / trang</option>
+                            <option value="-1">Tất cả</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="uniPaginationControls" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
+                    <!-- Sẽ được sinh động bằng Javascript -->
+                </div>
+            </div>
         <?php else: ?>
             <p class="text-muted" style="font-size: 0.9rem; padding: 20px 0;">Chưa có danh mục trường đại học nào trong hệ thống.</p>
         <?php endif; ?>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL IMPORT DANH SÁCH TRƯỜNG ĐẠI HỌC TỪ FILE CSV -->
+<!-- ========================================================================= -->
+<div id="importUniversityModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;">
+    <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 580px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
+        <!-- Modal Header -->
+        <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc;">
+            <div style="font-size: 1.05rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-file-import" style="color: #2563eb; margin-right: 6px;"></i>
+                <span>Nhập danh sách Trường Đại học từ file CSV</span>
+            </div>
+            <button type="button" onclick="closeImportUniversityModal()" style="background: none; border: none; font-size: 1.25rem; color: #64748b; cursor: pointer; padding: 4px;" title="Đóng">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body & Form -->
+        <form action="<?= url('admin/universities/import') ?>" method="POST" enctype="multipart/form-data" style="margin: 0;">
+            <?= csrf_field() ?>
+            <div style="padding: 20px;">
+                <!-- Hướng dẫn & Tải file mẫu -->
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 14px 16px; margin-bottom: 18px; font-size: 0.85rem; color: #1e40af;">
+                    <div style="font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-circle-info"></i> Quy định định dạng file nhập dữ liệu:
+                    </div>
+                    <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
+                        <li>Hỗ trợ file định dạng <b>.CSV</b> (hoặc <b>.TXT</b>), phân cách bởi dấu phẩy <code>,</code> hoặc chấm phẩy <code>;</code>.</li>
+                        <li>Các cột bắt buộc: <b>MaTruong</b>, <b>TenTruong</b>.</li>
+                        <li>Cột tùy chọn: <b>SoNamDaoTaoChuan</b> (mặc định 4.0), <b>ThuocDHQGHCM</b> (1 hoặc 0, mặc định 1), <b>DangHopTac</b> (1 hoặc 0, mặc định 1).</li>
+                    </ul>
+                    <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
+                        <a href="<?= url('admin/universities/template') ?>" class="btn btn-outline btn-sm" style="background: #fff; color: #1e40af; border-color: #93c5fd; font-weight: 600; text-decoration: none; border-radius: 6px; padding: 5px 12px; display: inline-flex; align-items: center;">
+                            <i class="fa-solid fa-download" style="margin-right: 6px;"></i> Tải tệp CSV mẫu chuẩn
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Chọn file -->
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #1e293b; margin-bottom: 6px;">
+                        Chọn tệp CSV danh sách trường đại học <span style="color: #dc2626;">*</span>
+                    </label>
+                    <input type="file" name="importFile" accept=".csv,.txt" required class="btn-outline" style="width: 100%; padding: 9px 12px; border-radius: 6px; font-size: 0.9rem; background: #fff;">
+                    <small style="color: var(--text-muted); display: block; margin-top: 4px;">Tệp tối đa 10MB, hỗ trợ font tiếng Việt UTF-8.</small>
+                </div>
+
+                <!-- Tùy chọn ghi đè -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
+                    <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 0.85rem; color: #334155; cursor: pointer; user-select: none;">
+                        <input type="checkbox" name="overwriteExisting" value="1" checked style="margin-top: 2px;">
+                        <span>
+                            <b>Cập nhật thông tin nếu trường đã tồn tại:</b> Khi được chọn, trường có trùng Mã trường sẽ được cập nhật Tên trường, Thời gian đào tạo chuẩn, Phân loại và Trạng thái hợp tác mới.
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div style="padding: 14px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-outline" onclick="closeImportUniversityModal()" style="border-radius: 6px; padding: 8px 18px;">
+                    Hủy bỏ
+                </button>
+                <button type="submit" class="btn btn-primary" style="border-radius: 6px; padding: 8px 20px; font-weight: 600;">
+                    <i class="fa-solid fa-file-import" style="margin-right: 6px;"></i> Bắt đầu nhập dữ liệu
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -559,6 +650,13 @@ ob_start();
         f.submit();
     }
 
+    // =========================================================================
+    // PHÂN TRANG VÀ BỘ LỌC TÌM KIẾM TRƯỜNG ĐẠI HỌC (REAL-TIME PAGINATION & FILTER)
+    // =========================================================================
+    let uniCurrentPage = 1;
+    let uniPageSize = 10;
+    let uniMatchedRows = [];
+
     // 7. Bộ lọc đa tiêu chí cho danh sách trường đại học
     function filterUniversities() {
         const keyword = (document.getElementById('filterKeyword')?.value || '').trim().toLowerCase();
@@ -568,7 +666,7 @@ ob_start();
         const studentRadio = document.querySelector('input[name="filterStudentRadio"]:checked')?.value || '';
 
         const rows = document.querySelectorAll('.uni-row');
-        let matched = 0;
+        uniMatchedRows = [];
         const total = rows.length;
 
         rows.forEach(row => {
@@ -615,8 +713,7 @@ ob_start();
             }
 
             if (isMatch) {
-                row.style.display = '';
-                matched++;
+                uniMatchedRows.push(row);
             } else {
                 row.style.display = 'none';
             }
@@ -624,24 +721,146 @@ ob_start();
 
         const noMatchRow = document.getElementById('noMatchRow');
         if (noMatchRow) {
-            noMatchRow.style.display = (matched === 0 && total > 0) ? '' : 'none';
+            noMatchRow.style.display = (uniMatchedRows.length === 0 && total > 0) ? '' : 'none';
         }
 
+        renderUniversityPagination();
+    }
+
+    function renderUniversityPagination() {
+        const totalMatched = uniMatchedRows.length;
+        const allRows = document.querySelectorAll('.uni-row');
+        const totalAll = allRows.length;
+
+        let totalPages = uniPageSize > 0 ? Math.ceil(totalMatched / uniPageSize) : 1;
+        if (totalPages < 1) totalPages = 1;
+
+        if (uniCurrentPage > totalPages) uniCurrentPage = totalPages;
+        if (uniCurrentPage < 1) uniCurrentPage = 1;
+
+        const startIdx = uniPageSize > 0 ? (uniCurrentPage - 1) * uniPageSize : 0;
+        const endIdx = uniPageSize > 0 ? startIdx + uniPageSize : totalMatched;
+
+        uniMatchedRows.forEach((row, idx) => {
+            if (idx >= startIdx && idx < endIdx) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Cập nhật dòng thông tin phân trang
+        const infoEl = document.getElementById('uniPaginationInfo');
+        if (infoEl) {
+            if (totalMatched === 0) {
+                infoEl.innerText = 'Không có trường đại học nào phù hợp';
+            } else {
+                const displayStart = startIdx + 1;
+                const displayEnd = Math.min(endIdx, totalMatched);
+                infoEl.innerHTML = `Hiển thị <b>${displayStart} - ${displayEnd}</b> trên tổng số <b>${totalMatched}</b> trường (Trang <b>${uniCurrentPage}</b> / <b>${totalPages}</b>)`;
+            }
+        }
+
+        // Cập nhật badge tổng số trường trên tiêu đề bảng
         const countBadge = document.getElementById('uniCountBadge');
         if (countBadge) {
-            countBadge.innerText = matched + ' trường';
+            countBadge.innerText = totalMatched + ' trường';
         }
 
+        // Cập nhật badge trên thanh bộ lọc
         const summaryBadge = document.getElementById('filterSummaryBadge');
         if (summaryBadge) {
-            if (matched === total) {
-                summaryBadge.innerText = `Hiển thị tất cả (${total} trường)`;
+            if (totalMatched === totalAll) {
+                summaryBadge.innerText = `Hiển thị tất cả (${totalAll} trường)`;
                 summaryBadge.className = 'badge badge-info';
             } else {
-                summaryBadge.innerText = `Tìm thấy ${matched} / ${total} trường`;
+                summaryBadge.innerText = `Tìm thấy ${totalMatched} / ${totalAll} trường`;
                 summaryBadge.className = 'badge badge-warning';
             }
         }
+
+        // Cập nhật số lượng trên nút Xuất Excel
+        const exportBtnText = document.getElementById('btnExportUniText');
+        if (exportBtnText) {
+            if (totalMatched === totalAll) {
+                exportBtnText.innerText = `Xuất Excel (${totalMatched})`;
+            } else {
+                exportBtnText.innerText = `Xuất Excel (${totalMatched} đã lọc)`;
+            }
+        }
+
+        // Cập nhật các nút phân trang
+        const controlsEl = document.getElementById('uniPaginationControls');
+        if (!controlsEl) return;
+
+        if (totalPages <= 1) {
+            controlsEl.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+
+        // Nút Đầu (<<)
+        const disabledFirst = uniCurrentPage === 1 ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : 'style="padding: 5px 9px; border-radius: 6px;"';
+        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToUniPage(1)" ${disabledFirst} title="Trang đầu"><i class="fa-solid fa-angles-left"></i></button>`;
+
+        // Nút Trước (<)
+        const disabledPrev = uniCurrentPage === 1 ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : 'style="padding: 5px 9px; border-radius: 6px;"';
+        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToUniPage(${uniCurrentPage - 1})" ${disabledPrev} title="Trang trước"><i class="fa-solid fa-angle-left"></i></button>`;
+
+        // Các nút số trang
+        let startPage = Math.max(1, uniCurrentPage - 2);
+        let endPage = Math.min(totalPages, uniCurrentPage + 2);
+
+        if (startPage > 1) {
+            html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToUniPage(1)" style="padding: 5px 10px; border-radius: 6px;">1</button>`;
+            if (startPage > 2) {
+                html += `<span style="padding: 4px 6px; color: var(--text-muted);">&bull;&bull;&bull;</span>`;
+            }
+        }
+
+        for (let p = startPage; p <= endPage; p++) {
+            if (p === uniCurrentPage) {
+                html += `<button type="button" class="btn btn-primary btn-sm" style="padding: 5px 12px; border-radius: 6px; font-weight: 700;">${p}</button>`;
+            } else {
+                html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToUniPage(${p})" style="padding: 5px 10px; border-radius: 6px;">${p}</button>`;
+            }
+        }
+
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                html += `<span style="padding: 4px 6px; color: var(--text-muted);">&bull;&bull;&bull;</span>`;
+            }
+            html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToUniPage(${totalPages})" style="padding: 5px 10px; border-radius: 6px;">${totalPages}</button>`;
+        }
+
+        // Nút Sau (>)
+        const disabledNext = uniCurrentPage === totalPages ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : 'style="padding: 5px 9px; border-radius: 6px;"';
+        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToUniPage(${uniCurrentPage + 1})" ${disabledNext} title="Trang sau"><i class="fa-solid fa-angle-right"></i></button>`;
+
+        // Nút Cuối (>>)
+        const disabledLast = uniCurrentPage === totalPages ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : 'style="padding: 5px 9px; border-radius: 6px;"';
+        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToUniPage(${totalPages})" ${disabledLast} title="Trang cuối"><i class="fa-solid fa-angles-right"></i></button>`;
+
+        controlsEl.innerHTML = html;
+    }
+
+    function goToUniPage(page) {
+        uniCurrentPage = page;
+        renderUniversityPagination();
+        const tableCard = document.getElementById('tableUniversities');
+        if (tableCard) {
+            tableCard.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest'
+            });
+        }
+    }
+
+    function changeUniPageSize(val) {
+        uniPageSize = parseInt(val, 10);
+        uniCurrentPage = 1;
+        renderUniversityPagination();
     }
 
     // 8. Đặt lại toàn bộ bộ lọc về mặc định
@@ -652,8 +871,81 @@ ob_start();
         if (document.getElementById('filterDuration')) document.getElementById('filterDuration').value = '';
         const allRadio = document.querySelector('input[name="filterStudentRadio"][value=""]');
         if (allRadio) allRadio.checked = true;
+        uniCurrentPage = 1;
         filterUniversities();
     }
+
+    // Xuất file CSV danh sách trường đại học theo đúng kết quả đang hiển thị theo bộ lọc
+    function exportFilteredUniversities() {
+        if (!uniMatchedRows || uniMatchedRows.length === 0) {
+            alert('Không có trường đại học nào phù hợp với bộ lọc hiện tại để xuất file!');
+            return;
+        }
+
+        const matchedCodes = [];
+        uniMatchedRows.forEach(row => {
+            const code = row.getAttribute('data-matruong');
+            if (code) matchedCodes.push(code);
+        });
+
+        if (matchedCodes.length === 0) {
+            alert('Không tìm thấy dữ liệu trường đại học hợp lệ để xuất!');
+            return;
+        }
+
+        // Tạo form ẩn gửi danh sách Mã trường đã lọc sang backend để xuất CSV chuẩn UTF-8
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '<?= url("admin/universities/export") ?>';
+        form.style.display = 'none';
+
+        const csrfInp = document.createElement('input');
+        csrfInp.type = 'hidden';
+        csrfInp.name = 'csrf_token';
+        csrfInp.value = '<?= csrf_token() ?>';
+        form.appendChild(csrfInp);
+
+        const idsInp = document.createElement('input');
+        idsInp.type = 'hidden';
+        idsInp.name = 'ids';
+        idsInp.value = matchedCodes.join(',');
+        form.appendChild(idsInp);
+
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+    }
+
+    // Modal Import trường đại học
+    function openImportUniversityModal() {
+        const modal = document.getElementById('importUniversityModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeImportUniversityModal() {
+        const modal = document.getElementById('importUniversityModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    }
+
+    // Khởi tạo bộ lọc và phân trang ngay khi trang tải xong
+    document.addEventListener('DOMContentLoaded', function() {
+        filterUniversities();
+
+        const importModal = document.getElementById('importUniversityModal');
+        if (importModal) {
+            importModal.addEventListener('click', function(e) {
+                if (e.target === importModal) {
+                    closeImportUniversityModal();
+                }
+            });
+        }
+    });
 </script>
 
 <?php
