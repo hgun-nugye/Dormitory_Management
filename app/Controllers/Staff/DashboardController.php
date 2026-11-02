@@ -167,11 +167,43 @@ class DashboardController extends Controller
         $role = $user['MaVaiTro'] ?? $user['VaiTro'] ?? '';
         $cumQuanLy = trim((string)($user['MaCumQuanLy'] ?? ''));
 
-        // 1. Quản lý toàn KTX (NV_QUAN_LY_KTX / ADMIN / QuanTriVien) hoặc không bị giới hạn cụm
+        // 0. Quản trị viên hệ thống (ADMIN): Đã tách biệt hoàn toàn nghiệp vụ, không trực tiếp quản lý hạ tầng KTX
+        if ($role === 'ADMIN' || ($user['VaiTro'] ?? '') === 'QuanTriVien') {
+            return [
+                'level' => 'VIEW_ONLY',
+                'title' => 'Quản trị viên (Chỉ xem)',
+                'badgeClass' => 'badge-info',
+                'maKhu' => null,
+                'maCum' => null,
+                'maToa' => null,
+                'canCreateKhu' => false,
+                'canReadKhu' => true,
+                'canUpdateKhu' => false,
+                'canDeleteKhu' => false,
+                'canCreateCum' => false,
+                'canReadCum' => true,
+                'canUpdateCum' => false,
+                'canDeleteCum' => false,
+                'canCreateToa' => false,
+                'canReadToa' => true,
+                'canUpdateToa' => false,
+                'canDeleteToa' => false,
+                'canCreatePhong' => false,
+                'canReadPhong' => true,
+                'canUpdatePhong' => false,
+                'canDeletePhong' => false,
+                'canCrudKhu' => false,
+                'canCrudCum' => false,
+                'canCrudToa' => false,
+                'canCrudPhong' => false,
+                'defaultTab' => 'phong'
+            ];
+        }
+
+        // 1. Quản lý toàn KTX (NV_QUAN_LY_KTX) hoặc cán bộ quản lý KTX cấp cao
         if (
-            in_array($role, ['NV_QUAN_LY_KTX', 'ADMIN', 'QuanTriVien'], true) ||
-            ($user['VaiTro'] ?? '') === 'QuanTriVien' ||
-            (empty($cumQuanLy) && in_array($role, ['NV_QUAN_LY_KTX', 'ADMIN'], true))
+            $role === 'NV_QUAN_LY_KTX' ||
+            (empty($cumQuanLy) && $role === 'NV_QUAN_LY_KTX')
         ) {
             return [
                 'level' => 'FULL',
@@ -346,7 +378,7 @@ class DashboardController extends Controller
 
         try {
             // Danh sách Khu
-            if ($scope['level'] === 'FULL') {
+            if (in_array($scope['level'], ['FULL', 'VIEW_ONLY'], true)) {
                 $khuList = Database::fetchAll("
                     SELECT k.*,
                            (SELECT COUNT(*) FROM CumNha c WHERE c.MaKhu = k.MaKhu) AS TongCum,
@@ -368,7 +400,7 @@ class DashboardController extends Controller
             }
 
             // Danh sách Cụm
-            if ($scope['level'] === 'FULL') {
+            if (in_array($scope['level'], ['FULL', 'VIEW_ONLY'], true)) {
                 $cumList = Database::fetchAll("
                     SELECT c.*, k.TenKhu,
                            (SELECT COUNT(*) FROM ToaNha t WHERE t.MaCum = c.MaCum) AS TongToa,
@@ -402,7 +434,7 @@ class DashboardController extends Controller
             }
 
             // Danh sách Tòa nhà
-            if ($scope['level'] === 'FULL') {
+            if (in_array($scope['level'], ['FULL', 'VIEW_ONLY'], true)) {
                 $toaList = Database::fetchAll("
                     SELECT t.*, c.TenCum, c.MaKhu, k.TenKhu,
                            (SELECT COUNT(*) FROM Phong p WHERE p.MaToaNha = t.MaToaNha) AS TongPhong,
