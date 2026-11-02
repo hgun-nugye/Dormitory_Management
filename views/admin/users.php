@@ -141,6 +141,7 @@ ob_start();
                                 </option>
                             <?php endforeach; ?>
                         <?php else: ?>
+                            <option value="TRUONG_TOA">Trưởng tòa nhà (TRUONG_TOA)</option>
                             <option value="TRUONG_CUM">Trưởng cụm nhà (TRUONG_CUM)</option>
                             <option value="TRUONG_KHU">Trưởng khu KTX (TRUONG_KHU)</option>
                             <option value="NV_THUONG">Nhân viên kỹ thuật / hành chính (NV_THUONG)</option>
@@ -160,16 +161,27 @@ ob_start();
 
         <select id="maCumQuanLy" name="maCumQuanLy" class="btn-outline"
             style="width: 100%; padding: 10px; border-radius: 6px; font-size: 0.9rem;">
-            <option value="">-- Toàn hệ thống (Dành cho Admin / Quản lý chung) --</option>
-            <option value="KHU_A">Toàn bộ Khu A (Dành cho Trưởng khu A)</option>
-            <option value="KHU_B">Toàn bộ Khu B (Dành cho Trưởng khu B)</option>
-
-            <?php foreach ($cumNhaList as $cn): ?>
-                <option value="<?= htmlspecialchars($cn['MaCum']) ?>">
-                    Cụm nhà <?= htmlspecialchars($cn['TenCum']) ?>
-                    (<?= htmlspecialchars($cn['TenKhu'] ?? ('Khu ' . $cn['MaKhu'])) ?>)
-                </option>
-            <?php endforeach; ?>
+            <option value="">-- Toàn hệ thống (Dành cho Admin / Quản lý chung KTX) --</option>
+            <optgroup label="Cấp Khu KTX (Dành cho Trưởng khu)">
+                <option value="KHU_A">Toàn bộ Khu A (Trưởng khu A)</option>
+                <option value="KHU_B">Toàn bộ Khu B (Trưởng khu B)</option>
+            </optgroup>
+            <optgroup label="Cấp Cụm nhà (Dành cho Trưởng cụm)">
+                <?php foreach ($cumNhaList as $cn): ?>
+                    <option value="<?= htmlspecialchars($cn['MaCum']) ?>">
+                        Cụm nhà <?= htmlspecialchars($cn['TenCum']) ?> (<?= htmlspecialchars($cn['TenKhu'] ?? ('Khu ' . $cn['MaKhu'])) ?>)
+                    </option>
+                <?php endforeach; ?>
+            </optgroup>
+            <?php if (!empty($toaNhaList)): ?>
+                <optgroup label="Cấp Tòa nhà (Dành cho Trưởng tòa)">
+                    <?php foreach ($toaNhaList as $tn): ?>
+                        <option value="<?= htmlspecialchars($tn['MaToaNha']) ?>">
+                            <?= htmlspecialchars($tn['TenToaNha']) ?> (<?= htmlspecialchars($tn['MaToaNha']) ?> - Cụm <?= htmlspecialchars($tn['TenCum']) ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </optgroup>
+            <?php endif; ?>
         </select>
 
         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
@@ -225,10 +237,16 @@ ob_start();
                             <?php
                             $isLocked = ((int)($u['DangHoatDong'] ?? 1)) === 0;
                             $scopeLabel = 'Toàn hệ thống KTX';
-                            if (!empty($u['TenCum'])) {
+                            if ($u['MaCumQuanLy'] === 'KHU_A') {
+                                $scopeLabel = 'Toàn bộ Khu A';
+                            } elseif ($u['MaCumQuanLy'] === 'KHU_B') {
+                                $scopeLabel = 'Toàn bộ Khu B';
+                            } elseif (!empty($u['TenToaNha'])) {
+                                $scopeLabel = $u['TenToaNha'] . ' (' . $u['MaCumQuanLy'] . ')';
+                            } elseif (!empty($u['TenCum'])) {
                                 $scopeLabel = $u['TenCum'] . ' (' . ($u['TenKhu'] ?? 'KTX') . ')';
                             } elseif (!empty($u['MaCumQuanLy'])) {
-                                $scopeLabel = 'Cụm ' . $u['MaCumQuanLy'];
+                                $scopeLabel = 'Phạm vi: ' . $u['MaCumQuanLy'];
                             } elseif ($u['MaVaiTro'] === 'TRUONG_KHU') {
                                 $scopeLabel = 'Toàn bộ Khu KTX';
                             }
@@ -249,6 +267,7 @@ ob_start();
                                     if ($u['MaVaiTro'] === 'ADMIN') $badgeClass = 'badge-danger';
                                     elseif ($u['MaVaiTro'] === 'TRUONG_KHU') $badgeClass = 'badge-warning';
                                     elseif ($u['MaVaiTro'] === 'TRUONG_CUM') $badgeClass = 'badge-success';
+                                    elseif ($u['MaVaiTro'] === 'TRUONG_TOA') $badgeClass = 'badge-primary';
                                     ?>
                                     <span class="badge <?= $badgeClass ?>">
                                         <?= htmlspecialchars($u['TenVaiTro'] ?? $u['MaVaiTro']) ?>

@@ -21,33 +21,6 @@ ob_start();
         </div>
     </div>
 
-    <!-- Thanh phím tắt chuyển nhanh các phân hệ nghiệp vụ Staff -->
-    <div class="card" style="margin-bottom: 24px; padding: 14px 18px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
-        <div style="font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
-            ⚡ Phím tắt chuyển nhanh sang các nghiệp vụ BQL Cụm:
-        </div>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <a href="<?= url('staff/rooms') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-weight: 500;">
-                🏢 1. Sơ đồ Phòng & Cư trú (CT01)
-            </a>
-            <a href="<?= url('staff/applications') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-weight: 500;">
-                📋 2. Xét duyệt Chỗ ở 72h & Miễn giảm
-            </a>
-            <a href="<?= url('staff/utilities') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-weight: 500;">
-                ⚡ 3. Ghi Điện Nước & Công nợ
-            </a>
-            <a href="<?= url('staff/requests') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-weight: 500;">
-                📬 4. Dịch vụ Một Cửa (Chuyển phòng/Tạm vắng)
-            </a>
-            <a href="<?= url('staff/maintenance') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-weight: 500;">
-                🛠️ 5. Điều phối Bảo trì Thiết bị
-            </a>
-            <a href="<?= url('staff/discipline') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-weight: 500;">
-                🛡️ 6. An ninh Ra vào & Rèn luyện
-            </a>
-        </div>
-    </div>
-
     <!-- Thống kê nhanh trong cụm -->
     <div class="grid grid-cols-4" style="gap: 18px; margin-bottom: 24px;">
         <div class="card stat-card" style="border-left: 4px solid #f59e0b;">
@@ -81,7 +54,7 @@ ob_start();
                 <a href="<?= url('staff/applications') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">Xem tất cả &rarr;</a>
             </div>
         </div>
-        
+
         <?php if (!empty($pendingApplications)): ?>
             <div class="table-responsive">
                 <table class="data-table">
@@ -136,7 +109,7 @@ ob_start();
                 <a href="<?= url('staff/rooms') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">Xem sơ đồ phòng &rarr;</a>
             </div>
         </div>
-        
+
         <?php if (!empty($consolidation)): ?>
             <div class="table-responsive">
                 <table class="data-table">
@@ -188,7 +161,7 @@ ob_start();
                 <a href="<?= url('staff/maintenance') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">Xem chi tiết &rarr;</a>
             </div>
         </div>
-        
+
         <?php if (!empty($maintenanceTickets)): ?>
             <div class="table-responsive">
                 <table class="data-table">
