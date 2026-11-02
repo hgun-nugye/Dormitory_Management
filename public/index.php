@@ -94,6 +94,9 @@ Router::post('/admin/users/delete', 'Admin\DashboardController@deleteUser');
 Router::get('/admin/periods', 'Admin\DashboardController@periods');
 Router::get('/admin/room-types', 'Admin\DashboardController@roomTypes');
 Router::get('/admin/universities', 'Admin\DashboardController@universities');
+Router::post('/admin/universities/save', 'Admin\DashboardController@saveUniversity');
+Router::post('/admin/universities/toggle-status', 'Admin\DashboardController@toggleUniversityStatus');
+Router::post('/admin/universities/delete', 'Admin\DashboardController@deleteUniversity');
 
 // Cron Trigger Routes
 Router::get('/cron/trigger_release', function () {
