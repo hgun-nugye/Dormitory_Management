@@ -67,6 +67,7 @@ Router::get('/staff/requests', 'Staff\DashboardController@requests', [AuthMiddle
 Router::get('/staff/maintenance', 'Staff\DashboardController@maintenance', [AuthMiddleware::class]);
 Router::get('/staff/discipline', 'Staff\DashboardController@discipline', [AuthMiddleware::class]);
 Router::post('/staff/approve-application', 'Staff\DashboardController@approveApplication', [AuthMiddleware::class]);
+Router::post('/staff/reject-application', 'Staff\DashboardController@rejectApplication', [AuthMiddleware::class]);
 
 // Admin Routes
 Router::get('/admin/dashboard', 'Admin\DashboardController@index');
