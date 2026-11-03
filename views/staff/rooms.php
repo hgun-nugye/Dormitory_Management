@@ -511,9 +511,9 @@ ob_start();
         <!-- ========================================================================= -->
         <!-- MODAL IMPORT DANH SÁCH PHÒNG TỪ FILE CSV (GIỐNG MẪU USERS) -->
         <!-- ========================================================================= -->
-        <div id="importRoomModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;">
-            <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 580px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
-                <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc;">
+        <div id="importRoomModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 20px 16px; box-sizing: border-box; overflow-y: auto;">
+            <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 620px; max-height: calc(100vh - 40px); display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
+                <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; flex-shrink: 0;">
                     <div style="font-size: 1.05rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
                         <i class="fa-solid fa-file-import" style="color: #2563eb; margin-right: 6px;"></i>
                         <span>Nhập danh sách Phòng ở từ file CSV</span>
@@ -523,22 +523,24 @@ ob_start();
                     </button>
                 </div>
 
-                <form action="<?= url('staff/rooms/import') ?>" method="POST" enctype="multipart/form-data" style="margin: 0;">
+                <form action="<?= url('staff/rooms/import') ?>" method="POST" enctype="multipart/form-data" style="margin: 0; display: flex; flex-direction: column; flex: 1 1 auto; overflow: hidden;">
                     <?= csrf_field() ?>
-                    <div style="padding: 20px;">
+                    <div style="padding: 20px; overflow-y: auto; flex: 1 1 auto; max-height: calc(100vh - 170px);">
                         <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 14px 16px; margin-bottom: 18px; font-size: 0.85rem; color: #1e40af;">
                             <div style="font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
                                 <i class="fa-solid fa-circle-info"></i> Quy định định dạng file nhập dữ liệu:
                             </div>
                             <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
-                                <li>Hỗ trợ file định dạng <b>.CSV</b> hoặc <b>.TXT</b> phân cách bởi dấu phẩy <code>,</code> hoặc chấm phẩy <code>;</code>.</li>
-                                <li>Cột bắt buộc: <b>SoPhong</b> (Số phòng, ví dụ: <code>101</code>, <code>202</code>...).</li>
-                                <li>Cột tùy chọn: <b>Tang</b> (Tầng, mặc định: 1), <b>MaLoaiPhong</b> (ví dụ: <code>LP4</code>, <code>LP6</code>, <code>LP8</code>, <code>LP4ML</code>), <b>TrangThaiPhong</b> (mặc định: <code>Còn chỗ</code>).</li>
-                                <li>Tất cả các phòng nhập sẽ được tự động gắn vào Tòa nhà <b><?= htmlspecialchars($toaInfo['TenToaNha'] ?? $maToa) ?></b> và tự động sinh các giường trống theo đúng tiêu chuẩn.</li>
+                                <li>Hỗ trợ file định dạng <b>.CSV</b> hoặc <b>.TXT</b> (mã hóa UTF-8), phân cách bởi dấu phẩy <code>,</code> hoặc chấm phẩy <code>;</code>.</li>
+                                <li><b>Cột bắt buộc:</b> <code>SoPhong</code> (Số phòng, ví dụ: <code>101</code>, <code>102</code>...).</li>
+                                <li><b>Thông tin phòng:</b> <code>Tang</code>, <code>MaLoaiPhong</code> (LP4, LP6, LP8...), <code>TrangThaiPhong</code> (Còn chỗ, Đang sử dụng, Khóa bảo trì).</li>
+                                <li><b>Sơ đồ giường & Sinh viên cư trú:</b> <code>KyHieuGiuong</code> (G1, G2...), <code>ViTriTangGiuong</code> (1: dưới, 2: trên), <code>MaSinhVien</code> (MSSV sinh viên đang ở giường này), <code>HoVaTen</code>, <code>GioiTinh</code>, <code>SoCCCD</code>, <code>SoDienThoai</code>, <code>Email</code>, <code>MaTruong</code>.</li>
+                                <li><b>Chức vụ & Tạm trú:</b> <code>LaTruongPhong</code> (1: Trưởng phòng, 0: Thành viên), <code>DaNopCT01</code> (1: Đã nộp, 0: Chưa nộp).</li>
+                                <li><i>Hệ thống tự động liên kết hợp đồng nội trú cho sinh viên và tự động sinh đủ số giường còn lại theo đúng tiêu chuẩn Loại phòng!</i></li>
                             </ul>
-                            <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
-                                <a href="<?= url('staff/rooms/template') ?>" class="btn btn-outline btn-sm" style="background: #fff; color: #1e40af; border-color: #93c5fd; font-weight: 600; text-decoration: none; border-radius: 6px; padding: 5px 12px; display: inline-flex; align-items: center;">
-                                    <i class="fa-solid fa-download" style="margin-right: 6px;"></i> Tải tệp CSV mẫu chuẩn
+                            <div style="margin-top: 12px; display: flex; justify-content: flex-end;">
+                                <a href="<?= url('staff/rooms/template') ?>" class="btn btn-outline btn-sm" style="background: #fff; color: #1e40af; border-color: #93c5fd; font-weight: 600; text-decoration: none; border-radius: 6px; padding: 6px 14px; display: inline-flex; align-items: center;">
+                                    <i class="fa-solid fa-download" style="margin-right: 6px;"></i> Tải tệp CSV mẫu chuẩn (Có Giường & Sinh viên)
                                 </a>
                             </div>
                         </div>
@@ -552,16 +554,21 @@ ob_start();
                         </div>
 
                         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
-                            <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 0.85rem; color: #334155; cursor: pointer; user-select: none;">
-                                <input type="checkbox" name="overwriteExisting" value="1" checked style="margin-top: 2px;">
+                            <input type="hidden" name="overwriteExisting" value="0">
+                            <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 0.85rem; color: #334155; cursor: pointer; user-select: none;">
+                                <input type="checkbox" id="overwriteExistingRooms" name="overwriteExisting" value="1" checked style="margin-top: 3px; width: 16px; height: 16px; cursor: pointer; accent-color: #2563eb;">
                                 <span>
-                                    <b>Cập nhật thông tin nếu phòng đã tồn tại:</b> Khi được chọn, phòng trùng mã sẽ được cập nhật lại tầng, loại phòng và trạng thái mới.
+                                    <b style="color: #1e293b;">Cập nhật / Ghi đè nếu phòng đã tồn tại:</b><br>
+                                    <span style="font-size: 0.8rem; color: #64748b; line-height: 1.5; display: block; margin-top: 2px;">
+                                        • <b>Nếu chọn:</b> Cập nhật thông tin phòng (tầng, loại phòng, trạng thái) và đồng bộ sơ đồ giường, sinh viên lưu trú theo đúng dữ liệu trong file.<br>
+                                        • <b>Nếu bỏ chọn:</b> Bỏ qua các phòng đã có trong hệ thống, chỉ thêm mới các phòng chưa từng tồn tại.
+                                    </span>
                                 </span>
                             </label>
                         </div>
                     </div>
 
-                    <div style="padding: 14px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: flex-end; gap: 10px;">
+                    <div style="padding: 14px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
                         <button type="button" class="btn btn-outline" onclick="closeImportRoomModal()" style="border-radius: 6px; padding: 8px 18px;">
                             Hủy bỏ
                         </button>
@@ -683,6 +690,56 @@ ob_start();
                         <button type="button" class="btn btn-outline" onclick="closeModal('modalDeleteRoom')" style="border-radius: 6px; padding: 8px 16px;">Hủy</button>
                         <button type="submit" class="btn btn-danger" style="border-radius: 6px; padding: 8px 18px; font-weight: 600; background: #dc2626; color: #fff;">
                             <i class="fa-solid fa-trash-can" style="margin-right: 6px;"></i> Xác nhận Xóa
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- MODAL XÁC NHẬN XÓA SINH VIÊN KHỎI GIƯỜNG -->
+        <div id="modalRemoveStudent" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(2px); z-index: 1000001; align-items: center; justify-content: center; padding: 16px;">
+            <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); overflow: hidden; margin: auto; border: 1px solid #fecaca;">
+                <div style="padding: 16px 20px; border-bottom: 1px solid #fee2e2; display: flex; justify-content: space-between; align-items: center; background: #fef2f2;">
+                    <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #991b1b; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-user-xmark" style="color: #dc2626;"></i> Xác nhận Xóa Sinh viên khỏi Giường
+                    </h3>
+                    <button type="button" onclick="closeModal('modalRemoveStudent')" style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #64748b; line-height: 1;">&times;</button>
+                </div>
+
+                <form method="POST" action="<?= url('staff/rooms/remove-student') ?>" style="padding: 20px; margin: 0;">
+                    <?= csrf_field() ?>
+                    <input type="hidden" id="removeStudentInputGiuong" name="maGiuong" value="">
+                    <input type="hidden" id="removeStudentInputPhong" name="maPhong" value="">
+                    <input type="hidden" id="removeStudentInputMsv" name="maSinhVien" value="">
+
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; font-size: 0.9rem;">
+                        <div style="margin-bottom: 8px;">
+                            Sinh viên: <strong id="removeStudentDisplayName" style="color: #0f172a; font-size: 0.95rem;"></strong>
+                            <span style="color: var(--text-muted); font-size: 0.825rem;"> (MSSV: <code id="removeStudentDisplayMssv"></code>)</span>
+                        </div>
+                        <div style="margin-bottom: 8px; color: #475569;">
+                            Trường ĐH: <strong id="removeStudentDisplayTruong"></strong>
+                        </div>
+                        <div style="color: #475569;">
+                            Vị trí: Giường <strong id="removeStudentDisplayBed" style="color: var(--primary);"></strong> &bull; Phòng <strong id="removeStudentDisplayRoom" style="color: var(--primary);"></strong>
+                        </div>
+                    </div>
+
+                    <p style="font-size: 0.9rem; color: #334155; line-height: 1.5; margin-bottom: 14px;">
+                        Bạn có chắc chắn muốn hủy cư trú và xóa sinh viên này khỏi giường không?
+                    </p>
+
+                    <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; font-size: 0.8rem; color: #92400e; margin-bottom: 18px; line-height: 1.5;">
+                        <i class="fa-solid fa-triangle-exclamation" style="margin-right: 4px;"></i>
+                        <strong>Lưu ý hệ thống:</strong> Hợp đồng nội trú của sinh viên tại giường này sẽ được chuyển sang <b>Đã thanh lý</b>, giường sẽ trở về trạng thái <b>Trống</b>. Nếu sinh viên đang giữ vai trò Trưởng phòng, vai trò sẽ được hủy tự động.
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('modalRemoveStudent')" style="border-radius: 6px; padding: 8px 16px;">
+                            Hủy bỏ
+                        </button>
+                        <button type="submit" class="btn btn-danger" style="border-radius: 6px; padding: 8px 18px; font-weight: 600; background: #dc2626; color: #fff;">
+                            <i class="fa-solid fa-user-minus" style="margin-right: 6px;"></i> Xác nhận Xóa SV
                         </button>
                     </div>
                 </form>
@@ -1066,7 +1123,7 @@ ob_start();
                 const occupied = room ? parseInt(room.SoSVDangO || 0) : 0;
                 const fillPercent = maxCap > 0 ? Math.round((occupied / maxCap) * 100) : 0;
 
-                summaryEl.innerHTML = `
+                let summaryHtml = `
                     <div>
                         <strong>Tòa: ${currentMaToa}</strong> &bull; Tầng: <strong>${room ? room.Tang : 1}</strong> &bull; 
                         Loại phòng: <strong>${room ? (room.TenLoaiPhong || room.MaLoaiPhong) : ''}</strong> &bull; 
@@ -1077,6 +1134,16 @@ ob_start();
                         Trưởng phòng: <strong>${room && room.TruongPhong ? (room.TenTruongPhong ? room.TenTruongPhong + ' (' + room.TruongPhong + ')' : room.TruongPhong) : 'Chưa chỉ định'}</strong>
                     </div>
                 `;
+
+                if (occupied >= maxCap) {
+                    summaryHtml += `
+                        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 8px 12px; margin-top: 8px; color: #991b1b; font-size: 0.8rem; display: flex; align-items: center; gap: 6px;">
+                            <span><strong>Cảnh báo sức chứa:</strong> Phòng đã đạt đủ số lượng sinh viên tối đa cho phép (${occupied}/${maxCap} SV). Không thể tiếp nhận thêm sinh viên vào phòng này!</span>
+                        </div>
+                    `;
+                }
+
+                summaryEl.innerHTML = summaryHtml;
 
                 // Bảng giường
                 const tbody = document.getElementById('modalBedTableBody');
@@ -1188,6 +1255,21 @@ ob_start();
                                 `;
                             }
 
+                            // Nút Xóa sinh viên khỏi giường (Mở Modal xác nhận)
+                            const safeHoTen = (g.HoVaTen || 'Sinh viên').replace(/'/g, "\\'");
+                            const safeMssv = (g.MSSVTaiTruong || g.MaSinhVien || '').replace(/'/g, "\\'");
+                            const safeTruong = (g.TenTruong || 'ĐHQG-HCM').replace(/'/g, "\\'");
+                            const safeKyHieu = (g.KyHieuGiuong || '').replace(/'/g, "\\'");
+
+                            html += `
+                                <button type="button" class="btn btn-outline btn-sm" 
+                                        onclick="openRemoveStudentModal('${g.MaGiuong}', '${maPhong}', '${g.MaSinhVien}', '${safeHoTen}', '${safeMssv}', '${safeTruong}', '${safeKyHieu}')"
+                                        style="border-radius: 4px; padding: 3px 8px; font-size: 0.75rem; color: #b91c1c; border-color: #fca5a5; background: #fff5f5;" 
+                                        title="Xóa sinh viên khỏi giường này (Mở hộp thoại xác nhận)">
+                                    <i class="fa-solid fa-user-minus" style="margin-right: 3px;"></i> Xóa SV
+                                </button>
+                            `;
+
                             html += `</div></td>`;
                         } else {
                             // Giường trống / bảo trì
@@ -1272,17 +1354,60 @@ ob_start();
                 document.getElementById('modalDeleteRoom').style.display = 'flex';
             }
 
+            function openRemoveStudentModal(maGiuong, maPhong, maSinhVien, hoTen, mssv, tenTruong, kyHieuGiuong) {
+                document.getElementById('removeStudentInputGiuong').value = maGiuong;
+                document.getElementById('removeStudentInputPhong').value = maPhong;
+                document.getElementById('removeStudentInputMsv').value = maSinhVien;
+
+                document.getElementById('removeStudentDisplayName').innerText = hoTen || 'Sinh viên';
+                document.getElementById('removeStudentDisplayMssv').innerText = mssv || maSinhVien;
+                document.getElementById('removeStudentDisplayTruong').innerText = tenTruong || 'ĐHQG-HCM';
+                document.getElementById('removeStudentDisplayBed').innerText = kyHieuGiuong || maGiuong;
+                document.getElementById('removeStudentDisplayRoom').innerText = maPhong;
+
+                document.getElementById('modalRemoveStudent').style.display = 'flex';
+            }
+
             function closeModal(modalId) {
                 const el = document.getElementById(modalId);
                 if (el) el.style.display = 'none';
             }
 
-            // Phím Escape để đóng tất cả các modal
+            // Phím Escape để đóng modal (ưu tiên modal xác nhận trên cùng trước)
             window.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
+                    const removeModal = document.getElementById('modalRemoveStudent');
+                    if (removeModal && removeModal.style.display === 'flex') {
+                        closeModal('modalRemoveStudent');
+                        return;
+                    }
+                    const delRoomModal = document.getElementById('modalDeleteRoom');
+                    if (delRoomModal && delRoomModal.style.display === 'flex') {
+                        closeModal('modalDeleteRoom');
+                        return;
+                    }
                     closeBedDetailModal();
                     closeImportRoomModal();
+                }
+            });
+
+            // Đóng modal khi click ra ngoài vùng backdrop
+            window.addEventListener('click', function(e) {
+                const importModal = document.getElementById('importRoomModal');
+                if (e.target === importModal) {
+                    closeImportRoomModal();
+                }
+                const removeModal = document.getElementById('modalRemoveStudent');
+                if (e.target === removeModal) {
+                    closeModal('modalRemoveStudent');
+                }
+                const delRoomModal = document.getElementById('modalDeleteRoom');
+                if (e.target === delRoomModal) {
                     closeModal('modalDeleteRoom');
+                }
+                const bedModal = document.getElementById('bedDetailModal');
+                if (e.target === bedModal) {
+                    closeBedDetailModal();
                 }
             });
 
