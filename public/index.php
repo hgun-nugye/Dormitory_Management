@@ -103,6 +103,8 @@ Router::post('/staff/reject-application', 'Staff\\ApplicationController@rejectAp
 // Staff - Tiện ích, Yêu cầu, Bảo trì, Kỷ luật
 Router::get('/staff/utilities', 'Staff\\UtilityController@utilities', [AuthMiddleware::class]);
 Router::get('/staff/requests', 'Staff\\RequestController@requests', [AuthMiddleware::class]);
+Router::post('/staff/requests/approve', 'Staff\\RequestController@approveRequest', [AuthMiddleware::class]);
+Router::post('/staff/requests/reject', 'Staff\\RequestController@rejectRequest', [AuthMiddleware::class]);
 Router::get('/staff/maintenance', 'Staff\\MaintenanceController@maintenance', [AuthMiddleware::class]);
 Router::get('/staff/discipline', 'Staff\\DisciplineController@discipline', [AuthMiddleware::class]);
 
