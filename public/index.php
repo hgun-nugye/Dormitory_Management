@@ -64,6 +64,10 @@ Router::get('/staff/dashboard', 'Staff\\DashboardController@index', [AuthMiddlew
 
 // Staff - Quản lý Hạ tầng KTX (Khu, Cụm, Tòa, Phòng)
 Router::get('/staff/zones', 'Staff\\ZoneController@zones', [AuthMiddleware::class]);
+Router::get('/staff/zones/export', 'Staff\\ZoneController@exportZones', [AuthMiddleware::class]);
+Router::post('/staff/zones/export', 'Staff\\ZoneController@exportZones', [AuthMiddleware::class]);
+Router::get('/staff/zones/template', 'Staff\\ZoneController@downloadTemplate', [AuthMiddleware::class]);
+Router::post('/staff/zones/import', 'Staff\\ZoneController@importZones', [AuthMiddleware::class]);
 Router::post('/staff/zones/save-khu', 'Staff\\ZoneController@saveKhu', [AuthMiddleware::class]);
 Router::post('/staff/zones/delete-khu', 'Staff\\ZoneController@deleteKhu', [AuthMiddleware::class]);
 Router::post('/staff/zones/save-cum', 'Staff\\ZoneController@saveCum', [AuthMiddleware::class]);
