@@ -73,6 +73,10 @@ Router::post('/staff/zones/delete-room', 'Staff\DashboardController@deleteRoom',
 Router::post('/staff/zones/approve-proposal', 'Staff\DashboardController@approveProposal', [AuthMiddleware::class]);
 Router::post('/staff/zones/reject-proposal', 'Staff\DashboardController@rejectProposal', [AuthMiddleware::class]);
 Router::get('/staff/rooms', 'Staff\DashboardController@rooms', [AuthMiddleware::class]);
+Router::post('/staff/rooms/checkin', 'Staff\DashboardController@confirmCheckin', [AuthMiddleware::class]);
+Router::post('/staff/rooms/assign-leader', 'Staff\DashboardController@assignRoomLeader', [AuthMiddleware::class]);
+Router::post('/staff/rooms/toggle-bed-maintenance', 'Staff\DashboardController@toggleBedMaintenance', [AuthMiddleware::class]);
+Router::post('/staff/rooms/toggle-room-maintenance', 'Staff\DashboardController@toggleRoomMaintenance', [AuthMiddleware::class]);
 Router::get('/staff/rooms/export', 'Staff\DashboardController@exportRooms', [AuthMiddleware::class]);
 Router::post('/staff/rooms/export', 'Staff\DashboardController@exportRooms', [AuthMiddleware::class]);
 Router::get('/staff/rooms/template', 'Staff\DashboardController@downloadRoomTemplate', [AuthMiddleware::class]);
