@@ -118,6 +118,9 @@ class DashboardController extends Controller
     public function deleteKhu(): void { (new ZoneController())->deleteKhu(); }
     public function saveRoom(): void { (new ZoneController())->saveRoom(); }
     public function deleteRoom(): void { (new ZoneController())->deleteRoom(); }
+    public function exportZones(): void { (new ZoneController())->exportZones(); }
+    public function downloadTemplate(): void { (new ZoneController())->downloadTemplate(); }
+    public function importZones(): void { (new ZoneController())->importZones(); }
     public function approveProposal(): void { (new ZoneController())->approveProposal(); }
     public function rejectProposal(): void { (new ZoneController())->rejectProposal(); }
 

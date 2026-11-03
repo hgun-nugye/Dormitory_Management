@@ -997,6 +997,392 @@ class ZoneController extends Controller
     }
 
     /**
+     * Xuất danh sách Phòng ở & Hạ tầng KTX ra file CSV
+     */
+    public function exportZones(): void
+    {
+        $user = Auth::user();
+        $scope = $this->getStaffScope($user);
+
+        $request = new Request();
+        $cum = trim((string)$request->input('cum', ''));
+        $toa = trim((string)$request->input('toa', ''));
+        $tang = $request->input('tang');
+        $loaiPhong = trim((string)$request->input('loaiPhong', ''));
+        $trangThai = trim((string)$request->input('trangThai', ''));
+        $keyword = trim((string)$request->input('keyword', ''));
+        $idsParam = $request->input('ids');
+
+        try {
+            $whereConditions = [];
+            $params = [];
+
+            // Giới hạn theo phân quyền cán bộ
+            if ($scope['level'] === 'KHU') {
+                $whereConditions[] = "cn.MaKhu = :khuScope";
+                $params['khuScope'] = $scope['maKhu'];
+            } elseif ($scope['level'] === 'CUM') {
+                $whereConditions[] = "cn.MaCum = :cumScope";
+                $params['cumScope'] = $scope['maCum'];
+            } elseif ($scope['level'] === 'TOA') {
+                $whereConditions[] = "tn.MaToaNha = :toaScope";
+                $params['toaScope'] = $scope['maToa'];
+            }
+
+            // Nếu truyền danh sách IDs được chọn
+            if (!empty($idsParam)) {
+                $rawIds = is_array($idsParam) ? $idsParam : explode(',', (string)$idsParam);
+                $cleanIds = array_filter(array_map('trim', $rawIds));
+                if (!empty($cleanIds)) {
+                    $placeholders = [];
+                    foreach (array_values($cleanIds) as $k => $id) {
+                        $ph = ':id_' . $k;
+                        $placeholders[] = $ph;
+                        $params['id_' . $k] = $id;
+                    }
+                    $whereConditions[] = "p.MaPhong IN (" . implode(',', $placeholders) . ")";
+                }
+            } else {
+                if (!empty($cum)) {
+                    $whereConditions[] = "cn.MaCum = :cumFilter";
+                    $params['cumFilter'] = $cum;
+                }
+                if (!empty($toa)) {
+                    $whereConditions[] = "tn.MaToaNha = :toaFilter";
+                    $params['toaFilter'] = $toa;
+                }
+                if ($tang !== null && $tang !== '' && (int)$tang > 0) {
+                    $whereConditions[] = "p.Tang = :tangFilter";
+                    $params['tangFilter'] = (int)$tang;
+                }
+                if (!empty($loaiPhong)) {
+                    $whereConditions[] = "p.MaLoaiPhong = :lpFilter";
+                    $params['lpFilter'] = $loaiPhong;
+                }
+                if (!empty($trangThai)) {
+                    $whereConditions[] = "p.TrangThaiPhong = :stFilter";
+                    $params['stFilter'] = $trangThai;
+                }
+                if (!empty($keyword)) {
+                    $whereConditions[] = "(p.MaPhong LIKE :kw1 OR p.SoPhong LIKE :kw2 OR tn.TenToaNha LIKE :kw3 OR cn.TenCum LIKE :kw4)";
+                    $kw = "%{$keyword}%";
+                    $params['kw1'] = $kw;
+                    $params['kw2'] = $kw;
+                    $params['kw3'] = $kw;
+                    $params['kw4'] = $kw;
+                }
+            }
+
+            $whereSql = !empty($whereConditions) ? ('WHERE ' . implode(' AND ', $whereConditions)) : '';
+
+            $sql = "
+                SELECT p.*, tn.TenToaNha, tn.MaCum, cn.TenCum, cn.MaKhu, k.TenKhu,
+                       lp.TenLoaiPhong, lp.SoGiuongToiDa, lp.DonGiaLuuTruChuan,
+                       (SELECT COUNT(*) FROM Giuong g WHERE g.MaPhong = p.MaPhong) AS TongGiuong,
+                       (SELECT COUNT(*) FROM Giuong g WHERE g.MaPhong = p.MaPhong AND g.TrangThaiGiuong = 'Trống') AS SoGiuongTrong
+                FROM Phong p
+                JOIN ToaNha tn ON p.MaToaNha = tn.MaToaNha
+                JOIN CumNha cn ON tn.MaCum = cn.MaCum
+                JOIN KhuKTX k ON cn.MaKhu = k.MaKhu
+                LEFT JOIN LoaiPhong lp ON p.MaLoaiPhong = lp.MaLoaiPhong
+                {$whereSql}
+                ORDER BY cn.MaCum ASC, tn.MaToaNha ASC, p.Tang ASC, p.SoPhong ASC
+            ";
+            $rooms = Database::fetchAll($sql, $params);
+
+            $filename = 'HaTang_DanhSachPhong_' . date('Ymd_His') . '.csv';
+
+            header('Content-Type: text/csv; charset=UTF-8');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+
+            $output = fopen('php://output', 'w');
+            fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+
+            fputcsv($output, [
+                'Mã phòng',
+                'Tên Tòa nhà',
+                'Mã Tòa nhà',
+                'Tên Cụm nhà',
+                'Mã Cụm',
+                'Khu KTX',
+                'Số phòng',
+                'Tầng',
+                'Tên loại phòng',
+                'Mã loại phòng',
+                'Đơn giá (VNĐ/tháng)',
+                'Sức chứa tối đa (giường)',
+                'Sĩ số đang ở (SV)',
+                'Số giường trống',
+                'Trạng thái phòng'
+            ]);
+
+            foreach ($rooms as $r) {
+                $maxCap = (int)($r['SoGiuongToiDa'] ?? 4);
+                $occupied = (int)($r['SoSVDangO'] ?? 0);
+                $vacant = (int)($r['SoGiuongTrong'] ?? ($maxCap - $occupied));
+                fputcsv($output, [
+                    $r['MaPhong'],
+                    $r['TenToaNha'],
+                    $r['MaToaNha'],
+                    $r['TenCum'],
+                    $r['MaCum'],
+                    $r['TenKhu'] ?? ('Khu ' . ($r['MaKhu'] ?? '')),
+                    $r['SoPhong'],
+                    $r['Tang'],
+                    $r['TenLoaiPhong'] ?? $r['MaLoaiPhong'],
+                    $r['MaLoaiPhong'],
+                    (int)($r['DonGiaLuuTruChuan'] ?? 0),
+                    $maxCap,
+                    $occupied,
+                    max(0, $vacant),
+                    $r['TrangThaiPhong'] ?? 'Còn chỗ'
+                ]);
+            }
+
+            fclose($output);
+            exit;
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Lỗi xuất dữ liệu: ' . $e->getMessage());
+            $this->redirect('staff/zones');
+        }
+    }
+
+    /**
+     * Tải tệp CSV mẫu nhập danh sách phòng ở KTX
+     */
+    public function downloadTemplate(): void
+    {
+        $filename = 'Mau_Nhap_Phong_HaTang_KTX.csv';
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+
+        fputcsv($output, [
+            'MaPhong',
+            'MaToaNha',
+            'SoPhong',
+            'Tang',
+            'MaLoaiPhong',
+            'TrangThaiPhong'
+        ]);
+
+        fputcsv($output, ['A01.101', 'A01', '101', '1', 'LP01', 'Còn chỗ']);
+        fputcsv($output, ['A01.102', 'A01', '102', '1', 'LP01', 'Còn chỗ']);
+        fputcsv($output, ['A01.201', 'A01', '201', '2', 'LP02', 'Còn chỗ']);
+        fputcsv($output, ['A02.101', 'A02', '101', '1', 'LP01', 'Còn chỗ']);
+
+        fclose($output);
+        exit;
+    }
+
+    /**
+     * Nhập danh sách Phòng ở từ file CSV
+     */
+    public function importZones(): void
+    {
+        $user = Auth::user();
+        $scope = $this->getStaffScope($user);
+
+        if (empty($scope['canCreatePhong']) && empty($scope['canUpdatePhong'])) {
+            Session::flash('error', 'Bạn không có quyền nhập danh sách phòng ở vào hệ thống!');
+            $this->redirect('staff/zones');
+            return;
+        }
+
+        if (empty($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
+            Session::flash('error', 'Vui lòng chọn file CSV hợp lệ để tải lên!');
+            $this->redirect('staff/zones');
+            return;
+        }
+
+        $filePath = $_FILES['csv_file']['tmp_name'];
+        $request = new Request();
+        $overwrite = (bool)$request->input('overwriteExisting', false);
+
+        try {
+            $handle = fopen($filePath, 'r');
+            if (!$handle) {
+                throw new \Exception('Không thể mở file CSV tải lên.');
+            }
+
+            // Bỏ qua BOM nếu có
+            $bom = fread($handle, 3);
+            if ($bom !== "\xEF\xBB\xBF") {
+                rewind($handle);
+            }
+
+            $firstLine = fgets($handle);
+            if (!$firstLine) {
+                fclose($handle);
+                Session::flash('error', 'File CSV rỗng!');
+                $this->redirect('staff/zones');
+                return;
+            }
+
+            $delimiter = (substr_count($firstLine, ';') > substr_count($firstLine, ',')) ? ';' : ',';
+            rewind($handle);
+            $bom = fread($handle, 3);
+            if ($bom !== "\xEF\xBB\xBF") {
+                rewind($handle);
+            }
+
+            $headers = fgetcsv($handle, 0, $delimiter);
+            if (!$headers) {
+                fclose($handle);
+                Session::flash('error', 'Không thể đọc tiêu đề cột của file CSV!');
+                $this->redirect('staff/zones');
+                return;
+            }
+
+            $headerMap = [];
+            foreach ($headers as $idx => $h) {
+                $norm = strtolower(trim(str_replace([' ', '_', '-'], '', $h)));
+                $headerMap[$norm] = $idx;
+            }
+
+            $colMaPhong = $headerMap['maphong'] ?? $headerMap['phong'] ?? null;
+            $colMaToa = $headerMap['matoanha'] ?? $headerMap['toa'] ?? $headerMap['matoa'] ?? null;
+            $colSoPhong = $headerMap['sophong'] ?? $headerMap['so'] ?? null;
+            $colTang = $headerMap['tang'] ?? null;
+            $colMaLoai = $headerMap['maloaiphong'] ?? $headerMap['loaiphong'] ?? $headerMap['maloai'] ?? null;
+            $colTrangThai = $headerMap['trangthaiphong'] ?? $headerMap['trangthai'] ?? null;
+
+            if ($colSoPhong === null || $colMaToa === null) {
+                fclose($handle);
+                Session::flash('error', 'File CSV thiếu cột bắt buộc: Cần có tối thiểu cột "MaToaNha" và "SoPhong"!');
+                $this->redirect('staff/zones');
+                return;
+            }
+
+            $loaiPhongRows = Database::fetchAll("SELECT MaLoaiPhong, SoGiuongToiDa FROM LoaiPhong");
+            $loaiPhongMap = [];
+            foreach ($loaiPhongRows as $lp) {
+                $loaiPhongMap[$lp['MaLoaiPhong']] = (int)$lp['SoGiuongToiDa'];
+            }
+            $defaultLoaiPhong = !empty($loaiPhongRows) ? $loaiPhongRows[0]['MaLoaiPhong'] : 'LP01';
+
+            $createdCount = 0;
+            $updatedCount = 0;
+            $skippedCount = 0;
+            $errorRows = [];
+            $lineNum = 1;
+
+            while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
+                $lineNum++;
+                if (empty(array_filter($row))) {
+                    continue;
+                }
+
+                $rawToa = trim($row[$colMaToa] ?? '');
+                $rawSo = trim($row[$colSoPhong] ?? '');
+                $rawMaPhong = ($colMaPhong !== null && !empty(trim($row[$colMaPhong] ?? ''))) ? trim($row[$colMaPhong]) : ($rawToa . '.' . $rawSo);
+                $rawTang = ($colTang !== null && !empty(trim($row[$colTang] ?? ''))) ? max(1, (int)trim($row[$colTang])) : max(1, (int)substr($rawSo, 0, 1));
+                $rawLoai = ($colMaLoai !== null && !empty(trim($row[$colMaLoai] ?? ''))) ? trim($row[$colMaLoai]) : $defaultLoaiPhong;
+                $rawTrangThai = ($colTrangThai !== null && !empty(trim($row[$colTrangThai] ?? ''))) ? trim($row[$colTrangThai]) : 'Còn chỗ';
+
+                if (empty($rawToa) || empty($rawSo)) {
+                    $errorRows[] = "Dòng {$lineNum}: Thiếu mã tòa hoặc số phòng.";
+                    $skippedCount++;
+                    continue;
+                }
+
+                if ($scope['level'] === 'TOA' && !empty($scope['maToa']) && $rawToa !== $scope['maToa']) {
+                    $errorRows[] = "Dòng {$lineNum}: Bạn chỉ có quyền quản lý Tòa {$scope['maToa']} (bỏ qua tòa {$rawToa}).";
+                    $skippedCount++;
+                    continue;
+                }
+
+                $toaExists = Database::fetch("SELECT MaToaNha, MaCum FROM ToaNha WHERE MaToaNha = :toa", ['toa' => $rawToa]);
+                if (!$toaExists) {
+                    $errorRows[] = "Dòng {$lineNum}: Tòa '{$rawToa}' không tồn tại trong hệ thống.";
+                    $skippedCount++;
+                    continue;
+                }
+
+                if ($scope['level'] === 'CUM' && !empty($scope['maCum']) && $toaExists['MaCum'] !== $scope['maCum']) {
+                    $errorRows[] = "Dòng {$lineNum}: Tòa '{$rawToa}' không thuộc Cụm {$scope['maCum']} của bạn.";
+                    $skippedCount++;
+                    continue;
+                }
+
+                if (!isset($loaiPhongMap[$rawLoai])) {
+                    $rawLoai = $defaultLoaiPhong;
+                }
+                $soGiuong = $loaiPhongMap[$rawLoai] ?? 4;
+
+                $existingRoom = Database::fetch("SELECT MaPhong, SoSVDangO FROM Phong WHERE MaPhong = :mp", ['mp' => $rawMaPhong]);
+
+                if ($existingRoom) {
+                    if ($overwrite) {
+                        Database::execute("
+                            UPDATE Phong 
+                            SET MaLoaiPhong = :lp, Tang = :tang, TrangThaiPhong = :st
+                            WHERE MaPhong = :mp
+                        ", [
+                            'lp' => $rawLoai,
+                            'tang' => $rawTang,
+                            'st' => $rawTrangThai,
+                            'mp' => $rawMaPhong
+                        ]);
+                        $updatedCount++;
+                    } else {
+                        $skippedCount++;
+                    }
+                } else {
+                    Database::execute("
+                        INSERT INTO Phong (MaPhong, MaToaNha, MaLoaiPhong, SoPhong, Tang, SoSVDangO, TrangThaiPhong)
+                        VALUES (:mp, :toa, :lp, :so, :tang, 0, :st)
+                    ", [
+                        'mp' => $rawMaPhong,
+                        'toa' => $rawToa,
+                        'lp' => $rawLoai,
+                        'so' => $rawSo,
+                        'tang' => $rawTang,
+                        'st' => $rawTrangThai
+                    ]);
+
+                    for ($i = 1; $i <= $soGiuong; $i++) {
+                        $maGiuong = str_replace('.', '', $rawMaPhong) . '-G' . $i;
+                        Database::execute("
+                            INSERT INTO Giuong (MaGiuong, MaPhong, KyHieuGiuong, ViTriTangGiuong, TrangThaiGiuong)
+                            VALUES (:mg, :mp, :kh, :vt, 'Trống')
+                        ", [
+                            'mg' => $maGiuong,
+                            'mp' => $rawMaPhong,
+                            'kh' => 'G' . $i,
+                            'vt' => ($i % 2 === 1) ? 1 : 2
+                        ]);
+                    }
+                    $createdCount++;
+                }
+            }
+
+            fclose($handle);
+
+            $msg = "Nhập dữ liệu phòng KTX hoàn tất: Đã thêm mới <b>{$createdCount}</b> phòng, Cập nhật <b>{$updatedCount}</b> phòng, Bỏ qua <b>{$skippedCount}</b> phòng.";
+            if (!empty($errorRows)) {
+                $errSnippet = implode('<br>', array_slice($errorRows, 0, 5));
+                if (count($errorRows) > 5) {
+                    $errSnippet .= '<br>...và ' . (count($errorRows) - 5) . ' cảnh báo khác.';
+                }
+                Session::flash('warning', $msg . '<br><div style="margin-top:6px;"><b>Chi tiết cảnh báo:</b><br>' . $errSnippet . '</div>');
+            } else {
+                Session::flash('success', $msg);
+            }
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Lỗi xử lý file CSV: ' . $e->getMessage());
+        }
+
+        $this->redirect('staff/zones');
+    }
+
+    /**
      * Phê duyệt đề xuất hạ tầng (Stub/Placeholder)
      */
     public function approveProposal(): void
