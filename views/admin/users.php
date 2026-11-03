@@ -13,10 +13,7 @@ ob_start();
 
         <div class="page-header" style="align-items: center; flex-wrap: wrap; gap: 12px;">
             <div>
-                <h1 class="page-title">Quản lý Tài khoản & Phân quyền Cán bộ</h1>
-                <p class="page-subtitle">
-                    <strong>Chức năng phân hệ:</strong> CRUD tài khoản cán bộ BQL, phân công vai trò (Trưởng khu / Trưởng cụm / Kỹ thuật), gán phạm vi quản lý và nhập/xuất dữ liệu.
-                </p>
+                <h1 class="page-title">Quản lý Tài khoản</h1>
             </div>
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                 <button type="button" class="btn btn-primary" id="btnToggleAddUser" onclick="toggleUserForm()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center;">
@@ -99,7 +96,7 @@ ob_start();
                     <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">
                         Tên đăng nhập (Mã nhân viên) <span style="color:#dc2626;">*</span>
                         <span id="usernameLockNotice" style="display: none; font-size: 0.775rem; color: #b45309; font-weight: normal; margin-left: 6px;">
-                            <i class="fa-solid fa-lock" style="margin-right: 4px;"></i> Cố định khi sửa
+                            <i class="fa-solid fa-lock" style="margin-right: 4px;"></i>
                         </span>
                     </label>
                     <input type="text" id="tenDangNhap" name="tenDangNhap" class="btn-outline" style="width: 100%; padding: 10px; border-radius: 6px; font-size: 0.9rem;" placeholder="Ví dụ: NV003, TK002, admin..." required>
@@ -163,50 +160,39 @@ ob_start();
 
             <div class="grid grid-cols-2" style="gap: 16px; margin-bottom: 16px;">
                 <div>
-                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">
-                        Phạm vi phụ trách (Chỉ định Cụm nhà)
+                    <label id="scopeLabel" for="maCumQuanLy" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">
+                        <span id="scopeLabelText">Phạm vi phụ trách (Chỉ định Cụm / Khu / Tòa)</span>
+                        <span id="scopeRequiredStar" style="color:#dc2626; display:none;">*</span>
                     </label>
                     <select id="maCumQuanLy" name="maCumQuanLy" class="btn-outline" style="width: 100%; padding: 10px; border-radius: 6px; font-size: 0.9rem;">
-                        <option value="">-- Toàn hệ thống KTX (Không giới hạn) --</option>
-                        <option value="KHU_A">Toàn bộ Khu A</option>
-                        <option value="KHU_B">Toàn bộ Khu B</option>
-                        <?php if (!empty($cumList)): ?>
-                            <optgroup label="Chỉ định cụ thể Cụm nhà:">
-                                <?php foreach ($cumList as $c): ?>
-                                    <option value="<?= htmlspecialchars($c['MaCum']) ?>">
-                                        Cụm <?= htmlspecialchars($c['TenCum']) ?> (Khu <?= htmlspecialchars($c['MaKhu'] ?? '') ?> - <?= htmlspecialchars($c['MaCum']) ?>)
-                                    </option>
-                                <?php endforeach; ?>
-                            </optgroup>
-                        <?php endif; ?>
+                        <option value="">-- Vui lòng chọn Vai trò hệ thống trước --</option>
                     </select>
-                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
-                        * Trưởng cụm chỉ có quyền trên Cụm nhà được gán.
+                    <div id="scopeHelpText" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+                        * Phạm vi quản lý sẽ tự động điều chỉnh theo vai trò được chọn (Trưởng khu chọn Khu, Trưởng cụm chọn Cụm, Trưởng tòa chọn Tòa...).
                     </div>
                 </div>
+            </div>
+            <!-- CÁC NÚT CHỨC NĂNG FORM -->
+            <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 8px; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <button type="submit" id="btnSubmitForm" class="btn btn-primary"
+                        style="border-radius: 6px; padding: 10px 22px; font-weight: 600;">
+                        <i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i>
+                        Lưu tài khoản & Cấp quyền
+                    </button>
 
-                <!-- CÁC NÚT CHỨC NĂNG FORM -->
-                <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 28px; flex-wrap: wrap; gap: 10px;">
-                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                        <button type="submit" id="btnSubmitForm" class="btn btn-primary"
-                            style="border-radius: 6px; padding: 10px 22px; font-weight: 600;">
-                            <i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i>
-                            Lưu tài khoản & Cấp quyền
-                        </button>
-
-                        <button type="button" id="btnCancelEdit" class="btn btn-outline"
-                            style="border-radius: 6px; padding: 10px 18px;"
-                            onclick="resetUserForm()">
-                            <i class="fa-solid fa-rotate-left" style="margin-right: 6px;"></i>
-                            Làm mới
-                        </button>
-                    </div>
-                    <div>
-                        <button type="button" class="btn btn-outline" style="border-radius: 6px; padding: 10px 18px;" onclick="hideUserForm()">
-                            <i class="fa-solid fa-xmark" style="margin-right: 6px;"></i>
-                            Đóng biểu mẫu
-                        </button>
-                    </div>
+                    <button type="button" id="btnCancelEdit" class="btn btn-outline"
+                        style="border-radius: 6px; padding: 10px 18px;"
+                        onclick="resetUserForm()">
+                        <i class="fa-solid fa-rotate-left" style="margin-right: 6px;"></i>
+                        Làm mới
+                    </button>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-outline" style="border-radius: 6px; padding: 10px 18px;" onclick="hideUserForm()">
+                        <i class="fa-solid fa-xmark" style="margin-right: 6px;"></i>
+                        Đóng biểu mẫu
+                    </button>
                 </div>
             </div>
         </form>
@@ -216,7 +202,6 @@ ob_start();
     <div class="card">
         <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-users-gear" style="color: var(--primary); margin-right: 4px;"></i>
                 <span>Danh sách tài khoản cán bộ đang quản lý trong hệ thống</span>
                 <span class="badge badge-info" id="userTotalBadge"><?= count($userList ?? []) ?> tài khoản</span>
             </div>
@@ -233,7 +218,7 @@ ob_start();
             </div>
 
             <select id="filterUserRole" class="btn-outline"
-                style="min-width: 200px; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem;"
+                style="min-width: 200px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
                 onchange="filterUsers()">
                 <option value="">-- Tất cả vai trò --</option>
                 <?php if (!empty($vaitroList)): ?>
@@ -253,7 +238,7 @@ ob_start();
             </select>
 
             <select id="filterUserStatus" class="btn-outline"
-                style="min-width: 170px; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem;"
+                style="min-width: 170px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
                 onchange="filterUsers()">
                 <option value="">-- Tất cả trạng thái --</option>
                 <option value="1">Đang hoạt động</option>
@@ -287,9 +272,9 @@ ob_start();
                             <?php
                             $isLocked = ((int)($u['DangHoatDong'] ?? 1)) === 0;
                             $scopeLabel = 'Toàn hệ thống KTX';
-                            if ($u['MaCumQuanLy'] === 'KHU_A') {
+                            if ($u['MaCumQuanLy'] === 'KHU_A' || $u['MaCumQuanLy'] === 'A') {
                                 $scopeLabel = 'Toàn bộ Khu A';
-                            } elseif ($u['MaCumQuanLy'] === 'KHU_B') {
+                            } elseif ($u['MaCumQuanLy'] === 'KHU_B' || $u['MaCumQuanLy'] === 'B') {
                                 $scopeLabel = 'Toàn bộ Khu B';
                             } elseif (!empty($u['TenToaNha'])) {
                                 $scopeLabel = $u['TenToaNha'] . ' (' . $u['MaCumQuanLy'] . ')';
@@ -485,8 +470,11 @@ ob_start();
 
 <!-- JAVASCRIPT XỬ LÝ PHÂN TRANG, BỘ LỌC, MODAL VÀ FORM CRUD -->
 <script>
-    // Dữ liệu cán bộ có sẵn để tra cứu & gợi ý
+    // Dữ liệu cán bộ và hạ tầng phân cấp có sẵn để tra cứu & gán phạm vi phụ trách
     const staffPool = <?= json_encode($allStaff ?? [], JSON_UNESCAPED_UNICODE) ?>;
+    const khuPool = <?= json_encode($khuList ?? [], JSON_UNESCAPED_UNICODE) ?>;
+    const cumPool = <?= json_encode($cumNhaList ?? [], JSON_UNESCAPED_UNICODE) ?>;
+    const toaPool = <?= json_encode($toaNhaList ?? [], JSON_UNESCAPED_UNICODE) ?>;
 
     // =========================================================================
     // 1. PHÂN TRANG VÀ LỌC TÌM KIẾM CÁN BỘ (REAL-TIME PAGINATION & FILTER)
@@ -741,7 +729,7 @@ ob_start();
     });
 
     // =========================================================================
-    // 3. XỬ LÝ GỢI Ý HỌ TÊN CÁN BỘ TỪ DATALIST
+    // 3. XỬ LÝ GỢI Ý HỌ TÊN CÁN BỘ TỪ DATALIST & PHẠM VI THEO VAI TRÒ
     // =========================================================================
     const hoVaTenInput = document.getElementById('hoVaTen');
     const soDienThoaiInput = document.getElementById('soDienThoai');
@@ -750,6 +738,179 @@ ob_start();
     const maVaiTroSelect = document.getElementById('maVaiTro');
     const maCumQuanLySelect = document.getElementById('maCumQuanLy');
     const editMaTaiKhoanInput = document.getElementById('editMaTaiKhoan');
+
+    /**
+     * Render linh hoạt danh sách Phạm vi phụ trách (Khu / Cụm / Tòa / Toàn hệ thống) theo Vai trò được chọn
+     * @param {string} role - Mã vai trò (TRUONG_KHU, TRUONG_CUM, TRUONG_TOA, ADMIN, NV_QUAN_LY_KTX, NV_THUONG...)
+     * @param {string} selectedValue - Giá trị phạm vi đã được gán trước đó (khi sửa)
+     */
+    function renderScopeByRole(role, selectedValue = '') {
+        const scopeSelect = document.getElementById('maCumQuanLy');
+        const scopeLabel = document.getElementById('scopeLabelText');
+        const scopeStar = document.getElementById('scopeRequiredStar');
+        const scopeHelp = document.getElementById('scopeHelpText');
+
+        if (!scopeSelect) return;
+
+        scopeSelect.disabled = false;
+        scopeSelect.innerHTML = '';
+        scopeSelect.removeAttribute('required');
+        if (scopeStar) scopeStar.style.display = 'none';
+
+        if (role === 'TRUONG_KHU') {
+            // 1. Trưởng khu KTX: Chỉ định Khu KTX (Khu A / Khu B)
+            if (scopeLabel) scopeLabel.innerText = 'Phạm vi phụ trách (Chỉ định Khu KTX)';
+            if (scopeStar) scopeStar.style.display = 'inline';
+            if (scopeHelp) scopeHelp.innerHTML = '<i class="fa-solid fa-circle-info" style="margin-right: 4px;"></i> Trưởng khu có toàn quyền quản lý trên toàn bộ các Cụm và Tòa nhà thuộc Khu KTX được phân công.';
+
+            const optDefault = document.createElement('option');
+            optDefault.value = '';
+            optDefault.innerText = '-- Chọn Khu KTX phụ trách --';
+            scopeSelect.appendChild(optDefault);
+
+            khuPool.forEach(k => {
+                const opt = document.createElement('option');
+                opt.value = 'KHU_' + k.MaKhu;
+                opt.innerText = (k.TenKhu || ('Khu ' + k.MaKhu)) + ' (KHU_' + k.MaKhu + ')';
+                scopeSelect.appendChild(opt);
+            });
+
+            scopeSelect.setAttribute('required', 'required');
+        } else if (role === 'TRUONG_CUM') {
+            // 2. Trưởng cụm nhà: Chỉ định Cụm nhà (AG, AH, BA, BB, BC...)
+            if (scopeLabel) scopeLabel.innerText = 'Phạm vi phụ trách (Chỉ định Cụm nhà)';
+            if (scopeStar) scopeStar.style.display = 'inline';
+            if (scopeHelp) scopeHelp.innerHTML = '<i class="fa-solid fa-circle-info" style="margin-right: 4px;"></i> Trưởng cụm phụ trách quản lý cơ sở vật chất, nhân sự và xét duyệt hồ sơ tại Cụm nhà được gán.';
+
+            const optDefault = document.createElement('option');
+            optDefault.value = '';
+            optDefault.innerText = '-- Chọn Cụm nhà phụ trách --';
+            scopeSelect.appendChild(optDefault);
+
+            // Gom nhóm theo Khu A và Khu B
+            const khuGroups = {};
+            cumPool.forEach(c => {
+                const kCode = c.MaKhu || 'Khác';
+                if (!khuGroups[kCode]) khuGroups[kCode] = [];
+                khuGroups[kCode].push(c);
+            });
+
+            for (const [kCode, cList] of Object.entries(khuGroups)) {
+                const optGroup = document.createElement('optgroup');
+                optGroup.label = 'Các Cụm nhà thuộc Khu ' + kCode + ':';
+                cList.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.MaCum;
+                    opt.innerText = (c.TenCum || ('Cụm ' + c.MaCum)) + ' (Mã: ' + c.MaCum + ')';
+                    optGroup.appendChild(opt);
+                });
+                scopeSelect.appendChild(optGroup);
+            }
+
+            scopeSelect.setAttribute('required', 'required');
+        } else if (role === 'TRUONG_TOA') {
+            // 3. Trưởng tòa nhà: Chỉ định Tòa nhà (A01, H01, BA1, B02, C06...)
+            if (scopeLabel) scopeLabel.innerText = 'Phạm vi phụ trách (Chỉ định Tòa nhà)';
+            if (scopeStar) scopeStar.style.display = 'inline';
+            if (scopeHelp) scopeHelp.innerHTML = '<i class="fa-solid fa-circle-info" style="margin-right: 4px;"></i> Trưởng tòa phụ trách trực tiếp sinh viên, cơ sở vật chất và nề nếp tại Tòa nhà được gán.';
+
+            const optDefault = document.createElement('option');
+            optDefault.value = '';
+            optDefault.innerText = '-- Chọn Tòa nhà phụ trách --';
+            scopeSelect.appendChild(optDefault);
+
+            // Gom nhóm theo Cụm
+            const cumGroups = {};
+            toaPool.forEach(t => {
+                const cCode = t.MaCum || 'Khác';
+                if (!cumGroups[cCode]) cumGroups[cCode] = [];
+                cumGroups[cCode].push(t);
+            });
+
+            for (const [cCode, tList] of Object.entries(cumGroups)) {
+                const optGroup = document.createElement('optgroup');
+                const cumObj = cumPool.find(c => c.MaCum === cCode);
+                optGroup.label = (cumObj ? cumObj.TenCum : ('Cụm ' + cCode)) + ':';
+                tList.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.MaToaNha;
+                    opt.innerText = (t.TenToaNha || ('Tòa ' + t.MaToaNha)) + ' (Mã: ' + t.MaToaNha + ')';
+                    optGroup.appendChild(opt);
+                });
+                scopeSelect.appendChild(optGroup);
+            }
+
+            scopeSelect.setAttribute('required', 'required');
+        } else if (role === 'ADMIN' || role === 'NV_QUAN_LY_KTX') {
+            // 4. Admin hoặc Quản lý chung KTX: Toàn quyền toàn hệ thống
+            if (scopeLabel) scopeLabel.innerText = 'Phạm vi quản trị (Toàn hệ thống KTX)';
+            if (scopeHelp) scopeHelp.innerHTML = '<i class="fa-solid fa-circle-check" style="color:#15803d; margin-right: 4px;"></i> Vai trò này có toàn quyền quản trị và giám sát trên toàn bộ hệ thống KTX ĐHQG-HCM (không giới hạn khu/cụm/tòa).';
+
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.innerText = 'Toàn hệ thống KTX (Không giới hạn phạm vi)';
+            scopeSelect.appendChild(opt);
+        } else if (role === 'NV_THUONG') {
+            // 5. Nhân viên thường / Kỹ thuật / Hành chính: Cho phép chọn theo Cụm, Tòa hoặc Toàn hệ thống
+            if (scopeLabel) scopeLabel.innerText = 'Phạm vi phân công kỹ thuật / công việc';
+            if (scopeHelp) scopeHelp.innerHTML = '<i class="fa-solid fa-circle-info" style="margin-right: 4px;"></i> Nhân viên có thể được phân công làm việc theo một Cụm, một Tòa hoặc làm việc trên Toàn hệ thống.';
+
+            const optAll = document.createElement('option');
+            optAll.value = '';
+            optAll.innerText = '-- Toàn hệ thống KTX (Không giới hạn) --';
+            scopeSelect.appendChild(optAll);
+
+            if (cumPool.length > 0) {
+                const groupCum = document.createElement('optgroup');
+                groupCum.label = 'Phụ trách theo Cụm nhà:';
+                cumPool.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.MaCum;
+                    opt.innerText = (c.TenCum || c.MaCum) + ' (Khu ' + (c.MaKhu || '') + ')';
+                    groupCum.appendChild(opt);
+                });
+                scopeSelect.appendChild(groupCum);
+            }
+
+            if (toaPool.length > 0) {
+                const groupToa = document.createElement('optgroup');
+                groupToa.label = 'Phụ trách theo Tòa nhà:';
+                toaPool.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.MaToaNha;
+                    opt.innerText = (t.TenToaNha || t.MaToaNha) + ' (Cụm ' + (t.MaCum || '') + ')';
+                    groupToa.appendChild(opt);
+                });
+                scopeSelect.appendChild(groupToa);
+            }
+        } else {
+            // Chưa chọn vai trò
+            if (scopeLabel) scopeLabel.innerText = 'Phạm vi phụ trách (Chỉ định Khu / Cụm / Tòa)';
+            if (scopeHelp) scopeHelp.innerHTML = '<i class="fa-solid fa-arrow-up" style="margin-right: 4px;"></i> Vui lòng chọn Vai trò hệ thống ở trên để hiển thị phạm vi phân quyền phù hợp.';
+
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.innerText = '-- Vui lòng chọn Vai trò hệ thống trước --';
+            scopeSelect.appendChild(opt);
+        }
+
+        // Khôi phục giá trị đã chọn nếu có
+        if (selectedValue !== undefined && selectedValue !== null && selectedValue !== '') {
+            scopeSelect.value = selectedValue;
+            if (!scopeSelect.value && selectedValue.startsWith('KHU_')) {
+                scopeSelect.value = selectedValue.replace('KHU_', '');
+            }
+            if (!scopeSelect.value && (selectedValue === 'A' || selectedValue === 'B')) {
+                scopeSelect.value = 'KHU_' + selectedValue;
+            }
+        }
+    }
+
+    if (maVaiTroSelect) {
+        maVaiTroSelect.addEventListener('change', function() {
+            renderScopeByRole(this.value);
+        });
+    }
 
     function findStaffByName(name) {
         if (!name) return null;
@@ -772,9 +933,7 @@ ob_start();
                 }
                 if (!editMaTaiKhoanInput.value && matched.MaVaiTro && maVaiTroSelect) {
                     maVaiTroSelect.value = matched.MaVaiTro;
-                }
-                if (!editMaTaiKhoanInput.value && matched.MaCumQuanLy && maCumQuanLySelect) {
-                    maCumQuanLySelect.value = matched.MaCumQuanLy;
+                    renderScopeByRole(matched.MaVaiTro, matched.MaCumQuanLy || '');
                 }
             }
         });
@@ -829,7 +988,7 @@ ob_start();
     }
 
     function editUser(user) {
-        document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-user-pen" style="color: var(--primary); margin-right: 8px;"></i> <span>Chỉnh sửa thông tin cán bộ: ' + (user.HoVaTen || user.TenDangNhap) + '</span>';
+        document.getElementById('formTitle').innerHTML = '<span>Chỉnh sửa thông tin cán bộ: ' + (user.HoVaTen || user.TenDangNhap) + '</span>';
         document.getElementById('editMaTaiKhoan').value = user.MaTaiKhoan;
 
         // Cố định tên đăng nhập khi sửa
@@ -848,9 +1007,7 @@ ob_start();
         if (maVaiTroSelect) {
             maVaiTroSelect.value = user.MaVaiTro || '';
         }
-        if (maCumQuanLySelect) {
-            maCumQuanLySelect.value = user.MaCumQuanLy || '';
-        }
+        renderScopeByRole(user.MaVaiTro || '', user.MaCumQuanLy || '');
 
         // Chuyển vùng mật khẩu
         const createBox = document.getElementById('createPasswordBox');
@@ -877,7 +1034,7 @@ ob_start();
 
         const btn = document.getElementById('btnToggleAddUser');
         if (btn) {
-            btn.innerHTML = '<i class="fa-solid fa-user-plus" style="margin-right: 6px;"></i> + Thêm cán bộ mới';
+            btn.innerHTML = '<i class="fa-solid fa-user-plus" style="margin-right: 6px;"></i> Thêm cán bộ mới';
             btn.className = 'btn btn-primary';
         }
     }
@@ -907,6 +1064,7 @@ ob_start();
 
         document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-user-plus" style="color: var(--primary); margin-right: 8px;"></i> <span>Thêm mới hoặc Điều chỉnh phân quyền Cán bộ</span>';
         document.getElementById('btnSubmitForm').innerHTML = '<i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i> Lưu tài khoản & Cấp quyền';
+        renderScopeByRole('');
     }
 
     function confirmQuickResetPassword() {
@@ -1015,9 +1173,12 @@ ob_start();
         f.submit();
     }
 
-    // Khởi tạo bộ lọc và phân trang ngay khi trang tải xong
+    // Khởi tạo bộ lọc, phân trang và phạm vi theo vai trò ngay khi trang tải xong
     document.addEventListener('DOMContentLoaded', function() {
         filterUsers();
+        if (maVaiTroSelect) {
+            renderScopeByRole(maVaiTroSelect.value);
+        }
     });
 </script>
 

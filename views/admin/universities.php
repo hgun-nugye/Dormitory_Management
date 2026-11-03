@@ -8,15 +8,12 @@ ob_start();
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('admin/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">Quản trị hệ thống</a>
             <span>/</span>
-            <span style="color: var(--text-primary); font-weight: 500;">Trường Đại học liên kết & Thành viên</span>
+            <span style="color: var(--text-primary); font-weight: 500;">Trường Đại học liên kết</span>
         </div>
 
         <div class="page-header" style="align-items: center; flex-wrap: wrap; gap: 12px;">
             <div>
                 <h1 class="page-title">Quản lý Trường Đại học liên kết & Thành viên</h1>
-                <p class="page-subtitle">
-                    <strong>Chức năng phân hệ:</strong> Quản trị danh mục các trường đại học thành viên ĐHQG-HCM và các trường đối tác, cấu hình thời gian đào tạo chuẩn và trạng thái hợp tác tiếp nhận sinh viên nội trú.
-                </p>
             </div>
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                 <button type="button" class="btn btn-primary" id="btnToggleAddUni" onclick="toggleUniversityForm()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center;">
@@ -75,7 +72,7 @@ ob_start();
                     <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">
                         Mã trường đại học <span style="color:#dc2626;">*</span>
                         <span id="maTruongLockNotice" style="display: none; font-size: 0.775rem; color: #b45309; font-weight: normal; margin-left: 6px;">
-                            <i class="fa-solid fa-lock" style="margin-right: 4px;"></i> Cố định khi sửa
+                            <i class="fa-solid fa-lock" style="margin-right: 4px;"></i>
                         </span>
                     </label>
                     <input type="text" id="maTruong" name="maTruong" class="btn-outline" style="width: 100%; padding: 10px; border-radius: 6px; font-size: 0.9rem; text-transform: uppercase;" placeholder="Ví dụ: BK, KHTN, UIT, USSH, UEL, IU..." required maxlength="20">
@@ -134,110 +131,91 @@ ob_start();
         </form>
     </div>
 
-    <!-- ===================================================================== -->
-    <!-- BỘ LỌC TÌM KIẾM ĐA TIÊU CHÍ (SEARCH & ADVANCED FILTERS) -->
-    <!-- ===================================================================== -->
-    <div class="card" style="margin-bottom: 22px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px 20px;">
-        <div style="font-weight: 700; color: #1e293b; font-size: 0.95rem; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+    <!-- BẢNG DANH MỤC TRƯỜNG ĐẠI HỌC (TÍCH HỢP BỘ LỌC TÌM KIẾM LIỀN BẢNG) -->
+    <div class="card">
+        <!-- TIÊU ĐỀ BẢNG & BADGE -->
+        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-filter" style="color: var(--primary); margin-right: 4px;"></i>
-                <span>Tìm kiếm Trường Đại học</span>
+                <span>Danh sách các trường đại học thành viên & liên kết</span>
+                <span class="badge badge-info" id="uniCountBadge"><?= count($universityList ?? []) ?> trường</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div>
                 <span id="filterSummaryBadge" class="badge badge-info" style="font-size: 0.775rem;">
                     Hiển thị tất cả (<?= count($universityList ?? []) ?> trường)
                 </span>
             </div>
         </div>
 
-        <div class="grid grid-cols-4" style="gap: 12px; align-items: flex-end;">
-            <!-- 1. TÌM KIẾM THEO TỪ KHÓA -->
-            <div>
-                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;">
-                    1. Từ khóa (Mã hoặc Tên trường):
-                </label>
-                <div style="position: relative;">
-                    <input type="text" id="filterKeyword" class="btn-outline" style="width: 100%; padding: 8px 10px 8px 30px; border-radius: 6px; font-size: 0.85rem;" placeholder="Tìm BK, KHTN, Bách khoa..." oninput="filterUniversities()">
-                    <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem;"></i>
+        <!-- THANH TÌM KIẾM VÀ LỌC ĐA TIÊU CHÍ (LIỀN MẠCH VỚI BẢNG) -->
+        <div style="background: #f8fafc; padding: 14px 16px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+            <!-- HÀNG 1: CÁC TIÊU CHÍ LỌC CHÍNH -->
+            <div class="grid grid-cols-4" style="gap: 12px; align-items: flex-end;">
+                <!-- 1. TÌM KIẾM THEO TỪ KHÓA -->
+                <div>
+                    <div style="position: relative;">
+                        <input type="text" id="filterKeyword" class="btn-outline" style="width: 100%; padding: 8px 10px 8px 30px; border-radius: 6px; font-size: 0.85rem;" placeholder="Tìm BK, KHTN, Bách khoa..." oninput="filterUniversities()">
+                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem;"></i>
+                    </div>
+                </div>
+
+                <!-- 2. PHÂN LOẠI THÀNH VIÊN -->
+                <div>
+                    <select id="filterCategory" class="btn-outline" style="width: 100%; padding: 8px 10px; border-radius: 6px; font-size: 0.85rem;" onchange="filterUniversities()">
+                        <option value="">-- Tất cả phân loại --</option>
+                        <option value="1">Thành viên ĐHQG-HCM</option>
+                        <option value="0">Ngoài ĐHQG-HCM (Liên kết)</option>
+                    </select>
+                </div>
+
+                <!-- 3. TRẠNG THÁI HỢP TÁC -->
+                <div>
+                    <select id="filterStatus" class="btn-outline" style="width: 100%; padding: 8px 10px; border-radius: 6px; font-size: 0.85rem;" onchange="filterUniversities()">
+                        <option value="">-- Tất cả trạng thái hợp tác --</option>
+                        <option value="1">Đang hợp tác tiếp nhận</option>
+                        <option value="0">Tạm dừng tiếp nhận</option>
+                    </select>
+                </div>
+
+                <!-- 4. THỜI GIAN ĐÀO TẠO CHUẨN -->
+                <div>
+                    <select id="filterDuration" class="btn-outline" style="width: 100%; padding: 8px 10px; border-radius: 6px; font-size: 0.85rem;" onchange="filterUniversities()">
+                        <option value="">-- Tất cả thời gian --</option>
+                        <option value="4.0">4.0 năm chuẩn</option>
+                        <option value="4.5">4.5 năm chuẩn</option>
+                        <option value="5.0">5.0 năm trở lên</option>
+                    </select>
                 </div>
             </div>
 
-            <!-- 2. PHÂN LOẠI THÀNH VIÊN -->
-            <div>
-                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;">
-                    2. Phân loại đơn vị:
-                </label>
-                <select id="filterCategory" class="btn-outline" style="width: 100%; padding: 8px 10px; border-radius: 6px; font-size: 0.85rem;" onchange="filterUniversities()">
-                    <option value="">-- Tất cả phân loại --</option>
-                    <option value="1">Thành viên ĐHQG-HCM</option>
-                    <option value="0">Ngoài ĐHQG-HCM (Liên kết)</option>
-                </select>
-            </div>
+            <!-- HÀNG 2: LỌC THEO SINH VIÊN KTX & NÚT XÓA BỘ LỌC -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 10px; border-top: 1px dashed #cbd5e1; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; gap: 18px; align-items: center; flex-wrap: wrap;">
+                    <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">
+                        <i class="fa-solid fa-user-graduate" style="margin-right: 4px;"></i> Sinh viên nội trú:
+                    </span>
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 500; cursor: pointer; color: var(--text-primary);">
+                        <input type="radio" name="filterStudentRadio" value="" checked onchange="filterUniversities()">
+                        Tất cả
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 500; cursor: pointer; color: var(--text-primary);">
+                        <input type="radio" name="filterStudentRadio" value="has_students" onchange="filterUniversities()">
+                        Đang có sinh viên (&gt; 0)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 500; cursor: pointer; color: var(--text-primary);">
+                        <input type="radio" name="filterStudentRadio" value="no_students" onchange="filterUniversities()">
+                        Chưa có sinh viên (0 SV)
+                    </label>
+                </div>
 
-            <!-- 3. TRẠNG THÁI HỢP TÁC -->
-            <div>
-                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;">
-                    3. Trạng thái tiếp nhận:
-                </label>
-                <select id="filterStatus" class="btn-outline" style="width: 100%; padding: 8px 10px; border-radius: 6px; font-size: 0.85rem;" onchange="filterUniversities()">
-                    <option value="">-- Tất cả trạng thái --</option>
-                    <option value="1">Đang hợp tác tiếp nhận</option>
-                    <option value="0">Tạm dừng tiếp nhận</option>
-                </select>
-            </div>
-
-            <!-- 4. THỜI GIAN ĐÀO TẠO CHUẨN -->
-            <div>
-                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;">
-                    4. Thời gian đào tạo:
-                </label>
-                <select id="filterDuration" class="btn-outline" style="width: 100%; padding: 8px 10px; border-radius: 6px; font-size: 0.85rem;" onchange="filterUniversities()">
-                    <option value="">-- Tất cả thời gian --</option>
-                    <option value="4.0">4.0 năm chuẩn</option>
-                    <option value="4.5">4.5 năm chuẩn</option>
-                    <option value="5.0">5.0 năm trở lên</option>
-                </select>
+                <div>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="clearUniversityFilters()" style="border-radius: 6px; color: #dc2626; border-color: #fecaca; background: #fff; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; padding: 6px 12px;">
+                        <i class="fa-solid fa-filter-circle-xmark" style="margin-right: 4px;"></i> Xóa bộ lọc
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- HÀNG PHỤ: LỌC THEO SINH VIÊN KTX & NÚT XÓA BỘ LỌC -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px dashed #cbd5e1; flex-wrap: wrap; gap: 10px;">
-            <div style="display: flex; gap: 18px; align-items: center; flex-wrap: wrap;">
-                <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">
-                    <i class="fa-solid fa-user-graduate" style="margin-right: 4px;"></i> Sinh viên nội trú:
-                </span>
-                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 500; cursor: pointer; color: var(--text-primary);">
-                    <input type="radio" name="filterStudentRadio" value="" checked onchange="filterUniversities()">
-                    Tất cả
-                </label>
-                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 500; cursor: pointer; color: var(--text-primary);">
-                    <input type="radio" name="filterStudentRadio" value="has_students" onchange="filterUniversities()">
-                    Đang có sinh viên (&gt; 0)
-                </label>
-                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 500; cursor: pointer; color: var(--text-primary);">
-                    <input type="radio" name="filterStudentRadio" value="no_students" onchange="filterUniversities()">
-                    Chưa có sinh viên (0 SV)
-                </label>
-            </div>
-
-            <div>
-                <button type="button" class="btn btn-outline btn-sm" onclick="clearUniversityFilters()" style="border-radius: 6px; color: #dc2626; border-color: #fecaca; background: #fff; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer;">
-                    <i class="fa-solid fa-filter-circle-xmark" style="margin-right: 4px;"></i> Xóa bộ lọc
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- BẢNG DANH MỤC TRƯỜNG ĐẠI HỌC (CRUD TABLE) -->
-    <div class="card">
-        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-building-columns" style="color: var(--primary); margin-right: 4px;"></i>
-                <span>Danh sách các trường đại học thành viên & liên kết</span>
-                <span class="badge badge-info" id="uniCountBadge"><?= count($universityList ?? []) ?> trường</span>
-            </div>
-        </div>
-
+        <!-- BẢNG DỮ LIỆU -->
         <?php if (!empty($universityList)): ?>
             <div class="table-responsive">
                 <table class="data-table" id="tableUniversities">
@@ -305,7 +283,7 @@ ob_start();
                                     <?php endif; ?>
                                 </td>
                                 <td style="text-align: right; white-space: nowrap;">
-                                    <!-- NÚT SỬA (UPDATE) -->
+                                    <!-- NÚT SỬA -->
                                     <button type="button" class="btn btn-outline btn-sm"
                                         style="border-radius: 6px; margin-right: 4px;"
                                         data-item="<?= htmlspecialchars(json_encode($u, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"
@@ -366,13 +344,14 @@ ob_start();
                 </div>
 
                 <div id="uniPaginationControls" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
-                    <!-- Sẽ được sinh động bằng Javascript -->
+                    <!-- Sinh động bằng JavaScript -->
                 </div>
             </div>
         <?php else: ?>
             <p class="text-muted" style="font-size: 0.9rem; padding: 20px 0;">Chưa có danh mục trường đại học nào trong hệ thống.</p>
         <?php endif; ?>
     </div>
+
 </div>
 
 <!-- ========================================================================= -->
@@ -518,7 +497,7 @@ ob_start();
         document.getElementById('thuocDHQGHCM').value = (uni.ThuocDHQGHCM !== undefined) ? uni.ThuocDHQGHCM : '1';
         document.getElementById('dangHopTac').value = (uni.DangHopTac !== undefined) ? uni.DangHopTac : '1';
 
-        document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-pen-to-square" style="color: var(--primary); margin-right: 8px;"></i> <span>Chỉnh sửa thông tin Trường: ' + (uni.TenTruong || uni.MaTruong) + ' (' + uni.MaTruong + ')</span>';
+        document.getElementById('formTitle').innerHTML = '<span>Chỉnh sửa thông tin Trường: ' + (uni.TenTruong || uni.MaTruong) + ' (' + uni.MaTruong + ')</span>';
         document.getElementById('btnSubmitForm').innerHTML = '<i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i> Cập nhật trường';
 
         // Hiển thị biểu mẫu nếu đang ẩn
