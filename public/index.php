@@ -59,68 +59,79 @@ Router::get('/student/dashboard', 'Student\DashboardController@index', [AuthMidd
 Router::get('/student/profile', 'Student\ProfileController@index');
 Router::get('/student/payments', 'Student\PaymentController@index');
 
-// Staff Routes
-Router::get('/staff/dashboard', 'Staff\DashboardController@index', [AuthMiddleware::class]);
-Router::get('/staff/zones', 'Staff\DashboardController@zones', [AuthMiddleware::class]);
-Router::post('/staff/zones/save-khu', 'Staff\DashboardController@saveKhu', [AuthMiddleware::class]);
-Router::post('/staff/zones/delete-khu', 'Staff\DashboardController@deleteKhu', [AuthMiddleware::class]);
-Router::post('/staff/zones/save-cum', 'Staff\DashboardController@saveCum', [AuthMiddleware::class]);
-Router::post('/staff/zones/delete-cum', 'Staff\DashboardController@deleteCum', [AuthMiddleware::class]);
-Router::post('/staff/zones/save-toa', 'Staff\DashboardController@saveToa', [AuthMiddleware::class]);
-Router::post('/staff/zones/delete-toa', 'Staff\DashboardController@deleteToa', [AuthMiddleware::class]);
-Router::post('/staff/zones/save-room', 'Staff\DashboardController@saveRoom', [AuthMiddleware::class]);
-Router::post('/staff/zones/delete-room', 'Staff\DashboardController@deleteRoom', [AuthMiddleware::class]);
-Router::post('/staff/zones/approve-proposal', 'Staff\DashboardController@approveProposal', [AuthMiddleware::class]);
-Router::post('/staff/zones/reject-proposal', 'Staff\DashboardController@rejectProposal', [AuthMiddleware::class]);
-Router::get('/staff/rooms', 'Staff\DashboardController@rooms', [AuthMiddleware::class]);
-Router::post('/staff/rooms/checkin', 'Staff\DashboardController@confirmCheckin', [AuthMiddleware::class]);
-Router::post('/staff/rooms/assign-leader', 'Staff\DashboardController@assignRoomLeader', [AuthMiddleware::class]);
-Router::post('/staff/rooms/toggle-bed-maintenance', 'Staff\DashboardController@toggleBedMaintenance', [AuthMiddleware::class]);
-Router::post('/staff/rooms/toggle-room-maintenance', 'Staff\DashboardController@toggleRoomMaintenance', [AuthMiddleware::class]);
-Router::get('/staff/rooms/export', 'Staff\DashboardController@exportRooms', [AuthMiddleware::class]);
-Router::post('/staff/rooms/export', 'Staff\DashboardController@exportRooms', [AuthMiddleware::class]);
-Router::get('/staff/rooms/template', 'Staff\DashboardController@downloadRoomTemplate', [AuthMiddleware::class]);
-Router::post('/staff/rooms/import', 'Staff\DashboardController@importRooms', [AuthMiddleware::class]);
-Router::post('/staff/rooms/save-room', 'Staff\DashboardController@saveRoomFromRooms', [AuthMiddleware::class]);
-Router::post('/staff/rooms/delete-room', 'Staff\DashboardController@deleteRoomFromRooms', [AuthMiddleware::class]);
-Router::post('/staff/rooms/toggle-status', 'Staff\DashboardController@toggleRoomStatus', [AuthMiddleware::class]);
-Router::post('/staff/rooms/add-bed', 'Staff\DashboardController@addBed', [AuthMiddleware::class]);
-Router::post('/staff/rooms/update-bed-status', 'Staff\DashboardController@updateBedStatus', [AuthMiddleware::class]);
-Router::post('/staff/rooms/delete-bed', 'Staff\DashboardController@deleteBed', [AuthMiddleware::class]);
-Router::post('/staff/rooms/assign-leader', 'Staff\DashboardController@assignRoomLeader', [AuthMiddleware::class]);
-Router::post('/staff/rooms/confirm-checkin', 'Staff\DashboardController@confirmCheckIn', [AuthMiddleware::class]);
-Router::post('/staff/rooms/toggle-ct01', 'Staff\DashboardController@toggleCT01', [AuthMiddleware::class]);
-Router::post('/staff/rooms/remove-student', 'Staff\DashboardController@removeStudentFromBed', [AuthMiddleware::class]);
-Router::get('/staff/applications', 'Staff\DashboardController@applications', [AuthMiddleware::class]);
-Router::get('/staff/utilities', 'Staff\DashboardController@utilities', [AuthMiddleware::class]);
-Router::get('/staff/requests', 'Staff\DashboardController@requests', [AuthMiddleware::class]);
-Router::get('/staff/maintenance', 'Staff\DashboardController@maintenance', [AuthMiddleware::class]);
-Router::get('/staff/discipline', 'Staff\DashboardController@discipline', [AuthMiddleware::class]);
-Router::post('/staff/approve-application', 'Staff\DashboardController@approveApplication', [AuthMiddleware::class]);
-Router::post('/staff/reject-application', 'Staff\DashboardController@rejectApplication', [AuthMiddleware::class]);
+// Staff Routes - Tách theo từng nghiệp vụ chuẩn
+Router::get('/staff/dashboard', 'Staff\\DashboardController@index', [AuthMiddleware::class]);
 
-// Admin Routes
-Router::get('/admin/dashboard', 'Admin\DashboardController@index');
-Router::get('/admin/users', 'Admin\DashboardController@users');
-Router::get('/admin/users/export', 'Admin\DashboardController@exportUsers');
-Router::post('/admin/users/export', 'Admin\DashboardController@exportUsers');
-Router::get('/admin/users/template', 'Admin\DashboardController@downloadUserTemplate');
-Router::post('/admin/users/import', 'Admin\DashboardController@importUsers');
-Router::post('/admin/users/save', 'Admin\DashboardController@saveUser');
-Router::post('/admin/users/reset-password', 'Admin\DashboardController@resetPassword');
-Router::post('/admin/users/toggle-status', 'Admin\DashboardController@toggleUserStatus');
-Router::post('/admin/users/delete', 'Admin\DashboardController@deleteUser');
+// Staff - Quản lý Hạ tầng KTX (Khu, Cụm, Tòa, Phòng)
+Router::get('/staff/zones', 'Staff\\ZoneController@zones', [AuthMiddleware::class]);
+Router::post('/staff/zones/save-khu', 'Staff\\ZoneController@saveKhu', [AuthMiddleware::class]);
+Router::post('/staff/zones/delete-khu', 'Staff\\ZoneController@deleteKhu', [AuthMiddleware::class]);
+Router::post('/staff/zones/save-cum', 'Staff\\ZoneController@saveCum', [AuthMiddleware::class]);
+Router::post('/staff/zones/delete-cum', 'Staff\\ZoneController@deleteCum', [AuthMiddleware::class]);
+Router::post('/staff/zones/save-toa', 'Staff\\ZoneController@saveToa', [AuthMiddleware::class]);
+Router::post('/staff/zones/delete-toa', 'Staff\\ZoneController@deleteToa', [AuthMiddleware::class]);
+Router::post('/staff/zones/save-room', 'Staff\\ZoneController@saveRoom', [AuthMiddleware::class]);
+Router::post('/staff/zones/delete-room', 'Staff\\ZoneController@deleteRoom', [AuthMiddleware::class]);
+Router::post('/staff/zones/approve-proposal', 'Staff\\ZoneController@approveProposal', [AuthMiddleware::class]);
+Router::post('/staff/zones/reject-proposal', 'Staff\\ZoneController@rejectProposal', [AuthMiddleware::class]);
 
-Router::get('/admin/periods', 'Admin\DashboardController@periods');
-Router::get('/admin/room-types', 'Admin\DashboardController@roomTypes');
-Router::get('/admin/universities', 'Admin\DashboardController@universities');
-Router::get('/admin/universities/export', 'Admin\DashboardController@exportUniversities');
-Router::post('/admin/universities/export', 'Admin\DashboardController@exportUniversities');
-Router::get('/admin/universities/template', 'Admin\DashboardController@downloadUniversityTemplate');
-Router::post('/admin/universities/import', 'Admin\DashboardController@importUniversities');
-Router::post('/admin/universities/save', 'Admin\DashboardController@saveUniversity');
-Router::post('/admin/universities/toggle-status', 'Admin\DashboardController@toggleUniversityStatus');
-Router::post('/admin/universities/delete', 'Admin\DashboardController@deleteUniversity');
+// Staff - Quản lý Phòng & Giường nội trú (TRUONG_TOA)
+Router::get('/staff/rooms', 'Staff\\RoomController@rooms', [AuthMiddleware::class]);
+Router::post('/staff/rooms/checkin', 'Staff\\RoomController@confirmCheckIn', [AuthMiddleware::class]);
+Router::post('/staff/rooms/assign-leader', 'Staff\\RoomController@assignRoomLeader', [AuthMiddleware::class]);
+Router::post('/staff/rooms/toggle-bed-maintenance', 'Staff\\RoomController@toggleBedMaintenance', [AuthMiddleware::class]);
+Router::post('/staff/rooms/toggle-room-maintenance', 'Staff\\RoomController@toggleRoomMaintenance', [AuthMiddleware::class]);
+Router::get('/staff/rooms/export', 'Staff\\RoomController@exportRooms', [AuthMiddleware::class]);
+Router::post('/staff/rooms/export', 'Staff\\RoomController@exportRooms', [AuthMiddleware::class]);
+Router::get('/staff/rooms/template', 'Staff\\RoomController@downloadRoomTemplate', [AuthMiddleware::class]);
+Router::post('/staff/rooms/import', 'Staff\\RoomController@importRooms', [AuthMiddleware::class]);
+Router::post('/staff/rooms/save-room', 'Staff\\RoomController@saveRoomFromRooms', [AuthMiddleware::class]);
+Router::post('/staff/rooms/delete-room', 'Staff\\RoomController@deleteRoomFromRooms', [AuthMiddleware::class]);
+Router::post('/staff/rooms/toggle-status', 'Staff\\RoomController@toggleRoomStatus', [AuthMiddleware::class]);
+Router::post('/staff/rooms/add-bed', 'Staff\\RoomController@addBed', [AuthMiddleware::class]);
+Router::post('/staff/rooms/update-bed-status', 'Staff\\RoomController@updateBedStatus', [AuthMiddleware::class]);
+Router::post('/staff/rooms/delete-bed', 'Staff\\RoomController@deleteBed', [AuthMiddleware::class]);
+Router::post('/staff/rooms/confirm-checkin', 'Staff\\RoomController@confirmCheckIn', [AuthMiddleware::class]);
+Router::post('/staff/rooms/toggle-ct01', 'Staff\\RoomController@toggleCT01', [AuthMiddleware::class]);
+Router::post('/staff/rooms/remove-student', 'Staff\\RoomController@removeStudentFromBed', [AuthMiddleware::class]);
+
+// Staff - Hồ sơ Đăng ký & Giữ chỗ 72h
+Router::get('/staff/applications', 'Staff\\ApplicationController@applications', [AuthMiddleware::class]);
+Router::post('/staff/approve-application', 'Staff\\ApplicationController@approveApplication', [AuthMiddleware::class]);
+Router::post('/staff/reject-application', 'Staff\\ApplicationController@rejectApplication', [AuthMiddleware::class]);
+
+// Staff - Tiện ích, Yêu cầu, Bảo trì, Kỷ luật
+Router::get('/staff/utilities', 'Staff\\UtilityController@utilities', [AuthMiddleware::class]);
+Router::get('/staff/requests', 'Staff\\RequestController@requests', [AuthMiddleware::class]);
+Router::get('/staff/maintenance', 'Staff\\MaintenanceController@maintenance', [AuthMiddleware::class]);
+Router::get('/staff/discipline', 'Staff\\DisciplineController@discipline', [AuthMiddleware::class]);
+
+// Admin Routes - Tách theo từng nghiệp vụ chuẩn
+Router::get('/admin/dashboard', 'Admin\\DashboardController@index');
+
+// Admin - Quản lý Cán bộ & Tài khoản
+Router::get('/admin/users', 'Admin\\UserController@users');
+Router::get('/admin/users/export', 'Admin\\UserController@exportUsers');
+Router::post('/admin/users/export', 'Admin\\UserController@exportUsers');
+Router::get('/admin/users/template', 'Admin\\UserController@downloadUserTemplate');
+Router::post('/admin/users/import', 'Admin\\UserController@importUsers');
+Router::post('/admin/users/save', 'Admin\\UserController@saveUser');
+Router::post('/admin/users/reset-password', 'Admin\\UserController@resetPassword');
+Router::post('/admin/users/toggle-status', 'Admin\\UserController@toggleUserStatus');
+Router::post('/admin/users/delete', 'Admin\\UserController@deleteUser');
+
+Router::get('/admin/periods', 'Admin\\DashboardController@periods');
+Router::get('/admin/room-types', 'Admin\\DashboardController@roomTypes');
+
+// Admin - Quản lý Trường Đại học liên kết
+Router::get('/admin/universities', 'Admin\\UniversityController@universities');
+Router::get('/admin/universities/export', 'Admin\\UniversityController@exportUniversities');
+Router::post('/admin/universities/export', 'Admin\\UniversityController@exportUniversities');
+Router::get('/admin/universities/template', 'Admin\\UniversityController@downloadUniversityTemplate');
+Router::post('/admin/universities/import', 'Admin\\UniversityController@importUniversities');
+Router::post('/admin/universities/save', 'Admin\\UniversityController@saveUniversity');
+Router::post('/admin/universities/toggle-status', 'Admin\\UniversityController@toggleUniversityStatus');
+Router::post('/admin/universities/delete', 'Admin\\UniversityController@deleteUniversity');
 
 // Cron Trigger Routes
 Router::get('/cron/trigger_release', function () {
