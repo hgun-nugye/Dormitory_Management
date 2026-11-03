@@ -49,22 +49,29 @@ class DashboardController extends Controller
             $stats['active_residents'] = Database::fetch("SELECT COUNT(*) AS total FROM HopDongNoiTru WHERE TrangThaiHopDong = 'Đang hiệu lực'")['total'] ?? 0;
             $stats['total_periods'] = Database::fetch("SELECT COUNT(*) AS total FROM DotDangKy")['total'] ?? 0;
             $stats['total_universities'] = Database::fetch("SELECT COUNT(*) AS total FROM TruongDaiHoc")['total'] ?? 0;
+            $stats['dhqg_universities'] = Database::fetch("SELECT COUNT(*) AS total FROM TruongDaiHoc WHERE ThuocDHQGHCM = 1")['total'] ?? 0;
+            $stats['active_universities'] = Database::fetch("SELECT COUNT(*) AS total FROM TruongDaiHoc WHERE DangHopTac = 1")['total'] ?? 0;
             $stats['pending_applications'] = Database::fetch("SELECT COUNT(*) AS total FROM HoSoDangKy WHERE TrangThaiHoSo = 'Chờ duyệt'")['total'] ?? 0;
             $stats['pending_maintenance'] = Database::fetch("SELECT COUNT(*) AS total FROM PhieuBaoHong WHERE TrangThaiSua = 'Chờ xử lý'")['total'] ?? 0;
-            $stats['total_staff'] = Database::fetch("SELECT COUNT(*) AS total FROM NhanVien")['total'] ?? 0;
+            $stats['total_staff'] = Database::fetch("SELECT COUNT(*) AS total FROM TaiKhoan WHERE MaVaiTro NOT IN ('SINH_VIEN', 'TRUONG_PHONG')")['total'] ?? 0;
+            $stats['active_staff'] = Database::fetch("SELECT COUNT(*) AS total FROM TaiKhoan WHERE MaVaiTro NOT IN ('SINH_VIEN', 'TRUONG_PHONG') AND DangHoatDong = 1")['total'] ?? 0;
             $stats['total_transactions'] = Database::fetch("SELECT COUNT(*) AS total FROM GiaoDichThanhToan")['total'] ?? 0;
 
-            // Danh sách cán bộ & phân quyền
+            // Danh sách cán bộ & phân quyền (5 tài khoản mới nhất)
             $canBoList = Database::fetchAll("
-                        SELECT tk.MaTaiKhoan, tk.TenDangNhap, tk.MaVaiTro, tk.MaCumQuanLy, tk.DangHoatDong,
-                            vt.TenVaiTro, nv.HoVaTen, nv.ChucVu, nv.SoDienThoai, nv.Email
-                        FROM TaiKhoan tk
-                        JOIN VaiTro vt ON tk.MaVaiTro = vt.MaVaiTro
-                        LEFT JOIN NhanVien nv ON tk.MaTaiKhoan = nv.MaTaiKhoan
-                        WHERE tk.MaVaiTro != 'SINH_VIEN' AND tk.MaVaiTro != 'TRUONG_PHONG'
-                        ORDER BY tk.MaTaiKhoan DESC
-                        LIMIT 5
-                    ");
+                SELECT tk.MaTaiKhoan, tk.TenDangNhap, tk.MaVaiTro, tk.MaCumQuanLy, tk.DangHoatDong, tk.NgayTao,
+                       vt.TenVaiTro, nv.MaNhanVien, nv.HoVaTen, nv.ChucVu, nv.SoDienThoai, nv.Email,
+                       cn.TenCum, k.TenKhu, toa.TenToaNha
+                FROM TaiKhoan tk
+                JOIN VaiTro vt ON tk.MaVaiTro = vt.MaVaiTro
+                LEFT JOIN NhanVien nv ON tk.MaTaiKhoan = nv.MaTaiKhoan
+                LEFT JOIN CumNha cn ON tk.MaCumQuanLy = cn.MaCum
+                LEFT JOIN KhuKTX k ON cn.MaKhu = k.MaKhu
+                LEFT JOIN ToaNha toa ON tk.MaCumQuanLy = toa.MaToaNha
+                WHERE tk.MaVaiTro NOT IN ('SINH_VIEN', 'TRUONG_PHONG')
+                ORDER BY tk.MaTaiKhoan DESC
+                LIMIT 5
+            ");
 
             // Đợt đăng ký 72h
             $dotDangKyList = Database::fetchAll("SELECT * FROM DotDangKy ORDER BY MaDot DESC LIMIT 5");
@@ -72,8 +79,15 @@ class DashboardController extends Controller
             // Loại phòng & đơn giá
             $loaiPhongList = Database::fetchAll("SELECT * FROM LoaiPhong ORDER BY DonGiaLuuTruChuan ASC");
 
-            // Trường đại học
-            $truongList = Database::fetchAll("SELECT * FROM TruongDaiHoc ORDER BY ThuocDHQGHCM DESC, MaTruong ASC");
+            // Trường đại học (5 trường kèm số lượng sinh viên nội trú)
+            $truongList = Database::fetchAll("
+                SELECT t.*, COUNT(sv.MaSinhVien) AS TongSinhVien
+                FROM TruongDaiHoc t
+                LEFT JOIN SinhVien sv ON t.MaTruong = sv.MaTruong
+                GROUP BY t.MaTruong, t.TenTruong, t.SoNamDaoTaoChuan, t.ThuocDHQGHCM, t.DangHopTac
+                ORDER BY t.ThuocDHQGHCM DESC, t.MaTruong ASC
+                LIMIT 5
+            ");
 
             // Doanh thu & giao dịch
             $recentTransactions = Database::fetchAll("
@@ -113,10 +127,10 @@ class DashboardController extends Controller
 
         if (empty($truongList)) {
             $truongList = [
-                ['MaTruong' => 'BK', 'TenTruong' => 'Trường Đại học Bách khoa - ĐHQG-HCM', 'ThuocDHQGHCM' => 1, 'SoNamDaoTaoChuan' => 4.5],
-                ['MaTruong' => 'KHTN', 'TenTruong' => 'Trường Đại học Khoa học Tự nhiên - ĐHQG-HCM', 'ThuocDHQGHCM' => 1, 'SoNamDaoTaoChuan' => 4.0],
-                ['MaTruong' => 'UIT', 'TenTruong' => 'Trường Đại học Công nghệ Thông tin - ĐHQG-HCM', 'ThuocDHQGHCM' => 1, 'SoNamDaoTaoChuan' => 4.0],
-                ['MaTruong' => 'UEL', 'TenTruong' => 'Trường Đại học Kinh tế - Luật - ĐHQG-HCM', 'ThuocDHQGHCM' => 1, 'SoNamDaoTaoChuan' => 4.0]
+                ['MaTruong' => 'BK', 'TenTruong' => 'Trường Đại học Bách khoa - ĐHQG-HCM', 'ThuocDHQGHCM' => 1, 'SoNamDaoTaoChuan' => 4.5, 'TongSinhVien' => 0, 'DangHopTac' => 1],
+                ['MaTruong' => 'KHTN', 'TenTruong' => 'Trường Đại học Khoa học Tự nhiên - ĐHQG-HCM', 'ThuocDHQGHCM' => 1, 'SoNamDaoTaoChuan' => 4.0, 'TongSinhVien' => 0, 'DangHopTac' => 1],
+                ['MaTruong' => 'UIT', 'TenTruong' => 'Trường Đại học Công nghệ Thông tin - ĐHQG-HCM', 'ThuocDHQGHCM' => 1, 'SoNamDaoTaoChuan' => 4.0, 'TongSinhVien' => 0, 'DangHopTac' => 1],
+                ['MaTruong' => 'UEL', 'TenTruong' => 'Trường Đại học Kinh tế - Luật - ĐHQG-HCM', 'ThuocDHQGHCM' => 1, 'SoNamDaoTaoChuan' => 4.0, 'TongSinhVien' => 0, 'DangHopTac' => 1]
             ];
         }
 
@@ -141,14 +155,15 @@ class DashboardController extends Controller
             $userList = Database::fetchAll("
                 SELECT tk.MaTaiKhoan, tk.TenDangNhap, tk.MaVaiTro, tk.MaCumQuanLy, tk.DangHoatDong, tk.NgayTao,
                        vt.TenVaiTro, nv.MaNhanVien, nv.HoVaTen, nv.ChucVu, nv.SoDienThoai, nv.Email,
-                       cn.TenCum, k.TenKhu
+                       cn.TenCum, k.TenKhu, toa.TenToaNha
                 FROM TaiKhoan tk
                 JOIN VaiTro vt ON tk.MaVaiTro = vt.MaVaiTro
                 LEFT JOIN NhanVien nv ON tk.MaTaiKhoan = nv.MaTaiKhoan
                 LEFT JOIN CumNha cn ON tk.MaCumQuanLy = cn.MaCum
                 LEFT JOIN KhuKTX k ON cn.MaKhu = k.MaKhu
+                LEFT JOIN ToaNha toa ON tk.MaCumQuanLy = toa.MaToaNha
                 WHERE tk.MaVaiTro NOT IN ('SINH_VIEN', 'TRUONG_PHONG')
-                ORDER BY tk.MaTaiKhoan ASC
+                ORDER BY tk.MaTaiKhoan DESC
             ");
         } catch (\Throwable $e) {
             $userList = [];
@@ -227,10 +242,12 @@ class DashboardController extends Controller
             $vaitroList = [];
         }
 
-        // 4. Danh mục Cụm nhà
+        // 4. Danh mục Khu, Cụm, Tòa nhà phục vụ phân quyền theo vai trò
+        $khuList = [];
         $cumNhaList = [];
         $toaNhaList = [];
         try {
+            $khuList = Database::fetchAll("SELECT * FROM KhuKTX ORDER BY MaKhu ASC");
             $cumNhaList = Database::fetchAll("
                 SELECT c.*, k.TenKhu 
                 FROM CumNha c 
@@ -238,14 +255,23 @@ class DashboardController extends Controller
                 ORDER BY c.MaKhu ASC, c.MaCum ASC
             ");
             $toaNhaList = Database::fetchAll("
-                SELECT t.MaToaNha, t.TenToaNha, c.TenCum, c.MaKhu
+                SELECT t.MaToaNha, t.TenToaNha, c.TenCum, c.MaKhu, k.TenKhu
                 FROM ToaNha t
                 JOIN CumNha c ON t.MaCum = c.MaCum
+                JOIN KhuKTX k ON c.MaKhu = k.MaKhu
                 ORDER BY c.MaKhu ASC, c.MaCum ASC, t.MaToaNha ASC
             ");
         } catch (\Throwable $e) {
+            $khuList = [];
             $cumNhaList = [];
             $toaNhaList = [];
+        }
+
+        if (empty($khuList)) {
+            $khuList = [
+                ['MaKhu' => 'A', 'TenKhu' => 'Khu A KTX ĐHQG-HCM'],
+                ['MaKhu' => 'B', 'TenKhu' => 'Khu B KTX ĐHQG-HCM']
+            ];
         }
 
         $flashSuccess = Session::flash('success');
@@ -257,6 +283,7 @@ class DashboardController extends Controller
             'userList' => $userList,
             'allStaff' => $allStaff,
             'vaitroList' => $vaitroList,
+            'khuList' => $khuList,
             'cumNhaList' => $cumNhaList,
             'toaNhaList' => $toaNhaList,
             'flashSuccess' => $flashSuccess,
@@ -277,8 +304,8 @@ class DashboardController extends Controller
         $maVaiTro = trim((string)$request->input('maVaiTro', ''));
         $maCum = trim((string)$request->input('maCumQuanLy', ''));
 
-        // Xử lý phạm vi quản lý: nếu là rỗng hoặc các nhãn tổng thì lưu NULL (hợp lệ với Foreign Key)
-        if ($maCum === '' || $maCum === 'ALL' || $maCum === 'KHU_A' || $maCum === 'KHU_B') {
+        // Xử lý phạm vi quản lý: vai trò toàn quyền thì lưu NULL; các vai trò khác lưu mã khu, cụm, tòa tương ứng
+        if ($maCum === '' || $maCum === 'ALL' || in_array($maVaiTro, ['ADMIN', 'NV_QUAN_LY_KTX'])) {
             $maCum = null;
         }
 
