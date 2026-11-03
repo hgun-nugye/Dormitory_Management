@@ -3,262 +3,307 @@ ob_start();
 ?>
 
 <div class="container">
-    <!-- Header -->
-    <div class="page-header" style="margin-bottom: 24px;">
-        <div>
-            <h1 class="page-title">Quản trị hệ thống KTX ĐHQG-HCM</h1>
-            <p class="page-subtitle">Bảng điều khiển trung tâm &bull; Toàn quyền quản trị tài khoản cán bộ, đợt tuyển sinh, loại phòng và tài chính toàn hệ thống</p>
+    <!-- Breadcrumb & Header -->
+    <div style="margin-bottom: 24px;">
+        <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
+            <a href="<?= url('admin/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">Trang chủ</a>
+            <span>/</span>
+            <span style="color: var(--text-primary); font-weight: 500;">Bảng điều khiển Quản trị trung tâm</span>
         </div>
-        <div>
-            <span class="badge badge-info" style="font-size: 0.85rem; padding: 6px 14px;">
-                Quản trị viên toàn hệ thống
-            </span>
+
+        <div class="page-header" style="align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 0;">
+            <div>
+                <h1 class="page-title" style="display: flex; align-items: center; gap: 10px;">
+                    Quản trị hệ thống KTX ĐHQG-HCM
+                </h1>
+            </div>
         </div>
     </div>
 
     <!-- Chỉ số toàn hệ thống -->
     <div class="grid grid-cols-4" style="gap: 18px; margin-bottom: 28px;">
-        <div class="card stat-card" style="border-left: 4px solid #2563eb;">
-            <div class="stat-label">Tổng sinh viên</div>
-            <div class="stat-val" style="color: #1e40af;"><?= number_format($stats['total_students'] ?? 0) ?></div>
-            <div class="stat-sub">Hồ sơ đã tạo tài khoản</div>
-        </div>
-        <div class="card stat-card" style="border-left: 4px solid #10b981;">
-            <div class="stat-label">Hợp đồng hiệu lực</div>
-            <div class="stat-val" style="color: #15803d;"><?= number_format($stats['active_residents'] ?? 0) ?></div>
-            <div class="stat-sub">Đang lưu trú nội trú</div>
-        </div>
-        <div class="card stat-card" style="border-left: 4px solid #7c3aed;">
-            <div class="stat-label">Đợt tuyển sinh KTX</div>
-            <div class="stat-val" style="color: #6d28d9;"><?= number_format($stats['total_periods'] ?? count($dotDangKyList ?? [])) ?></div>
-            <div class="stat-sub">Cấu hình đăng ký & giữ chỗ 72h</div>
-        </div>
+        <!-- 1. Cán bộ BQL -->
+        <a href="<?= url('admin/users') ?>" style="text-decoration: none; color: inherit;">
+            <div class="card stat-card" style="border-left: 4px solid #2563eb; transition: transform 0.15s ease, box-shadow 0.15s ease; cursor: pointer;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <div class="stat-label">Cán bộ Ban Quản lý</div>
+                        <div class="stat-val" style="color: #1e40af;"><?= number_format($stats['total_staff'] ?? 0) ?></div>
+                    </div>
+                    <div style="width: 38px; height: 38px; border-radius: 8px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                        <i class="fa-solid fa-users-gear"></i>
+                    </div>
+                </div>
+                <div class="stat-sub">
+                    <b><?= number_format($stats['active_staff'] ?? $stats['total_staff'] ?? 0) ?></b> đang hoạt động &bull; Phân quyền BQL
+                </div>
+            </div>
+        </a>
+
+        <!-- 2. Trường Đại học liên kết -->
+        <a href="<?= url('admin/universities') ?>" style="text-decoration: none; color: inherit;">
+            <div class="card stat-card" style="border-left: 4px solid #10b981; transition: transform 0.15s ease, box-shadow 0.15s ease; cursor: pointer;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <div class="stat-label">Trường Đại học liên kết</div>
+                        <div class="stat-val" style="color: #15803d;"><?= number_format($stats['total_universities'] ?? 0) ?></div>
+                    </div>
+                    <div style="width: 38px; height: 38px; border-radius: 8px; background: #f0fdf4; color: #16a34a; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                        <i class="fa-solid fa-building-columns"></i>
+                    </div>
+                </div>
+                <div class="stat-sub">
+                    <b><?= number_format($stats['dhqg_universities'] ?? 0) ?></b> ĐHQG &bull; <b><?= number_format($stats['active_universities'] ?? $stats['total_universities'] ?? 0) ?></b> đang hợp tác
+                </div>
+            </div>
+        </a>
+
+        <!-- 3. Đợt tuyển sinh KTX -->
+        <a href="<?= url('admin/periods') ?>" style="text-decoration: none; color: inherit;">
+            <div class="card stat-card" style="border-left: 4px solid #7c3aed; transition: transform 0.15s ease, box-shadow 0.15s ease; cursor: pointer;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <div class="stat-label">Đợt tuyển sinh KTX</div>
+                        <div class="stat-val" style="color: #6d28d9;"><?= number_format($stats['total_periods'] ?? count($dotDangKyList ?? [])) ?></div>
+                    </div>
+                    <div style="width: 38px; height: 38px; border-radius: 8px; background: #f5f3ff; color: #7c3aed; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                </div>
+                <div class="stat-sub">
+                    Cấu hình đăng ký & giữ chỗ 72h
+                </div>
+            </div>
+        </a>
+
+        <!-- 4. Sinh viên & Hợp đồng -->
         <div class="card stat-card" style="border-left: 4px solid #f59e0b;">
-            <div class="stat-label">Cán bộ Ban Quản lý</div>
-            <div class="stat-val" style="color: #b45309;"><?= number_format($stats['total_staff'] ?? 0) ?></div>
-            <div class="stat-sub">Phụ trách các khu & cụm</div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="stat-label">Sinh viên nội trú</div>
+                    <div class="stat-val" style="color: #b45309;"><?= number_format($stats['active_residents'] ?? 0) ?></div>
+                </div>
+                <div style="width: 38px; height: 38px; border-radius: 8px; background: #fffbeb; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                    <i class="fa-solid fa-user-graduate"></i>
+                </div>
+            </div>
+            <div class="stat-sub">
+                Trên tổng số <b><?= number_format($stats['total_students'] ?? 0) ?></b> hồ sơ sinh viên
+            </div>
         </div>
     </div>
 
     <!-- PHÂN HỆ 1: QUẢN TRỊ TÀI KHOẢN & PHÂN QUYỀN CÁN BỘ -->
-    <div id="phan-quyen" class="card" style="margin-bottom: 24px;">
-        <div class="card-title">
-            <span>1. Quản lý tài khoản cán bộ & Phân quyền phụ trách</span>
-            <a href="<?= url('admin/users') ?>" class="btn btn-primary btn-sm" style="border-radius: 6px; text-decoration: none;">
-                + Thêm cán bộ mới
-            </a>
-        </div>
-        <div class="table-responsive">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Tên đăng nhập</th>
-                        <th>Họ và tên cán bộ</th>
-                        <th>Vai trò phân quyền</th>
-                        <th>Phạm vi được giao phụ trách</th>
-                        <th>Số điện thoại</th>
-                        <th>Trạng thái</th>
-                        <th style="text-align: right;">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($canBoList as $cb): ?>
-                        <tr>
-                            <td><b><?= htmlspecialchars($cb['TenDangNhap']) ?></b></td>
-                            <td><?= htmlspecialchars($cb['HoVaTen'] ?? '') ?></td>
-                            <td><span class="badge badge-info"><?= htmlspecialchars($cb['TenVaiTro']) ?></span></td>
-                            <td><b><?= htmlspecialchars($cb['MaCumQuanLy'] ?? 'Toàn hệ thống') ?></b></td>
-                            <td><?= htmlspecialchars($cb['SoDienThoai'] ?? '') ?></td>
-                            <td>
-                                <span class="badge badge-success">Đang hoạt động</span>
-                            </td>
-                            <td style="text-align: right;">
-                                <a href="<?= url('admin/users') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; text-decoration: none;">
-                                    Phân quyền
-                                </a>
-                                <a href="<?= url('admin/users') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; text-decoration: none;">
-                                    Quản lý
-                                </a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <div id="phan-quyen" class="card" style="margin-bottom: 26px;">
+        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
 
-    <!-- PHÂN HỆ 2: CẤU HÌNH ĐỢT ĐĂNG KÝ & HẠN GIỮ CHỖ 72H -->
-    <div id="dot-dang-ky" class="card" style="margin-bottom: 24px;">
-        <div class="card-title">
-            <span>2. Cấu hình đợt đăng ký lưu trú & Hạn định giữ chỗ</span>
-            <a href="<?= url('admin/periods') ?>" class="btn btn-primary btn-sm" style="border-radius: 6px; text-decoration: none;">
-                + Mở đợt đăng ký mới
-            </a>
+                <span>Quản lý tài khoản</span>
+                <span class="badge badge-info" style="font-size: 0.775rem;">
+                    <?= count($canBoList ?? []) ?> gần đây / <?= number_format($stats['total_staff'] ?? 0) ?> cán bộ
+                </span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <a href="<?= url('admin/users') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center;">
+                    <i class="fa-solid fa-list-check" style="margin-right: 6px;"></i> Quản lý toàn bộ cán bộ
+                </a>
+                <a href="<?= url('admin/users') ?>" class="btn btn-primary btn-sm" style="border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center;">
+                    <i class="fa-solid fa-user-plus" style="margin-right: 6px;"></i>Thêm cán bộ mới
+                </a>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Tên đợt tuyển sinh</th>
-                        <th>Năm học</th>
-                        <th>Thời gian mở cổng</th>
-                        <th>Thời gian đóng cổng</th>
-                        <th>Hạn định giữ chỗ</th>
-                        <th>Trạng thái</th>
-                        <th style="text-align: right;">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($dotDangKyList as $d): ?>
-                        <tr>
-                            <td><b><?= htmlspecialchars($d['TenDot']) ?></b></td>
-                            <td><?= htmlspecialchars($d['NamHoc']) ?></td>
-                            <td><?= $d['ThoiGianMoCong'] ?></td>
-                            <td><?= $d['ThoiGianDongCong'] ?></td>
-                            <td><span class="badge badge-info"><?= $d['SoGioGiuCho'] ?> giờ</span></td>
-                            <td><span class="badge badge-success">Đang mở</span></td>
-                            <td style="text-align: right;">
-                                <a href="<?= url('admin/periods') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; text-decoration: none;">
-                                    Chỉnh sửa
-                                </a>
-                                <a href="<?= url('admin/periods') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; text-decoration: none;">
-                                    Quản lý đợt
-                                </a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
 
-    <!-- PHÂN HỆ 3: DANH MỤC LOẠI PHÒNG & ĐƠN GIÁ CHUẨN -->
-    <div id="loai-phong" class="card" style="margin-bottom: 24px;">
-        <div class="card-title">
-            <span>3. Danh mục Loại phòng & Đơn giá lưu trú chuẩn</span>
-            <a href="<?= url('admin/room-types') ?>" class="btn btn-primary btn-sm" style="border-radius: 6px; text-decoration: none;">
-                + Thêm loại phòng
-            </a>
-        </div>
-        <div class="table-responsive">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Mã loại</th>
-                        <th>Tên loại phòng</th>
-                        <th>Sức chứa</th>
-                        <th>Đơn giá chuẩn / tháng</th>
-                        <th>Dịch vụ gia tăng (Máy lạnh)</th>
-                        <th style="text-align: right;">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($loaiPhongList as $lp): ?>
-                        <tr>
-                            <td><b><?= htmlspecialchars($lp['MaLoaiPhong']) ?></b></td>
-                            <td><?= htmlspecialchars($lp['TenLoaiPhong']) ?></td>
-                            <td><?= $lp['SoGiuongToiDa'] ?> người</td>
-                            <td><b><?= format_money($lp['DonGiaLuuTruChuan']) ?></b></td>
-                            <td><?= format_money($lp['DonGiaDichVuTangThem']) ?></td>
-                            <td style="text-align: right;">
-                                <a href="<?= url('admin/room-types') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; text-decoration: none;">
-                                    Sửa giá
-                                </a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- PHÂN HỆ 4: TRƯỜNG ĐẠI HỌC THÀNH VIÊN -->
-    <div id="truong-hoc" class="card" style="margin-bottom: 24px;">
-        <div class="card-title">
-            <span>4. Danh mục Trường Đại học liên kết & Chỉ tiêu</span>
-            <a href="<?= url('admin/universities') ?>" class="btn btn-primary btn-sm" style="border-radius: 6px; text-decoration: none;">
-                + Thêm trường
-            </a>
-        </div>
-        <div class="table-responsive">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Mã trường</th>
-                        <th>Tên trường đại học</th>
-                        <th>Trực thuộc ĐHQG-HCM</th>
-                        <th>Thời gian đào tạo chuẩn</th>
-                        <th style="text-align: right;">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($truongList as $t): ?>
-                        <tr>
-                            <td><b><?= htmlspecialchars($t['MaTruong']) ?></b></td>
-                            <td><?= htmlspecialchars($t['TenTruong']) ?></td>
-                            <td>
-                                <?php if ($t['ThuocDHQGHCM']): ?>
-                                    <span class="badge badge-success">✓ Thành viên ĐHQG-HCM</span>
-                                <?php else: ?>
-                                    <span class="badge" style="background:#f1f5f9; color:#475569;">Ngoài ĐHQG-HCM</span>
-                                <?php endif; ?>
-                            </td>
-                            <td><?= $t['SoNamDaoTaoChuan'] ?> năm</td>
-                            <td style="text-align: right;">
-                                <a href="<?= url('admin/universities') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; text-decoration: none;">
-                                    Sửa
-                                </a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- PHÂN HỆ 5: GIÁM SÁT TÀI CHÍNH & GIAO DỊCH TOÀN HỆ THỐNG -->
-    <div id="tai-chinh" class="card">
-        <div class="card-title">
-            <span>5. Nhật ký giao dịch tài chính toàn hệ thống</span>
-            <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px;" onclick="alert('Xuất báo cáo tài chính toàn hệ thống ra Excel')">
-                Xuất báo cáo tài chính
-            </button>
-        </div>
-        <?php if (!empty($recentTransactions)): ?>
+        <?php if (!empty($canBoList)): ?>
             <div class="table-responsive">
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Mã giao dịch</th>
-                            <th>Mã hóa đơn</th>
-                            <th>Sinh viên</th>
-                            <th>Kênh thanh toán</th>
-                            <th>Số tiền</th>
-                            <th>Thời gian</th>
-                            <th>Kết quả</th>
+                            <th>Họ và tên cán bộ</th>
+                            <th>Vai trò phân quyền</th>
+                            <th>Phạm vi phụ trách</th>
+                            <th>Số điện thoại & Email</th>
+                            <th>Trạng thái</th>
+                            <th style="text-align: right;">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($recentTransactions as $tx): ?>
-                            <tr>
-                                <td><code><?= htmlspecialchars($tx['MaGiaoDich']) ?></code></td>
-                                <td><b><?= htmlspecialchars($tx['MaHoaDon']) ?></b></td>
-                                <td><?= htmlspecialchars($tx['HoVaTen']) ?> (<?= htmlspecialchars($tx['MaSinhVien']) ?>)</td>
-                                <td><?= htmlspecialchars($tx['KenhThanhToan'] ?? 'Mã QR KTX') ?></td>
-                                <td><b><?= format_money($tx['SoTien']) ?></b></td>
-                                <td><?= $tx['ThoiGianGiaoDich'] ?></td>
+                        <?php foreach ($canBoList as $cb): ?>
+                            <?php
+                            $isLocked = ((int)($cb['DangHoatDong'] ?? 1)) === 0;
+
+                            $scopeLabel = 'Toàn hệ thống KTX';
+                            if ($cb['MaCumQuanLy'] === 'KHU_A') {
+                                $scopeLabel = 'Toàn bộ Khu A';
+                            } elseif ($cb['MaCumQuanLy'] === 'KHU_B') {
+                                $scopeLabel = 'Toàn bộ Khu B';
+                            } elseif (!empty($cb['TenToaNha'])) {
+                                $scopeLabel = $cb['TenToaNha'] . ' (' . $cb['MaCumQuanLy'] . ')';
+                            } elseif (!empty($cb['TenCum'])) {
+                                $scopeLabel = $cb['TenCum'] . ' (' . ($cb['TenKhu'] ?? 'KTX') . ')';
+                            } elseif (!empty($cb['MaCumQuanLy'])) {
+                                $scopeLabel = 'Phạm vi: ' . $cb['MaCumQuanLy'];
+                            } elseif ($cb['MaVaiTro'] === 'TRUONG_KHU') {
+                                $scopeLabel = 'Toàn bộ Khu KTX';
+                            }
+
+                            $badgeClass = 'badge-info';
+                            if ($cb['MaVaiTro'] === 'ADMIN') $badgeClass = 'badge-danger';
+                            elseif ($cb['MaVaiTro'] === 'TRUONG_KHU') $badgeClass = 'badge-warning';
+                            elseif ($cb['MaVaiTro'] === 'TRUONG_CUM') $badgeClass = 'badge-success';
+                            elseif ($cb['MaVaiTro'] === 'TRUONG_TOA') $badgeClass = 'badge-primary';
+                            ?>
+                            <tr style="<?= $isLocked ? 'background: #fef2f2;' : '' ?>">
+
                                 <td>
-                                    <span class="badge badge-success">
-                                        <?= htmlspecialchars($tx['KetQuaGiaoDich']) ?>
+                                    <b><?= htmlspecialchars($cb['HoVaTen'] ?? 'Cán bộ BQL') ?></b>
+                                    <?php if (!empty($cb['ChucVu'])): ?>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);"><?= htmlspecialchars($cb['ChucVu']) ?></div>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <span class="badge <?= $badgeClass ?>">
+                                        <?= htmlspecialchars($cb['TenVaiTro'] ?? $cb['MaVaiTro']) ?>
                                     </span>
+                                </td>
+                                <td>
+                                    <b><?= htmlspecialchars($scopeLabel) ?></b>
+                                </td>
+                                <td>
+                                    <div><?= htmlspecialchars($cb['SoDienThoai'] ?? '—') ?></div>
+                                    <?php if (!empty($cb['Email'])): ?>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);"><?= htmlspecialchars($cb['Email']) ?></div>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if ($isLocked): ?>
+                                        <span class="badge badge-danger">
+                                            <i class="fa-solid fa-lock" style="margin-right: 4px;"></i> Đã khóa
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="badge badge-success">
+                                            <i class="fa-solid fa-circle-check" style="margin-right: 4px;"></i> Hoạt động
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
+                                <td style="text-align: right; white-space: nowrap;">
+                                    <a href="<?= url('admin/users') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; text-decoration: none;" title="Chỉnh sửa phân quyền & tài khoản">
+                                        <i class="fa-solid fa-pen-to-square" style="margin-right: 4px;"></i> Phân quyền
+                                    </a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--text-muted); flex-wrap: wrap; gap: 8px;">
+
+                <a href="<?= url('admin/users') ?>" style="color: var(--primary); font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                    Xem toàn bộ danh sách <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
         <?php else: ?>
-            <p class="text-muted" style="font-size: 0.9rem;">Chưa có giao dịch thanh toán nào được ghi nhận.</p>
+            <p class="text-muted" style="font-size: 0.9rem; padding: 20px 0;">Chưa có tài khoản cán bộ nào trong hệ thống.</p>
+        <?php endif; ?>
+    </div>
+
+    <!-- PHÂN HỆ 2: TRƯỜNG ĐẠI HỌC LIÊN KẾT & THÀNH VIÊN -->
+    <div id="truong-hoc" class="card" style="margin-bottom: 26px;">
+        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+
+                <span>Danh mục Trường Đại học liên kết</span>
+                <span class="badge badge-info" style="font-size: 0.775rem;">
+                    <?= count($truongList ?? []) ?> tiêu biểu / <?= number_format($stats['total_universities'] ?? 0) ?> trường
+                </span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <a href="<?= url('admin/universities') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center;">
+                    <i class="fa-solid fa-list-check" style="margin-right: 6px;"></i> Quản lý toàn bộ danh mục
+                </a>
+                <a href="<?= url('admin/universities') ?>" class="btn btn-primary btn-sm" style="border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center;">
+                    <i class="fa-solid fa-plus-circle" style="margin-right: 6px;"></i> Thêm trường mới
+                </a>
+            </div>
+        </div>
+
+        <?php if (!empty($truongList)): ?>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Mã trường</th>
+                            <th>Tên trường đại học</th>
+                            <th>Phân loại thành viên</th>
+                            <th>Thời gian chuẩn</th>
+                            <th>Sinh viên KTX</th>
+                            <th>Trạng thái hợp tác</th>
+                            <th style="text-align: right;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($truongList as $t): ?>
+                            <?php
+                            $isDHQG = ((int)($t['ThuocDHQGHCM'] ?? 0)) === 1;
+                            $isPaused = ((int)($t['DangHopTac'] ?? 1)) === 0;
+                            $svCount = (int)($t['TongSinhVien'] ?? 0);
+                            ?>
+                            <tr style="<?= $isPaused ? 'background: #fef2f2;' : '' ?>">
+                                <td>
+                                    <b style="color: var(--primary); font-size: 0.95rem;"><?= htmlspecialchars($t['MaTruong']) ?></b>
+                                </td>
+                                <td>
+                                    <b><?= htmlspecialchars($t['TenTruong']) ?></b>
+                                </td>
+                                <td>
+                                    <?php if ($isDHQG): ?>
+                                        <span class="badge badge-success">
+                                            <i class="fa-solid fa-circle-check" style="margin-right: 4px;"></i> Thành viên ĐHQG-HCM
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="badge" style="background: #f1f5f9; color: #475569;">
+                                            <i class="fa-solid fa-handshake" style="margin-right: 4px;"></i> Ngoài ĐHQG-HCM
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?= htmlspecialchars($t['SoNamDaoTaoChuan'] ?? 4.0) ?> năm
+                                </td>
+                                <td>
+                                    <span class="badge badge-info">
+                                        <i class="fa-solid fa-user-graduate" style="margin-right: 4px;"></i> <?= number_format($svCount) ?> sinh viên
+                                    </span>
+                                </td>
+                                <td>
+                                    <?php if (!$isPaused): ?>
+                                        <span class="badge badge-success">
+                                            <i class="fa-solid fa-circle-dot" style="margin-right: 4px;"></i> Đang hợp tác
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="badge badge-danger">
+                                            <i class="fa-solid fa-pause" style="margin-right: 4px;"></i> Tạm dừng
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
+                                <td style="text-align: right; white-space: nowrap;">
+                                    <a href="<?= url('admin/universities') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; text-decoration: none;" title="Chỉnh sửa thông tin trường">
+                                        <i class="fa-solid fa-pen-to-square" style="margin-right: 4px;"></i> Chi tiết
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--text-muted); flex-wrap: wrap; gap: 8px;">
+
+                <a href="<?= url('admin/universities') ?>" style="color: var(--primary); font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                    Xem toàn bộ danh mục trường<i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+        <?php else: ?>
+            <p class="text-muted" style="font-size: 0.9rem; padding: 20px 0;">Chưa có danh mục trường đại học nào trong hệ thống.</p>
         <?php endif; ?>
     </div>
 </div>

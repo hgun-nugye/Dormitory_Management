@@ -108,6 +108,43 @@ if (!function_exists('asset')) {
 }
 
 /**
+ * Current Request URI helper
+ */
+if (!function_exists('current_uri')) {
+    function current_uri() {
+        if (!class_exists('\App\Core\Request')) {
+            require_once dirname(__DIR__) . '/Core/Request.php';
+        }
+        return (new \App\Core\Request())->getUri();
+    }
+}
+
+/**
+ * Check if the given route path is currently active
+ */
+if (!function_exists('is_active_nav')) {
+    function is_active_nav($path) {
+        $currentUri = trim(current_uri(), '/');
+        $targetPath = trim($path, '/');
+
+        if ($targetPath === '' || $targetPath === '/') {
+            return $currentUri === '' || $currentUri === '/';
+        }
+
+        return $currentUri === $targetPath || str_starts_with($currentUri, $targetPath . '/');
+    }
+}
+
+/**
+ * Return 'active' class string if the route is active
+ */
+if (!function_exists('nav_active_class')) {
+    function nav_active_class($path, $activeClass = 'active') {
+        return is_active_nav($path) ? $activeClass : '';
+    }
+}
+
+/**
  * Session helper
  */
 if (!function_exists('session')) {
