@@ -88,11 +88,320 @@ class DashboardController extends Controller {
     {
         $user = Auth::user();
         $maCum = $this->getMaCum();
+        $request = new Request();
+
+        $filterToa = trim((string)$request->input('toaNha', ''));
+        $filterTang = trim((string)$request->input('tang', ''));
+        $filterTrangThai = trim((string)$request->input('trangThai', ''));
+
+        $buildings = [];
+        $rooms = [];
+        $bedsByRoom = [];
+        $underOccupiedRooms = [];
+
+        try {
+            // 1. Danh sách tòa nhà thuộc cụm của cán bộ
+            $buildings = Database::fetchAll(
+                "SELECT * FROM ToaNha WHERE MaCum = :cum ORDER BY MaToaNha ASC",
+                ['cum' => $maCum]
+            );
+
+            // 2. Danh sách phòng theo bộ lọc
+            $sqlRooms = "
+                SELECT p.*, lp.TenLoaiPhong, lp.SoGiuongToiDa, tn.TenToaNha,
+                       ROUND((p.SoSVDangO / lp.SoGiuongToiDa) * 100, 0) AS TyLeLapDay
+                FROM Phong p
+                JOIN ToaNha tn ON p.MaToaNha = tn.MaToaNha
+                JOIN LoaiPhong lp ON p.MaLoaiPhong = lp.MaLoaiPhong
+                WHERE tn.MaCum = :cum
+            ";
+            $paramsRooms = ['cum' => $maCum];
+
+            if (!empty($filterToa)) {
+                $sqlRooms .= " AND p.MaToaNha = :toa";
+                $paramsRooms['toa'] = $filterToa;
+            }
+            if (!empty($filterTang)) {
+                $sqlRooms .= " AND p.Tang = :tang";
+                $paramsRooms['tang'] = (int)$filterTang;
+            }
+            if (!empty($filterTrangThai)) {
+                $sqlRooms .= " AND p.TrangThaiPhong = :trangThai";
+                $paramsRooms['trangThai'] = $filterTrangThai;
+            }
+            $sqlRooms .= " ORDER BY p.MaToaNha ASC, p.Tang ASC, p.SoPhong ASC";
+            $rooms = Database::fetchAll($sqlRooms, $paramsRooms);
+
+            // 3. Danh sách giường và thông tin sinh viên / hợp đồng tương ứng
+            $bedsQuery = Database::fetchAll("
+                SELECT g.*, 
+                       hd.MaHopDong, hd.NgayNhanPhong, hd.TrangThaiHopDong, hd.NgayBatDau, hd.NgayKetThuc,
+                       COALESCE(sv.MaSinhVien, sv_hs.MaSinhVien) AS MaSinhVien,
+                       COALESCE(sv.HoVaTen, sv_hs.HoVaTen) AS HoVaTen,
+                       COALESCE(sv.MSSVTaiTruong, sv_hs.MSSVTaiTruong) AS MSSVTaiTruong,
+                       COALESCE(sv.GioiTinh, sv_hs.GioiTinh) AS GioiTinh,
+                       COALESCE(sv.SoCCCD, sv_hs.SoCCCD) AS SoCCCD,
+                       COALESCE(sv.SoDienThoai, sv_hs.SoDienThoai) AS SoDienThoai,
+                       COALESCE(t.TenTruong, t_hs.TenTruong) AS TenTruong,
+                       hs.MaHoSo
+                FROM Giuong g
+                LEFT JOIN HopDongNoiTru hd ON g.MaGiuong = hd.MaGiuong AND hd.TrangThaiHopDong IN ('Đang hiệu lực', 'Hiệu lực', 'Chờ nhận phòng')
+                LEFT JOIN SinhVien sv ON hd.MaSinhVien = sv.MaSinhVien
+                LEFT JOIN TruongDaiHoc t ON sv.MaTruong = t.MaTruong
+                LEFT JOIN (
+                    SELECT h1.MaHoSo, h1.MaSinhVien, h1.MaGiuong
+                    FROM HoSoDangKy h1
+                    INNER JOIN (
+                        SELECT MaGiuong, MAX(MaHoSo) AS MaxHoSo
+                        FROM HoSoDangKy
+                        WHERE TrangThaiHoSo IN ('Chờ thanh toán', 'Đã duyệt')
+                        GROUP BY MaGiuong
+                    ) h2 ON h1.MaHoSo = h2.MaxHoSo
+                ) hs ON g.MaGiuong = hs.MaGiuong
+                LEFT JOIN SinhVien sv_hs ON hs.MaSinhVien = sv_hs.MaSinhVien
+                LEFT JOIN TruongDaiHoc t_hs ON sv_hs.MaTruong = t_hs.MaTruong
+                JOIN Phong p ON g.MaPhong = p.MaPhong
+                JOIN ToaNha tn ON p.MaToaNha = tn.MaToaNha
+                WHERE tn.MaCum = :cum
+                ORDER BY g.KyHieuGiuong ASC
+            ", ['cum' => $maCum]);
+
+            foreach ($bedsQuery as $b) {
+                $bedsByRoom[$b['MaPhong']][] = $b;
+            }
+
+            // 4. Phòng đề xuất dồn phòng (lấp đầy <= 50%)
+            $underOccupiedRooms = RoomConsolidationService::getUnderOccupiedRooms($maCum);
+        } catch (\Throwable $e) {
+            // Tránh ngắt trang nếu lỗi
+        }
 
         $this->view('staff.rooms', [
             'user' => $user,
-            'maCum' => $maCum
+            'maCum' => $maCum,
+            'buildings' => $buildings,
+            'rooms' => $rooms,
+            'bedsByRoom' => $bedsByRoom,
+            'underOccupiedRooms' => $underOccupiedRooms,
+            'filterToa' => $filterToa,
+            'filterTang' => $filterTang,
+            'filterTrangThai' => $filterTrangThai,
+            'success' => Session::flash('success'),
+            'error' => Session::flash('error')
         ]);
+    }
+
+    public function confirmCheckin(): void
+    {
+        $request = new Request();
+        $maHopDong = trim((string)$request->input('maHopDong', ''));
+        $maGiuong = trim((string)$request->input('maGiuong', ''));
+        $maHoSo = trim((string)$request->input('maHoSo', ''));
+
+        Database::beginTransaction();
+        try {
+            $hd = null;
+            if (!empty($maHopDong)) {
+                $hd = Database::fetch("SELECT * FROM HopDongNoiTru WHERE MaHopDong = :maHD FOR UPDATE", ['maHD' => $maHopDong]);
+            } elseif (!empty($maGiuong)) {
+                $hd = Database::fetch("
+                    SELECT * FROM HopDongNoiTru 
+                    WHERE MaGiuong = :g AND (TrangThaiHopDong IN ('Chờ nhận phòng', 'Chờ hiệu lực') OR NgayNhanPhong IS NULL)
+                    ORDER BY MaHopDong DESC LIMIT 1 FOR UPDATE
+                ", ['g' => $maGiuong]);
+            }
+
+            if (!$hd) {
+                // Nếu chưa có hợp đồng nhưng có hồ sơ đã duyệt/thanh toán trên giường đó
+                $hoso = null;
+                if (!empty($maHoSo)) {
+                    $hoso = Database::fetch("SELECT * FROM HoSoDangKy WHERE MaHoSo = :hs FOR UPDATE", ['hs' => $maHoSo]);
+                }
+                if (!$hoso && !empty($maGiuong)) {
+                    $hoso = Database::fetch("
+                        SELECT * FROM HoSoDangKy 
+                        WHERE MaGiuong = :g AND TrangThaiHoSo IN ('Chờ thanh toán', 'Đã duyệt')
+                        ORDER BY MaHoSo DESC LIMIT 1 FOR UPDATE
+                    ", ['g' => $maGiuong]);
+                }
+
+                if ($hoso) {
+                    $bedId = $hoso['MaGiuong'] ?? $maGiuong;
+                    $existingHD = Database::fetch("SELECT * FROM HopDongNoiTru WHERE MaHoSo = :hs FOR UPDATE", ['hs' => $hoso['MaHoSo']]);
+                    if ($existingHD) {
+                        Database::execute("
+                            UPDATE HopDongNoiTru 
+                            SET NgayNhanPhong = NOW(), TrangThaiHopDong = 'Đang hiệu lực', MaGiuong = :g
+                            WHERE MaHopDong = :maHD
+                        ", [
+                            'maHD' => $existingHD['MaHopDong'],
+                            'g' => $bedId
+                        ]);
+                        $hd = $existingHD;
+                    } else {
+                        $newMaHD = 'HD' . date('Ym') . rand(100, 999);
+                        Database::execute("
+                            INSERT INTO HopDongNoiTru (MaHopDong, MaHoSo, MaSinhVien, MaGiuong, NgayBatDau, NgayKetThuc, NgayNhanPhong, TrangThaiHopDong)
+                            VALUES (:maHD, :maHoSo, :maSV, :maGiuong, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 10 MONTH), NOW(), 'Đang hiệu lực')
+                        ", [
+                            'maHD' => $newMaHD,
+                            'maHoSo' => $hoso['MaHoSo'],
+                            'maSV' => $hoso['MaSinhVien'],
+                            'maGiuong' => $bedId
+                        ]);
+                        $hd = ['MaHopDong' => $newMaHD, 'MaGiuong' => $bedId, 'MaSinhVien' => $hoso['MaSinhVien']];
+                    }
+
+                    Database::execute("UPDATE HoSoDangKy SET TrangThaiHoSo = 'Đã duyệt' WHERE MaHoSo = :hs", ['hs' => $hoso['MaHoSo']]);
+                } else {
+                    Database::rollBack();
+                    Session::flash('error', 'Không tìm thấy thông tin hợp đồng hoặc hồ sơ hợp lệ để nhận phòng.');
+                    $this->redirect('staff/rooms');
+                    return;
+                }
+            } else {
+                Database::execute("
+                    UPDATE HopDongNoiTru 
+                    SET NgayNhanPhong = NOW(), TrangThaiHopDong = 'Đang hiệu lực'
+                    WHERE MaHopDong = :maHD
+                ", ['maHD' => $hd['MaHopDong']]);
+            }
+
+            $bedId = $hd['MaGiuong'] ?? $maGiuong;
+            Database::execute("
+                UPDATE Giuong SET TrangThaiGiuong = 'Đã có người ở' WHERE MaGiuong = :g
+            ", ['g' => $bedId]);
+
+            Database::execute("
+                UPDATE SinhVien SET TrangThaiNoiTru = 'Đang nội trú' WHERE MaSinhVien = :sv
+            ", ['sv' => $hd['MaSinhVien']]);
+
+            $roomOfBed = Database::fetch("SELECT MaPhong FROM Giuong WHERE MaGiuong = :g", ['g' => $bedId]);
+            if ($roomOfBed) {
+                Database::execute("
+                    UPDATE Phong 
+                    SET SoSVDangO = (SELECT COUNT(*) FROM Giuong WHERE MaPhong = :p1 AND TrangThaiGiuong = 'Đã có người ở')
+                    WHERE MaPhong = :p2
+                ", [
+                    'p1' => $roomOfBed['MaPhong'],
+                    'p2' => $roomOfBed['MaPhong']
+                ]);
+            }
+
+            Database::commit();
+            Session::flash('success', "Xác nhận nhận phòng thành công cho sinh viên {$hd['MaSinhVien']} (Giường {$bedId}).");
+        } catch (\Throwable $e) {
+            Database::rollBack();
+            Session::flash('error', 'Lỗi khi xác nhận nhận phòng: ' . $e->getMessage());
+        }
+
+        $this->redirect('staff/rooms');
+    }
+
+    public function assignRoomLeader(): void
+    {
+        $request = new Request();
+        $maPhong = trim((string)$request->input('maPhong', ''));
+        $maSinhVien = trim((string)$request->input('maSinhVien', ''));
+
+        if (empty($maPhong) || empty($maSinhVien)) {
+            Session::flash('error', 'Dữ liệu chỉ định trưởng phòng không hợp lệ.');
+            $this->redirect('staff/rooms');
+            return;
+        }
+
+        try {
+            Database::execute("
+                UPDATE Phong SET TruongPhong = :sv WHERE MaPhong = :p
+            ", ['sv' => $maSinhVien, 'p' => $maPhong]);
+
+            $sv = Database::fetch("SELECT MaTaiKhoan FROM SinhVien WHERE MaSinhVien = :sv", ['sv' => $maSinhVien]);
+            if ($sv && !empty($sv['MaTaiKhoan'])) {
+                Database::execute("
+                    UPDATE TaiKhoan SET MaVaiTro = 'TRUONG_PHONG' WHERE MaTaiKhoan = :tk
+                ", ['tk' => $sv['MaTaiKhoan']]);
+            }
+
+            Session::flash('success', "Đã chỉ định sinh viên {$maSinhVien} làm Trưởng phòng {$maPhong} thành công.");
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Lỗi khi chỉ định trưởng phòng: ' . $e->getMessage());
+        }
+
+        $this->redirect('staff/rooms');
+    }
+
+    public function toggleBedMaintenance(): void
+    {
+        $request = new Request();
+        $maGiuong = trim((string)$request->input('maGiuong', ''));
+        $action = trim((string)$request->input('action', 'lock'));
+
+        if (empty($maGiuong)) {
+            Session::flash('error', 'Mã giường không hợp lệ.');
+            $this->redirect('staff/rooms');
+            return;
+        }
+
+        try {
+            if ($action === 'lock') {
+                $g = Database::fetch("SELECT TrangThaiGiuong FROM Giuong WHERE MaGiuong = :g", ['g' => $maGiuong]);
+                if ($g && $g['TrangThaiGiuong'] !== 'Trống') {
+                    Session::flash('error', 'Chỉ có thể khóa bảo trì giường đang ở trạng thái Trống.');
+                    $this->redirect('staff/rooms');
+                    return;
+                }
+                Database::execute("UPDATE Giuong SET TrangThaiGiuong = 'Khóa bảo trì' WHERE MaGiuong = :g", ['g' => $maGiuong]);
+                Session::flash('success', "Đã chuyển giường {$maGiuong} sang trạng thái Khóa bảo trì.");
+            } else {
+                Database::execute("UPDATE Giuong SET TrangThaiGiuong = 'Trống' WHERE MaGiuong = :g", ['g' => $maGiuong]);
+                Session::flash('success', "Đã mở lại giường {$maGiuong} về trạng thái Trống.");
+            }
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Lỗi khi cập nhật trạng thái giường: ' . $e->getMessage());
+        }
+
+        $this->redirect('staff/rooms');
+    }
+
+    public function toggleRoomMaintenance(): void
+    {
+        $request = new Request();
+        $maPhong = trim((string)$request->input('maPhong', ''));
+        $action = trim((string)$request->input('action', 'lock'));
+
+        if (empty($maPhong)) {
+            Session::flash('error', 'Mã phòng không hợp lệ.');
+            $this->redirect('staff/rooms');
+            return;
+        }
+
+        try {
+            if ($action === 'lock') {
+                Database::execute("UPDATE Phong SET TrangThaiPhong = 'Khóa bảo trì' WHERE MaPhong = :p", ['p' => $maPhong]);
+                Session::flash('success', "Đã khóa bảo trì phòng {$maPhong}.");
+            } else {
+                $p = Database::fetch("
+                    SELECT p.SoSVDangO, lp.SoGiuongToiDa 
+                    FROM Phong p 
+                    JOIN LoaiPhong lp ON p.MaLoaiPhong = lp.MaLoaiPhong 
+                    WHERE p.MaPhong = :p
+                ", ['p' => $maPhong]);
+                $newStatus = 'Còn chỗ';
+                if ($p) {
+                    if ($p['SoSVDangO'] >= $p['SoGiuongToiDa']) {
+                        $newStatus = 'Đầy chỗ';
+                    } elseif ($p['SoSVDangO'] > 0) {
+                        $newStatus = 'Đang sử dụng';
+                    }
+                }
+                Database::execute("UPDATE Phong SET TrangThaiPhong = :st WHERE MaPhong = :p", ['st' => $newStatus, 'p' => $maPhong]);
+                Session::flash('success', "Đã mở lại phòng {$maPhong} (Trạng thái: {$newStatus}).");
+            }
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Lỗi khi cập nhật trạng thái phòng: ' . $e->getMessage());
+        }
+
+        $this->redirect('staff/rooms');
     }
 
     public function applications(): void
