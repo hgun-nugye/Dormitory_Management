@@ -90,6 +90,7 @@ Router::post('/staff/rooms/delete-bed', 'Staff\DashboardController@deleteBed', [
 Router::post('/staff/rooms/assign-leader', 'Staff\DashboardController@assignRoomLeader', [AuthMiddleware::class]);
 Router::post('/staff/rooms/confirm-checkin', 'Staff\DashboardController@confirmCheckIn', [AuthMiddleware::class]);
 Router::post('/staff/rooms/toggle-ct01', 'Staff\DashboardController@toggleCT01', [AuthMiddleware::class]);
+Router::post('/staff/rooms/remove-student', 'Staff\DashboardController@removeStudentFromBed', [AuthMiddleware::class]);
 Router::get('/staff/applications', 'Staff\DashboardController@applications', [AuthMiddleware::class]);
 Router::get('/staff/utilities', 'Staff\DashboardController@utilities', [AuthMiddleware::class]);
 Router::get('/staff/requests', 'Staff\DashboardController@requests', [AuthMiddleware::class]);

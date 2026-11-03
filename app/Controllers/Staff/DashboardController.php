@@ -189,7 +189,11 @@ class DashboardController extends Controller {
                    tdh.TenTruong
             FROM Giuong g
             JOIN Phong p ON g.MaPhong = p.MaPhong
-            LEFT JOIN HopDongNoiTru hd ON g.MaGiuong = hd.MaGiuong AND hd.TrangThaiHopDong IN ('Đang hiệu lực', 'Chờ hiệu lực')
+            LEFT JOIN HopDongNoiTru hd ON hd.MaHopDong = (
+                SELECT hd2.MaHopDong FROM HopDongNoiTru hd2 
+                WHERE hd2.MaGiuong = g.MaGiuong AND hd2.TrangThaiHopDong IN ('Đang hiệu lực', 'Chờ hiệu lực')
+                ORDER BY hd2.NgayNhanPhong DESC, hd2.MaHopDong DESC LIMIT 1
+            )
             LEFT JOIN SinhVien sv ON hd.MaSinhVien = sv.MaSinhVien
             LEFT JOIN TruongDaiHoc tdh ON sv.MaTruong = tdh.MaTruong
             WHERE p.MaToaNha = :toa
@@ -1618,13 +1622,15 @@ class DashboardController extends Controller {
      */
     private function syncRoomOccupancy(string $maPhong, bool $forceUnlock = false, bool $preserveStatus = false): void
     {
-        // 1. Lấy thông tin phòng, sức chứa và sĩ số thực tế (mỗi tham số chuẩn bị chỉ xuất hiện 1 lần duy nhất)
+        // 1. Lấy thông tin phòng, sức chứa và sĩ số thực tế (đếm theo số sinh viên có hợp đồng hiệu lực ở giường có người ở)
         $info = Database::fetch("
             SELECT p.MaPhong, p.TrangThaiPhong, lp.SoGiuongToiDa,
-                   (SELECT COUNT(*) 
+                   (SELECT COUNT(DISTINCT hd.MaSinhVien) 
                     FROM Giuong g 
                     JOIN HopDongNoiTru hd ON g.MaGiuong = hd.MaGiuong 
-                    WHERE g.MaPhong = p.MaPhong AND hd.TrangThaiHopDong = 'Đang hiệu lực') AS SoSV
+                    WHERE g.MaPhong = p.MaPhong 
+                      AND hd.TrangThaiHopDong = 'Đang hiệu lực' 
+                      AND g.TrangThaiGiuong = 'Đã có người ở') AS SoSV
             FROM Phong p
             LEFT JOIN LoaiPhong lp ON p.MaLoaiPhong = lp.MaLoaiPhong
             WHERE p.MaPhong = :mp
@@ -1632,8 +1638,10 @@ class DashboardController extends Controller {
 
         if (!$info) return;
 
-        $soSV = (int)($info['SoSV'] ?? 0);
-        $maxCap = (int)($info['SoGiuongToiDa'] ?? 4);
+        $maxCap = max(1, (int)($info['SoGiuongToiDa'] ?? 4));
+        $rawSoSV = (int)($info['SoSV'] ?? 0);
+        // Ràng buộc tuyệt đối: Sĩ số phòng không bao giờ được vượt quá sức chứa tối đa theo Loại phòng
+        $soSV = min($maxCap, max(0, $rawSoSV));
         $currentStatus = $info['TrangThaiPhong'] ?? 'Còn chỗ';
 
         $newStatus = $currentStatus;
@@ -2262,6 +2270,119 @@ class DashboardController extends Controller {
     }
 
     /**
+     * Xóa sinh viên khỏi giường (Hủy lưu trú / Thanh lý hợp đồng / Trả giường)
+     * Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền thực hiện
+     */
+    public function removeStudentFromBed(): void
+    {
+        $user = Auth::user();
+        if (($user['MaVaiTro'] ?? '') !== 'TRUONG_TOA') {
+            Session::flash('error', 'Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền quản lý phòng và giường!');
+            $this->redirect('staff/rooms');
+            return;
+        }
+
+        $maToa = trim((string)($user['MaCumQuanLy'] ?? ''));
+        $request = new Request();
+        $maGiuong = trim((string)$request->input('maGiuong', ''));
+        $maPhong = trim((string)$request->input('maPhong', ''));
+        $maSinhVien = trim((string)$request->input('maSinhVien', ''));
+
+        if (empty($maGiuong) || empty($maPhong)) {
+            Session::flash('error', 'Thông tin giường hoặc phòng không hợp lệ!');
+            $this->redirect('staff/rooms');
+            return;
+        }
+
+        // Kiểm tra phòng và tòa nhà
+        $room = Database::fetch("SELECT * FROM Phong WHERE MaPhong = :mp", ['mp' => $maPhong]);
+        if (!$room || (!empty($maToa) && $room['MaToaNha'] !== $maToa)) {
+            Session::flash('error', 'Phòng không tồn tại hoặc không thuộc quyền quản lý!');
+            $this->redirect('staff/rooms');
+            return;
+        }
+
+        // Kiểm tra giường
+        $bed = Database::fetch("SELECT * FROM Giuong WHERE MaGiuong = :mg AND MaPhong = :mp", [
+            'mg' => $maGiuong,
+            'mp' => $maPhong
+        ]);
+        if (!$bed) {
+            Session::flash('error', 'Không tìm thấy giường trong phòng!');
+            $this->redirect('staff/rooms');
+            return;
+        }
+
+        // Lấy hợp đồng đang hiệu lực trên giường này
+        $activeHd = Database::fetch("
+            SELECT hd.*, sv.HoVaTen, sv.MSSVTaiTruong 
+            FROM HopDongNoiTru hd
+            LEFT JOIN SinhVien sv ON hd.MaSinhVien = sv.MaSinhVien
+            WHERE hd.MaGiuong = :mg AND hd.TrangThaiHopDong IN ('Đang hiệu lực', 'Chờ hiệu lực')
+        ", ['mg' => $maGiuong]);
+
+        if (!$activeHd) {
+            Database::execute("UPDATE Giuong SET TrangThaiGiuong = 'Trống' WHERE MaGiuong = :mg", ['mg' => $maGiuong]);
+            $this->syncRoomOccupancy($maPhong, true);
+            Session::flash('success', "Giường {$bed['KyHieuGiuong']} không có hợp đồng đang hiệu lực, đã đưa về trạng thái Trống!");
+            $this->redirect('staff/rooms');
+            return;
+        }
+
+        $targetMsv = $activeHd['MaSinhVien'];
+        $svTen = $activeHd['HoVaTen'] ?? $targetMsv;
+
+        try {
+            // 1. Thanh lý TOÀN BỘ hợp đồng nội trú đang hiệu lực trên giường này (tránh sót hợp đồng trùng lặp)
+            Database::execute("
+                UPDATE HopDongNoiTru 
+                SET TrangThaiHopDong = 'Đã thanh lý'
+                WHERE MaGiuong = :mg AND TrangThaiHopDong IN ('Đang hiệu lực', 'Chờ hiệu lực')
+            ", ['mg' => $maGiuong]);
+
+            // 2. Chuyển trạng thái giường về 'Trống'
+            Database::execute("
+                UPDATE Giuong 
+                SET TrangThaiGiuong = 'Trống' 
+                WHERE MaGiuong = :mg
+            ", ['mg' => $maGiuong]);
+
+            // 3. Nếu sinh viên đang là Trưởng phòng của phòng này, hủy vai trò Trưởng phòng
+            if ($room['TruongPhong'] === $targetMsv) {
+                Database::execute("
+                    UPDATE Phong 
+                    SET TruongPhong = NULL 
+                    WHERE MaPhong = :mp
+                ", ['mp' => $maPhong]);
+            }
+
+            // 4. Kiểm tra xem sinh viên này còn hợp đồng nào khác đang hiệu lực không
+            $otherHd = Database::fetch("
+                SELECT COUNT(*) AS cnt 
+                FROM HopDongNoiTru 
+                WHERE MaSinhVien = :sv AND TrangThaiHopDong IN ('Đang hiệu lực', 'Chờ hiệu lực')
+            ", ['sv' => $targetMsv]);
+
+            if ((int)($otherHd['cnt'] ?? 0) === 0) {
+                Database::execute("
+                    UPDATE SinhVien 
+                    SET TrangThaiNoiTru = 'Chưa ở' 
+                    WHERE MaSinhVien = :sv
+                ", ['sv' => $targetMsv]);
+            }
+
+            // 5. Đồng bộ lại sĩ số phòng và trạng thái phòng
+            $this->syncRoomOccupancy($maPhong, true);
+
+            Session::flash('success', "Đã xóa sinh viên {$svTen} (MSSV: {$targetMsv}) khỏi giường {$bed['KyHieuGiuong']} thành công! Giường đã chuyển về trạng thái Trống.");
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Lỗi khi xóa sinh viên khỏi giường: ' . $e->getMessage());
+        }
+
+        $this->redirect('staff/rooms');
+    }
+
+    /**
      * Xuất danh sách Phòng ở ra file CSV theo kết quả đang lọc hoặc toàn bộ
      * Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền thực hiện
      */
@@ -2431,11 +2552,11 @@ class DashboardController extends Controller {
     }
 
     /**
-     * Tải file mẫu CSV để nhập danh sách phòng ở
+     * Tải file mẫu CSV để nhập danh sách phòng ở kèm sơ đồ giường và sinh viên cư trú
      */
     public function downloadRoomTemplate(): void
     {
-        $filename = 'Mau_Import_Phong_KTX.csv';
+        $filename = 'Mau_Import_Phong_Va_Giuong_SV_KTX.csv';
         header('Content-Type: text/csv; charset=UTF-8');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         header('Pragma: no-cache');
@@ -2444,26 +2565,50 @@ class DashboardController extends Controller {
         $output = fopen('php://output', 'w');
         fwrite($output, "\xEF\xBB\xBF");
 
-        // Headers
+        // Headers chi tiết hỗ trợ nhập Phòng, Giường và Sinh viên đang ở
         fputcsv($output, [
             'SoPhong',
             'Tang',
             'MaLoaiPhong',
-            'TrangThaiPhong'
+            'TrangThaiPhong',
+            'KyHieuGiuong',
+            'ViTriTangGiuong',
+            'MaSinhVien',
+            'HoVaTen',
+            'GioiTinh',
+            'SoCCCD',
+            'SoDienThoai',
+            'Email',
+            'MaTruong',
+            'LaTruongPhong',
+            'DaNopCT01'
         ]);
 
-        // Dữ liệu mẫu minh họa
-        fputcsv($output, ['101', '1', 'LP4', 'Còn chỗ']);
-        fputcsv($output, ['102', '1', 'LP4', 'Còn chỗ']);
-        fputcsv($output, ['201', '2', 'LP6', 'Còn chỗ']);
-        fputcsv($output, ['301', '3', 'LP4ML', 'Khóa bảo trì']);
+        // Dữ liệu mẫu minh họa:
+        // Phòng 101 (LP4 - 4 giường): Có 2 sinh viên đang ở, G1 là Trưởng phòng đã nộp CT01
+        fputcsv($output, ['101', '1', 'LP4', 'Đang sử dụng', 'G1', '1', '2110001', 'Nguyễn Văn An', 'Nam', '079205001234', '0901234567', 'an.nguyen@example.com', 'BK', '1', '1']);
+        fputcsv($output, ['101', '1', 'LP4', 'Đang sử dụng', 'G2', '1', '2310002', 'Nguyễn Thị Ngọc Anh', 'Nữ', '079206001002', '0912345678', 'anh.nguyen@example.com', 'KHTN', '0', '1']);
+        fputcsv($output, ['101', '1', 'LP4', 'Đang sử dụng', 'G3', '2', '', '', '', '', '', '', '', '0', '0']);
+        fputcsv($output, ['101', '1', 'LP4', 'Đang sử dụng', 'G4', '2', '', '', '', '', '', '', '', '0', '0']);
+
+        // Phòng 102 (LP4): Có 1 sinh viên ở G1 (Trưởng phòng)
+        fputcsv($output, ['102', '1', 'LP4', 'Còn chỗ', 'G1', '1', '2212345', 'Trần Thị Mai Chúc', 'Nữ', '074205003456', '0987654321', 'chuc.tran@example.com', 'UIT', '1', '1']);
+        fputcsv($output, ['102', '1', 'LP4', 'Còn chỗ', 'G2', '1', '', '', '', '', '', '', '', '0', '0']);
+        fputcsv($output, ['102', '1', 'LP4', 'Còn chỗ', 'G3', '2', '', '', '', '', '', '', '', '0', '0']);
+        fputcsv($output, ['102', '1', 'LP4', 'Còn chỗ', 'G4', '2', '', '', '', '', '', '', '', '0', '0']);
+
+        // Phòng 201 (LP6): Phòng trống (hệ thống tự sinh G1 đến G6)
+        fputcsv($output, ['201', '2', 'LP6', 'Còn chỗ', 'G1', '1', '', '', '', '', '', '', '', '0', '0']);
+
+        // Phòng 301 (LP4ML): Phòng đang khóa bảo trì
+        fputcsv($output, ['301', '3', 'LP4ML', 'Khóa bảo trì', 'G1', '1', '', '', '', '', '', '', '', '0', '0']);
 
         fclose($output);
         exit;
     }
 
     /**
-     * Nhập danh sách phòng ở từ file CSV
+     * Nhập danh sách phòng ở từ file CSV (hỗ trợ nhập kèm danh sách sinh viên theo giường)
      * Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền thực hiện
      */
     public function importRooms(): void
@@ -2482,7 +2627,11 @@ class DashboardController extends Controller {
         }
 
         $request = new Request();
-        $overwrite = (bool)$request->input('overwriteExisting', false);
+        $rawOverwrite = $request->input('overwriteExisting', null);
+        if ($rawOverwrite === null) {
+            $rawOverwrite = $_POST['overwriteExisting'] ?? '0';
+        }
+        $overwrite = ($rawOverwrite === '1' || $rawOverwrite === 1 || $rawOverwrite === true || $rawOverwrite === 'on');
 
         if (!isset($_FILES['importFile']) || $_FILES['importFile']['error'] !== UPLOAD_ERR_OK) {
             Session::flash('error', 'Vui lòng chọn tệp CSV hợp lệ để nhập danh sách phòng!');
@@ -2518,26 +2667,69 @@ class DashboardController extends Controller {
             $firstLine = preg_replace('/^\xEF\xBB\xBF/', '', $firstLine);
 
             $delimiter = (substr_count($firstLine, ';') > substr_count($firstLine, ',')) ? ';' : ',';
+            if (substr_count($firstLine, "\t") > substr_count($firstLine, $delimiter)) {
+                $delimiter = "\t";
+            }
             $headers = str_getcsv(trim($firstLine), $delimiter);
+
+            // Hàm chuẩn hóa chuỗi tiêu đề cột (bỏ dấu, chuyển chữ thường, bỏ ký tự đặc biệt)
+            $normalize = function(string $str): string {
+                $str = mb_strtolower(trim($str), 'UTF-8');
+                $str = preg_replace("/(à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ)/u", 'a', $str);
+                $str = preg_replace("/(è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ)/u", 'e', $str);
+                $str = preg_replace("/(ì|í|ị|ỉ|ĩ)/u", 'i', $str);
+                $str = preg_replace("/(ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ)/u", 'o', $str);
+                $str = preg_replace("/(ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ)/u", 'u', $str);
+                $str = preg_replace("/(ỳ|ý|ỵ|ỷ|ỹ)/u", 'y', $str);
+                $str = preg_replace("/(đ)/u", 'd', $str);
+                return preg_replace('/[^a-z0-9]/', '', $str);
+            };
 
             $colMap = [];
             foreach ($headers as $idx => $h) {
-                $clean = strtolower(trim($h));
-                $clean = str_replace([' ', '_', '-', '.'], '', $clean);
-                if (in_array($clean, ['sophong', 'phong', 'room', 'roomnumber', 'sp'])) {
+                $clean = $normalize($h);
+                if (in_array($clean, ['sophong', 'phong', 'room', 'roomnumber', 'sp', 'sophongonoiduoc'])) {
                     $colMap['sophong'] = $idx;
-                } elseif (in_array($clean, ['tang', 'floor', 'sotang'])) {
+                } elseif (in_array($clean, ['tang', 'floor', 'sotang', 'tanglau'])) {
                     $colMap['tang'] = $idx;
-                } elseif (in_array($clean, ['maloaiphong', 'loaiphong', 'type', 'roomtype'])) {
+                } elseif (in_array($clean, ['maloaiphong', 'loaiphong', 'type', 'roomtype', 'tenloaiphong'])) {
                     $colMap['loaiphong'] = $idx;
-                } elseif (in_array($clean, ['trangthaiphong', 'trangthai', 'status'])) {
+                } elseif (in_array($clean, ['trangthaiphong', 'trangthai', 'status', 'trangthaiphongo'])) {
                     $colMap['trangthai'] = $idx;
+                } elseif (in_array($clean, ['kyhieugiuong', 'giuong', 'magiuong', 'bed', 'bedcode', 'kh', 'sogiuong'])) {
+                    $colMap['kyhieu'] = $idx;
+                } elseif (in_array($clean, ['vitritanggiuong', 'tanggiuong', 'vitri', 'bedlevel', 'level'])) {
+                    $colMap['vitri'] = $idx;
+                } elseif (in_array($clean, ['trangthaigiuong', 'bedstatus'])) {
+                    $colMap['trangthaigiuong'] = $idx;
+                } elseif (in_array($clean, ['masinhvien', 'mssv', 'masv', 'studentid', 'sv'])) {
+                    $colMap['masv'] = $idx;
+                } elseif (in_array($clean, ['hovaten', 'hoten', 'tensinhvien', 'tensv', 'fullname', 'name'])) {
+                    $colMap['hoten'] = $idx;
+                } elseif (in_array($clean, ['gioitinh', 'gender', 'sex', 'phai'])) {
+                    $colMap['gioitinh'] = $idx;
+                } elseif (in_array($clean, ['socccd', 'cccd', 'cmnd', 'idcard', 'cancuoc'])) {
+                    $colMap['cccd'] = $idx;
+                } elseif (in_array($clean, ['sodienthoai', 'sdt', 'phone', 'dienthoai', 'mobile'])) {
+                    $colMap['sdt'] = $idx;
+                } elseif (in_array($clean, ['email', 'mail'])) {
+                    $colMap['email'] = $idx;
+                } elseif (in_array($clean, ['matruong', 'truong', 'school', 'university', 'tentruong'])) {
+                    $colMap['truong'] = $idx;
+                } elseif (in_array($clean, ['latruongphong', 'truongphong', 'latp', 'chucvu', 'isleader', 'istruongphong', 'tp'])) {
+                    $colMap['latruongphong'] = $idx;
+                } elseif (in_array($clean, ['danopct01', 'ct01', 'danopmauct01', 'tamtrumauct01', 'tamtru'])) {
+                    $colMap['ct01'] = $idx;
+                } elseif (in_array($clean, ['ngaybatdau', 'batdau', 'startdate', 'tungay'])) {
+                    $colMap['startdate'] = $idx;
+                } elseif (in_array($clean, ['ngayketthuc', 'ketthuc', 'enddate', 'denngay'])) {
+                    $colMap['enddate'] = $idx;
                 }
             }
 
             if (!isset($colMap['sophong'])) {
                 fclose($handle);
-                Session::flash('error', 'Tệp CSV không đúng định dạng. Cột bắt buộc tối thiểu: SoPhong!');
+                Session::flash('error', 'Tệp CSV không đúng định dạng. Cột bắt buộc tối thiểu: SoPhong (Số phòng)!');
                 $this->redirect('staff/rooms');
                 return;
             }
@@ -2549,10 +2741,27 @@ class DashboardController extends Controller {
             }
             $defaultLoaiPhong = array_key_first($validLoaiPhong) ?: 'LP4';
 
-            $createdCount = 0;
-            $updatedCount = 0;
-            $skippedCount = 0;
+            // Trường ĐH mặc định
+            $firstTruong = Database::fetch("SELECT MaTruong FROM TruongDaiHoc LIMIT 1");
+            $defaultTruong = $firstTruong['MaTruong'] ?? 'BK';
 
+            // Đợt đăng ký mặc định
+            $dotRow = Database::fetch("SELECT MaDot FROM DotDangKy ORDER BY MaDot DESC LIMIT 1");
+            $defaultMaDot = (int)($dotRow['MaDot'] ?? 1);
+
+            // Năm học mặc định cho hợp đồng
+            $currentYear = (int)date('Y');
+            $currentMonth = (int)date('n');
+            if ($currentMonth >= 9) {
+                $defaultStart = $currentYear . '-09-01';
+                $defaultEnd = ($currentYear + 1) . '-06-30';
+            } else {
+                $defaultStart = ($currentYear - 1) . '-09-01';
+                $defaultEnd = $currentYear . '-06-30';
+            }
+
+            // Đọc toàn bộ các dòng và nhóm theo Số phòng
+            $roomGroups = [];
             while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
                 if (empty($row) || (count($row) === 1 && $row[0] === null)) {
                     continue;
@@ -2563,55 +2772,121 @@ class DashboardController extends Controller {
                     continue;
                 }
 
-                $tang = isset($colMap['tang'], $row[$colMap['tang']]) ? max(1, (int)$row[$colMap['tang']]) : 1;
-                $maLoaiPhong = isset($colMap['loaiphong'], $row[$colMap['loaiphong']]) ? trim((string)$row[$colMap['loaiphong']]) : '';
-                if (empty($maLoaiPhong) || !isset($validLoaiPhong[$maLoaiPhong])) {
-                    $maLoaiPhong = $defaultLoaiPhong;
-                }
-                $soGiuongToiDa = $validLoaiPhong[$maLoaiPhong] ?? 4;
+                if (!isset($roomGroups[$soPhong])) {
+                    $tang = isset($colMap['tang'], $row[$colMap['tang']]) ? max(1, (int)$row[$colMap['tang']]) : 1;
+                    $maLoaiPhong = isset($colMap['loaiphong'], $row[$colMap['loaiphong']]) ? trim((string)$row[$colMap['loaiphong']]) : '';
+                    if (empty($maLoaiPhong) || !isset($validLoaiPhong[$maLoaiPhong])) {
+                        $maLoaiPhong = $defaultLoaiPhong;
+                    }
+                    $trangThaiPhong = isset($colMap['trangthai'], $row[$colMap['trangthai']]) ? trim((string)$row[$colMap['trangthai']]) : 'Còn chỗ';
+                    if (!in_array($trangThaiPhong, ['Còn chỗ', 'Đang sử dụng', 'Đầy chỗ', 'Khóa bảo trì'], true)) {
+                        $trangThaiPhong = 'Còn chỗ';
+                    }
 
-                $trangThaiPhong = isset($colMap['trangthai'], $row[$colMap['trangthai']]) ? trim((string)$row[$colMap['trangthai']]) : 'Còn chỗ';
-                if (!in_array($trangThaiPhong, ['Còn chỗ', 'Đang sử dụng', 'Đầy chỗ', 'Khóa bảo trì'], true)) {
-                    $trangThaiPhong = 'Còn chỗ';
+                    $roomGroups[$soPhong] = [
+                        'soPhong' => $soPhong,
+                        'tang' => $tang,
+                        'maLoaiPhong' => $maLoaiPhong,
+                        'trangThaiPhong' => $trangThaiPhong,
+                        'soGiuongToiDa' => $validLoaiPhong[$maLoaiPhong] ?? 4,
+                        'beds' => []
+                    ];
                 }
 
+                // Đọc thông tin Giường & Sinh viên
+                $kyHieu = isset($colMap['kyhieu'], $row[$colMap['kyhieu']]) ? trim((string)$row[$colMap['kyhieu']]) : '';
+                $viTriTang = isset($colMap['vitri'], $row[$colMap['vitri']]) ? (int)$row[$colMap['vitri']] : 0;
+                $stGiuong = isset($colMap['trangthaigiuong'], $row[$colMap['trangthaigiuong']]) ? trim((string)$row[$colMap['trangthaigiuong']]) : '';
+                $maSV = isset($colMap['masv'], $row[$colMap['masv']]) ? trim((string)$row[$colMap['masv']]) : '';
+                $hoTen = isset($colMap['hoten'], $row[$colMap['hoten']]) ? trim((string)$row[$colMap['hoten']]) : '';
+                $gioiTinh = isset($colMap['gioitinh'], $row[$colMap['gioitinh']]) ? trim((string)$row[$colMap['gioitinh']]) : '';
+                $cccd = isset($colMap['cccd'], $row[$colMap['cccd']]) ? trim((string)$row[$colMap['cccd']]) : '';
+                $sdt = isset($colMap['sdt'], $row[$colMap['sdt']]) ? trim((string)$row[$colMap['sdt']]) : '';
+                $email = isset($colMap['email'], $row[$colMap['email']]) ? trim((string)$row[$colMap['email']]) : '';
+                $truong = isset($colMap['truong'], $row[$colMap['truong']]) ? trim((string)$row[$colMap['truong']]) : '';
+
+                $isTP = false;
+                if (isset($colMap['latruongphong'])) {
+                    $tpVal = mb_strtolower(trim((string)$row[$colMap['latruongphong']]), 'UTF-8');
+                    $isTP = in_array($tpVal, ['1', 'true', 'co', 'yes', 'tp', 'truongphong']);
+                }
+
+                $hasCT01 = 0;
+                if (isset($colMap['ct01'])) {
+                    $ctVal = mb_strtolower(trim((string)$row[$colMap['ct01']]), 'UTF-8');
+                    $hasCT01 = in_array($ctVal, ['1', 'true', 'co', 'yes', 'danop']) ? 1 : 0;
+                }
+
+                $startD = isset($colMap['startdate'], $row[$colMap['startdate']]) && !empty(trim((string)$row[$colMap['startdate']])) ? trim((string)$row[$colMap['startdate']]) : $defaultStart;
+                $endD = isset($colMap['enddate'], $row[$colMap['enddate']]) && !empty(trim((string)$row[$colMap['enddate']])) ? trim((string)$row[$colMap['enddate']]) : $defaultEnd;
+
+                // Nếu có chỉ định giường hoặc sinh viên
+                if (!empty($kyHieu) || !empty($maSV)) {
+                    if (empty($kyHieu)) {
+                        $kyHieu = 'G' . (count($roomGroups[$soPhong]['beds']) + 1);
+                    } else {
+                        $kyHieu = strtoupper($kyHieu);
+                    }
+
+                    if ($viTriTang <= 0) {
+                        preg_match('/\d+/', $kyHieu, $mDigits);
+                        $num = !empty($mDigits[0]) ? (int)$mDigits[0] : (count($roomGroups[$soPhong]['beds']) + 1);
+                        $viTriTang = ($num % 2 === 1) ? 1 : 2;
+                    }
+
+                    $bedIdx = $kyHieu;
+                    $roomGroups[$soPhong]['beds'][$bedIdx] = [
+                        'kyHieu' => $kyHieu,
+                        'viTriTang' => $viTriTang,
+                        'trangThaiGiuong' => !empty($stGiuong) ? $stGiuong : (!empty($maSV) ? 'Đã có người ở' : 'Trống'),
+                        'maSV' => $maSV,
+                        'hoTen' => $hoTen,
+                        'gioiTinh' => $gioiTinh,
+                        'cccd' => $cccd,
+                        'sdt' => $sdt,
+                        'email' => $email,
+                        'truong' => $truong,
+                        'isTP' => $isTP,
+                        'hasCT01' => $hasCT01,
+                        'startDate' => $startD,
+                        'endDate' => $endD
+                    ];
+                }
+            }
+            fclose($handle);
+
+            $createdCount = 0;
+            $updatedCount = 0;
+            $skippedCount = 0;
+            $assignedStudentCount = 0;
+            $newStudentCount = 0;
+            $warningRooms = [];
+
+            foreach ($roomGroups as $soPhong => $rData) {
                 $maPhong = $maToa . '.' . $soPhong;
+                $tang = $rData['tang'];
+                $maLoaiPhong = $rData['maLoaiPhong'];
+                $soGiuongToiDa = $rData['soGiuongToiDa'];
+                $trangThaiPhong = $rData['trangThaiPhong'];
 
                 $existing = Database::fetch("SELECT * FROM Phong WHERE MaPhong = :mp", ['mp' => $maPhong]);
 
                 if ($existing) {
-                    if ($overwrite) {
-                        Database::execute("
-                            UPDATE Phong
-                            SET Tang = :tang, MaLoaiPhong = :lp, TrangThaiPhong = :st
-                            WHERE MaPhong = :mp
-                        ", [
-                            'tang' => $tang,
-                            'lp' => $maLoaiPhong,
-                            'st' => $trangThaiPhong,
-                            'mp' => $maPhong
-                        ]);
-
-                        // Đảm bảo số giường tối thiểu theo loại phòng
-                        for ($i = 1; $i <= $soGiuongToiDa; $i++) {
-                            $maGiuong = str_replace('.', '', $maPhong) . '-G' . $i;
-                            Database::execute("
-                                INSERT INTO Giuong (MaGiuong, MaPhong, KyHieuGiuong, ViTriTangGiuong, TrangThaiGiuong)
-                                VALUES (:mg, :mp, :kh, :vt, 'Trống')
-                                ON DUPLICATE KEY UPDATE ViTriTangGiuong = VALUES(ViTriTangGiuong)
-                            ", [
-                                'mg' => $maGiuong,
-                                'mp' => $maPhong,
-                                'kh' => 'G' . $i,
-                                'vt' => ($i % 2 === 1) ? 1 : 2
-                            ]);
-                        }
-
-                        $this->syncRoomOccupancy($maPhong);
-                        $updatedCount++;
-                    } else {
+                    if (!$overwrite) {
                         $skippedCount++;
+                        continue;
                     }
+                    Database::execute("
+                        UPDATE Phong
+                        SET Tang = :tang, MaLoaiPhong = :lp, TrangThaiPhong = :st
+                        WHERE MaPhong = :mp
+                    ", [
+                        'tang' => $tang,
+                        'lp' => $maLoaiPhong,
+                        'st' => $trangThaiPhong,
+                        'mp' => $maPhong
+                    ]);
+                    $updatedCount++;
                 } else {
                     Database::execute("
                         INSERT INTO Phong (MaPhong, MaToaNha, MaLoaiPhong, SoPhong, Tang, SoSVDangO, TrangThaiPhong)
@@ -2624,26 +2899,236 @@ class DashboardController extends Controller {
                         'tang' => $tang,
                         'st' => $trangThaiPhong
                     ]);
+                    $createdCount++;
+                }
 
-                    for ($i = 1; $i <= $soGiuongToiDa; $i++) {
-                        $maGiuong = str_replace('.', '', $maPhong) . '-G' . $i;
+                // Xử lý Giường theo ràng buộc số giường tối đa của Loại phòng
+                $cleanPrefix = str_replace('.', '', $maPhong);
+                $bedsToProcess = $rData['beds'];
+                $truongPhongMaSV = null;
+
+                // Dọn dẹp các giường dư thừa trong DB nếu loại phòng mới có số giường nhỏ hơn hoặc do tàn dư dữ liệu cũ
+                $oldExcessBeds = Database::fetchAll("
+                    SELECT MaGiuong FROM Giuong 
+                    WHERE MaPhong = :mp AND CAST(SUBSTRING_INDEX(KyHieuGiuong, 'G', -1) AS UNSIGNED) > :maxCap
+                ", ['mp' => $maPhong, 'maxCap' => $soGiuongToiDa]);
+                foreach ($oldExcessBeds as $oeb) {
+                    Database::execute("UPDATE HopDongNoiTru SET TrangThaiHopDong = 'Đã thanh lý' WHERE MaGiuong = :mg", ['mg' => $oeb['MaGiuong']]);
+                    Database::execute("DELETE FROM Giuong WHERE MaGiuong = :mg", ['mg' => $oeb['MaGiuong']]);
+                }
+
+                // CẢNH BÁO: Kiểm tra số lượng sinh viên được chỉ định trong file có vượt quá sức chứa không
+                $residentStudentsInFile = array_filter($bedsToProcess, fn($b) => !empty(trim((string)$b['maSV'])));
+                $totalResidentInFile = count($residentStudentsInFile);
+                if ($totalResidentInFile > $soGiuongToiDa) {
+                    $excess = $totalResidentInFile - $soGiuongToiDa;
+                    $warningRooms[] = "Phòng <b>{$soPhong}</b> (Loại <b>{$maLoaiPhong}</b>): Trong file có <b>{$totalResidentInFile}</b> sinh viên cư trú, vượt quá sức chứa tối đa cho phép <b>{$soGiuongToiDa} SV</b>! Hệ thống chỉ tiếp nhận {$soGiuongToiDa} sinh viên đầu tiên và từ chối {$excess} sinh viên vượt mức.";
+                }
+
+                // 1. Tạo hoặc cập nhật các giường có trong file (chỉ cho phép tối đa $soGiuongToiDa giường)
+                $assignedBedKeys = [];
+                $bedOrder = 0;
+                $admittedResidentCount = 0;
+
+                foreach ($bedsToProcess as $bKey => $bInfo) {
+                    $bedOrder++;
+                    if ($bedOrder > $soGiuongToiDa) {
+                        break; // Ràng buộc tuyệt đối: không vượt quá số giường tối đa theo loại phòng
+                    }
+
+                    $kyHieu = $bInfo['kyHieu'];
+                    $maGiuong = $cleanPrefix . '-' . $kyHieu;
+                    $viTri = $bInfo['viTriTang'];
+                    $stGiuong = $bInfo['trangThaiGiuong'];
+                    $assignedBedKeys[] = $kyHieu;
+
+                    $mssvInput = trim((string)$bInfo['maSV']);
+                    $canAdmitStudent = false;
+
+                    if (!empty($mssvInput)) {
+                        if ($admittedResidentCount < $soGiuongToiDa) {
+                            $canAdmitStudent = true;
+                            $admittedResidentCount++;
+                        } else {
+                            // Vượt mức quy chuẩn sức chứa -> chuyển trạng thái giường về Trống
+                            $stGiuong = 'Trống';
+                        }
+                    }
+
+                    // Tạo hoặc cập nhật giường
+                    Database::execute("
+                        INSERT INTO Giuong (MaGiuong, MaPhong, KyHieuGiuong, ViTriTangGiuong, TrangThaiGiuong)
+                        VALUES (:mg, :mp, :kh, :vt, :st)
+                        ON DUPLICATE KEY UPDATE ViTriTangGiuong = VALUES(ViTriTangGiuong), TrangThaiGiuong = VALUES(TrangThaiGiuong)
+                    ", [
+                        'mg' => $maGiuong,
+                        'mp' => $maPhong,
+                        'kh' => $kyHieu,
+                        'vt' => $viTri,
+                        'st' => $stGiuong
+                    ]);
+
+                    // 2. Nếu tiếp nhận sinh viên vào giường này -> Xử lý cư trú
+                    if ($canAdmitStudent) {
+                        // Tìm sinh viên trong hệ thống (theo MaSinhVien, MSSVTaiTruong, hoặc SoCCCD)
+                        $sv = Database::fetch("
+                            SELECT * FROM SinhVien 
+                            WHERE MaSinhVien = :s1 OR MSSVTaiTruong = :s2 OR (SoCCCD IS NOT NULL AND SoCCCD = :s3)
+                            LIMIT 1
+                        ", ['s1' => $mssvInput, 's2' => $mssvInput, 's3' => $mssvInput]);
+
+                        if ($sv) {
+                            $realMsv = $sv['MaSinhVien'];
+                            Database::execute("UPDATE SinhVien SET TrangThaiNoiTru = 'Đang nội trú' WHERE MaSinhVien = :sv", ['sv' => $realMsv]);
+                        } else {
+                            // Tạo tài khoản và hồ sơ Sinh viên mới
+                            $realMsv = $mssvInput;
+                            $tkCheck = Database::fetch("SELECT MaTaiKhoan FROM TaiKhoan WHERE TenDangNhap = :u", ['u' => $realMsv]);
+                            if ($tkCheck) {
+                                $idTk = (int)$tkCheck['MaTaiKhoan'];
+                            } else {
+                                Database::execute("
+                                    INSERT INTO TaiKhoan (TenDangNhap, MatKhauMaHoa, MaVaiTro, DangHoatDong)
+                                    VALUES (:u, :p, 'SINH_VIEN', 1)
+                                ", [
+                                    'u' => $realMsv,
+                                    'p' => Auth::hashPassword($realMsv . '@123')
+                                ]);
+                                $idTk = (int)Database::lastInsertId();
+                            }
+
+                            $truongVal = !empty($bInfo['truong']) ? $bInfo['truong'] : $defaultTruong;
+                            $tenVal = !empty($bInfo['hoTen']) ? $bInfo['hoTen'] : ('Sinh viên ' . $realMsv);
+                            $gtVal = !empty($bInfo['gioiTinh']) ? $bInfo['gioiTinh'] : 'Nam';
+                            $cccdVal = !empty($bInfo['cccd']) ? $bInfo['cccd'] : null;
+                            $sdtVal = !empty($bInfo['sdt']) ? $bInfo['sdt'] : null;
+                            $emailVal = !empty($bInfo['email']) ? $bInfo['email'] : ($realMsv . '@student.vnuhcm.edu.vn');
+
+                            Database::execute("
+                                INSERT INTO SinhVien (MaSinhVien, MaTaiKhoan, MaTruong, MSSVTaiTruong, HoVaTen, GioiTinh, SoCCCD, SoDienThoai, Email, TrangThaiNoiTru)
+                                VALUES (:msv, :tk, :tr, :mssv, :ten, :gt, :cccd, :sdt, :mail, 'Đang nội trú')
+                                ON DUPLICATE KEY UPDATE HoVaTen = VALUES(HoVaTen), TrangThaiNoiTru = 'Đang nội trú'
+                            ", [
+                                'msv' => $realMsv,
+                                'tk' => $idTk,
+                                'tr' => $truongVal,
+                                'mssv' => $realMsv,
+                                'ten' => $tenVal,
+                                'gt' => $gtVal,
+                                'cccd' => $cccdVal,
+                                'sdt' => $sdtVal,
+                                'mail' => $emailVal
+                            ]);
+                            $newStudentCount++;
+                        }
+
+                        // Tạo / cập nhật Hồ sơ đăng ký (HoSoDangKy)
+                        $maHoSo = 'HS_' . $maGiuong . '_' . $realMsv;
+                        $existingHs = Database::fetch("SELECT MaHoSo FROM HoSoDangKy WHERE MaHoSo = :hs", ['hs' => $maHoSo]);
+                        if (!$existingHs) {
+                            Database::execute("
+                                INSERT INTO HoSoDangKy (MaHoSo, MaSinhVien, MaDot, MaGiuong, LoaiLuongDangKy, TrangThaiHoSo, ThoiGianNop, ThoiGianDuyet)
+                                VALUES (:hs, :sv, :dot, :mg, 'Chính thức', 'Đã duyệt', NOW(), NOW())
+                            ", [
+                                'hs' => $maHoSo,
+                                'sv' => $realMsv,
+                                'dot' => $defaultMaDot,
+                                'mg' => $maGiuong
+                            ]);
+                        }
+
+                        // 1. THANH LÝ TOÀN BỘ hợp đồng đang hiệu lực trên giường này (loại bỏ tuyệt đối hợp đồng cũ trùng lặp)
+                        Database::execute("
+                            UPDATE HopDongNoiTru 
+                            SET TrangThaiHopDong = 'Đã thanh lý' 
+                            WHERE MaGiuong = :mg AND TrangThaiHopDong IN ('Đang hiệu lực', 'Chờ hiệu lực')
+                        ", ['mg' => $maGiuong]);
+
+                        // 2. THANH LÝ bất kỳ hợp đồng đang hiệu lực nào khác của sinh viên này ở giường/phòng khác
+                        Database::execute("
+                            UPDATE HopDongNoiTru 
+                            SET TrangThaiHopDong = 'Đã thanh lý' 
+                            WHERE MaSinhVien = :sv AND TrangThaiHopDong IN ('Đang hiệu lực', 'Chờ hiệu lực')
+                        ", ['sv' => $realMsv]);
+
+                        // 3. Tạo hoặc cập nhật Hợp đồng nội trú
+                        $maHopDong = 'HD_' . $maGiuong . '_' . $realMsv;
+                        Database::execute("
+                            INSERT INTO HopDongNoiTru (MaHopDong, MaHoSo, MaSinhVien, MaGiuong, NgayBatDau, NgayKetThuc, NgayNhanPhong, DaNopMauCT01, TrangThaiHopDong)
+                            VALUES (:hd, :hs, :sv, :mg, :start, :end, NOW(), :ct01, 'Đang hiệu lực')
+                            ON DUPLICATE KEY UPDATE 
+                                TrangThaiHopDong = 'Đang hiệu lực', 
+                                DaNopMauCT01 = VALUES(DaNopMauCT01), 
+                                NgayNhanPhong = COALESCE(NgayNhanPhong, VALUES(NgayNhanPhong))
+                        ", [
+                            'hd' => $maHopDong,
+                            'hs' => $maHoSo,
+                            'sv' => $realMsv,
+                            'mg' => $maGiuong,
+                            'start' => $bInfo['startDate'],
+                            'end' => $bInfo['endDate'],
+                            'ct01' => $bInfo['hasCT01']
+                        ]);
+
+                        // Cập nhật trạng thái Giường
+                        Database::execute("UPDATE Giuong SET TrangThaiGiuong = 'Đã có người ở' WHERE MaGiuong = :mg", ['mg' => $maGiuong]);
+                        $assignedStudentCount++;
+
+                        if ($bInfo['isTP']) {
+                            $truongPhongMaSV = $realMsv;
+                        }
+                    } else {
+                        // Nếu giường trống hoặc bị từ chối do vượt quá sức chứa: thanh lý mọi hợp đồng cũ trên giường này
+                        Database::execute("
+                            UPDATE HopDongNoiTru 
+                            SET TrangThaiHopDong = 'Đã thanh lý' 
+                            WHERE MaGiuong = :mg AND TrangThaiHopDong IN ('Đang hiệu lực', 'Chờ hiệu lực')
+                        ", ['mg' => $maGiuong]);
+                        Database::execute("UPDATE Giuong SET TrangThaiGiuong = 'Trống' WHERE MaGiuong = :mg", ['mg' => $maGiuong]);
+                    }
+                }
+
+                // 3. Tự động sinh thêm các giường còn thiếu cho đủ $soGiuongToiDa
+                for ($i = 1; $i <= $soGiuongToiDa; $i++) {
+                    $kCheck = 'G' . $i;
+                    if (!in_array($kCheck, $assignedBedKeys)) {
+                        $mGiuongAuto = $cleanPrefix . '-' . $kCheck;
                         Database::execute("
                             INSERT INTO Giuong (MaGiuong, MaPhong, KyHieuGiuong, ViTriTangGiuong, TrangThaiGiuong)
                             VALUES (:mg, :mp, :kh, :vt, 'Trống')
+                            ON DUPLICATE KEY UPDATE ViTriTangGiuong = VALUES(ViTriTangGiuong)
                         ", [
-                            'mg' => $maGiuong,
+                            'mg' => $mGiuongAuto,
                             'mp' => $maPhong,
-                            'kh' => 'G' . $i,
+                            'kh' => $kCheck,
                             'vt' => ($i % 2 === 1) ? 1 : 2
                         ]);
                     }
-
-                    $createdCount++;
                 }
+
+                // Gán Trưởng phòng nếu có
+                if ($truongPhongMaSV) {
+                    Database::execute("UPDATE Phong SET TruongPhong = :tp WHERE MaPhong = :mp", ['tp' => $truongPhongMaSV, 'mp' => $maPhong]);
+                }
+
+                // Đồng bộ lại sĩ số và cập nhật trạng thái phòng (Đang sử dụng / Còn chỗ)
+                $this->syncRoomOccupancy($maPhong, true);
             }
 
-            fclose($handle);
-            Session::flash('success', "Nhập danh sách phòng thành công: Thêm mới {$createdCount} phòng, cập nhật {$updatedCount} phòng, bỏ qua {$skippedCount} phòng trùng lặp!");
+            $msg = "Nhập danh sách phòng thành công! Đã thêm mới {$createdCount} phòng, cập nhật {$updatedCount} phòng";
+            if ($skippedCount > 0) {
+                $msg .= ", bỏ qua {$skippedCount} phòng trùng lặp";
+            }
+            if ($assignedStudentCount > 0) {
+                $msg .= ". Đồng thời đã xếp {$assignedStudentCount} sinh viên vào giường (khởi tạo mới {$newStudentCount} hồ sơ SV)";
+            }
+            $msg .= "!";
+
+            if (!empty($warningRooms)) {
+                Session::flash('warning', "<b>⚠️ CẢNH BÁO VƯỢT QUÁ SỨC CHỨA PHÒNG:</b><br>" . implode('<br>', $warningRooms));
+            }
+
+            Session::flash('success', $msg);
         } catch (\Throwable $e) {
             Session::flash('error', 'Lỗi xử lý tệp CSV: ' . $e->getMessage());
         }
