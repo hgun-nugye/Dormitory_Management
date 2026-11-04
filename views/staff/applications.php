@@ -14,26 +14,12 @@ ob_start();
         <div class="page-header" style="align-items: center;">
             <div>
                 <h1 class="page-title">Xét duyệt Chỗ ở & Hồ sơ Miễn giảm</h1>
-                <p class="page-subtitle">
-                    <strong>Phân hệ:</strong> Xét duyệt hồ sơ đăng ký giữ chỗ 72h (Cụm <?= htmlspecialchars($maCum ?? 'AG') ?>) và Thẩm định hồ sơ miễn giảm học phí nội trú.
-                </p>
             </div>
             <div style="display: flex; gap: 8px;">
                 <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline" style="border-radius: 8px;">
                     &larr; Về Dashboard Cụm
                 </a>
             </div>
-        </div>
-
-        <!-- Thanh phím tắt chuyển nhanh các phân hệ nghiệp vụ Staff -->
-        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;">
-            <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">📊 Tổng quan BQL</a>
-            <a href="<?= url('staff/rooms') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">🏢 1. Sơ đồ Phòng & Cư trú</a>
-            <a href="<?= url('staff/applications') ?>" class="btn btn-primary btn-sm" style="border-radius: 6px;">📋 2. Xét duyệt Chỗ ở & Miễn giảm</a>
-            <a href="<?= url('staff/utilities') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">⚡ 3. Điện Nước & Công nợ</a>
-            <a href="<?= url('staff/requests') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">📬 4. Đơn Một Cửa</a>
-            <a href="<?= url('staff/maintenance') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">🛠️ 5. Điều phối Bảo trì</a>
-            <a href="<?= url('staff/discipline') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">🛡️ 6. An ninh & Rèn luyện</a>
         </div>
     </div>
 
@@ -52,23 +38,10 @@ ob_start();
         </div>
     <?php endif; ?>
 
-    <!-- HỘP THÔNG TIN NGUYÊN TẮC BẢO TOÀN DỮ LIỆU & PHÂN QUYỀN (THEO PDF) -->
-    <div class="card" style="margin-bottom: 24px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 16px;">
-        <div style="font-weight: 700; color: #92400e; font-size: 0.9rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
-            <span>⚠️ Nguyên tắc xét duyệt hồ sơ & Giải phóng giường (Mục 1 & 3 PDF):</span>
-        </div>
-        <ul style="font-size: 0.85rem; color: #b45309; line-height: 1.6; padding-left: 20px; margin: 0;">
-            <li><strong>Quy tắc giữ chỗ 72h:</strong> Khi BQL bấm [Duyệt giữ chỗ 72h], hệ thống tự động gán <code>NguoiDuyet</code>, <code>ThoiGianDuyet = NOW()</code> và tính <code>HanChotThanhToan = NOW() + 72 giờ</code>, đồng thời phát hành hóa đơn lệ phí giữ chỗ.</li>
-            <li><strong>Giải phóng giường:</strong> Nếu sinh viên bị Từ chối hoặc không thanh toán sau 72 giờ, giường đã khóa tự động được chuyển về <code>TrangThaiGiuong = 'Trống'</code>.</li>
-            <li><strong>Thẩm định miễn giảm:</strong> Mức giảm quy định từ <code>0% đến 100%</code>, tự động tính <code>SoTienHoanTra</code> theo đơn giá trần phòng nội trú chuẩn.</li>
-            <li><strong>Phân quyền:</strong> Cán bộ quản lý thao tác trên phạm vi cụm được phân công (Cụm <?= htmlspecialchars($maCum ?? 'AG') ?>).</li>
-        </ul>
-    </div>
-
     <!-- PHẦN 1: DANH SÁCH HỒ SƠ ĐĂNG KÝ CHỖ Ở MỚI CHỜ DUYỆT (CẤP CỤM) -->
     <div class="card" style="margin-bottom: 24px;">
         <div class="card-title">
-            <span>1. Danh sách Hồ sơ Đăng ký Chỗ ở Chờ duyệt (Cụm <?= htmlspecialchars($maCum ?? 'AG') ?>)</span>
+            <span> Danh sách Hồ sơ Đăng ký Chỗ ở Chờ duyệt (Cụm <?= htmlspecialchars($maCum ?? 'AG') ?>)</span>
             <span class="badge badge-warning"><?= count($pendingApplications ?? []) ?> hồ sơ chờ xử lý</span>
         </div>
 
@@ -128,7 +101,7 @@ ob_start();
                                         <input type="hidden" name="maHoSo" value="<?= htmlspecialchars($app['MaHoSo']) ?>">
                                         <input type="hidden" name="lyDo" id="lyDo-<?= htmlspecialchars($app['MaHoSo']) ?>" value="">
                                         <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px; color: #dc2626;" onclick="handleReject('<?= htmlspecialchars($app['MaHoSo']) ?>')">
-                                            ✕ Từ chối
+                                            Từ chối
                                         </button>
                                     </form>
                                 </td>
@@ -137,7 +110,7 @@ ob_start();
                     <?php else: ?>
                         <tr>
                             <td colspan="8" style="text-align: center; padding: 32px 16px; color: var(--text-muted);">
-                                <div>🎉 Hiện không có hồ sơ nào đang chờ duyệt tại Cụm <?= htmlspecialchars($maCum ?? 'AG') ?>.</div>
+                                <div> Hiện không có hồ sơ nào đang chờ duyệt tại Cụm <?= htmlspecialchars($maCum ?? 'AG') ?>.</div>
                                 <span style="font-size: 0.85rem;">Tất cả hồ sơ đăng ký đã được xử lý.</span>
                             </td>
                         </tr>
@@ -153,11 +126,6 @@ ob_start();
             <span>Theo dõi Hồ sơ Đang trong hạn 72h Thanh toán (Cụm <?= htmlspecialchars($maCum ?? 'AG') ?>)</span>
             <span class="badge badge-info"><?= count($active72hApplications ?? []) ?> hồ sơ đang giữ chỗ</span>
         </div>
-
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
-            Các hồ sơ đã được BQL duyệt; sinh viên cần hoàn tất thanh toán trước khi hết hạn. Nếu quá hạn 72 giờ, tiến trình ngầm sẽ tự động thu hồi giường.
-        </p>
-
         <div class="table-responsive">
             <table class="data-table">
                 <thead>
@@ -196,11 +164,11 @@ ob_start();
                                     </b>
                                 </td>
                                 <td>
-                                    <?php 
-                                        $phutConLai = (int)($act['SoPhutConLai'] ?? 0);
-                                        $gio = floor($phutConLai / 60);
-                                        $phut = $phutConLai % 60;
-                                        if ($phutConLai > 24 * 60): 
+                                    <?php
+                                    $phutConLai = (int)($act['SoPhutConLai'] ?? 0);
+                                    $gio = floor($phutConLai / 60);
+                                    $phut = $phutConLai % 60;
+                                    if ($phutConLai > 24 * 60):
                                     ?>
                                         <span class="badge badge-info">Còn <?= $gio ?> giờ <?= $phut ?>p</span>
                                     <?php elseif ($phutConLai > 0): ?>
@@ -236,13 +204,8 @@ ob_start();
     <!-- PHẦN 2: THẨM ĐỊNH & XÉT DUYỆT HỒ SƠ MIỄN GIẢM NỘI TRÚ -->
     <div class="card" style="margin-bottom: 24px;">
         <div class="card-title">
-            <span>2. Thẩm định & Duyệt Hồ sơ Miễn giảm nội trú</span>
-            <span class="badge badge-info">Bảng: HoSoMienGiam + HopDongNoiTru + SinhVien</span>
+            <span>Thẩm định & Duyệt Hồ sơ Miễn giảm nội trú</span>
         </div>
-
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
-            Dành cho cán bộ thẩm định điều kiện chính sách, kiểm tra giấy xác nhận minh chứng và tính toán số tiền hoàn trả hoặc cấn trừ tiền phòng:
-        </p>
 
         <div class="table-responsive">
             <table class="data-table">
@@ -325,27 +288,27 @@ ob_start();
 </div>
 
 <script>
-function handleReject(maHoSo) {
-    const lyDo = prompt('Nhập lý do từ chối hồ sơ ' + maHoSo + ':');
-    if (lyDo !== null) {
-        const input = document.getElementById('lyDo-' + maHoSo);
-        if (input) input.value = lyDo.trim();
-        const form = document.getElementById('reject-form-' + maHoSo);
-        if (form) form.submit();
-    }
-}
-
-function handleCancelActive(maHoSo) {
-    if (confirm('Xác nhận hủy chỗ hồ sơ ' + maHoSo + '? Giường sẽ được giải phóng ngay lập tức về trạng thái Trống.')) {
-        const lyDo = prompt('Lý do hủy giữ chỗ:', 'Sinh viên hủy hoặc không tiếp tục giữ chỗ');
+    function handleReject(maHoSo) {
+        const lyDo = prompt('Nhập lý do từ chối hồ sơ ' + maHoSo + ':');
         if (lyDo !== null) {
-            const input = document.getElementById('cancel-lyDo-' + maHoSo);
+            const input = document.getElementById('lyDo-' + maHoSo);
             if (input) input.value = lyDo.trim();
-            const form = document.getElementById('cancel-form-' + maHoSo);
+            const form = document.getElementById('reject-form-' + maHoSo);
             if (form) form.submit();
         }
     }
-}
+
+    function handleCancelActive(maHoSo) {
+        if (confirm('Xác nhận hủy chỗ hồ sơ ' + maHoSo + '? Giường sẽ được giải phóng ngay lập tức về trạng thái Trống.')) {
+            const lyDo = prompt('Lý do hủy giữ chỗ:', 'Sinh viên hủy hoặc không tiếp tục giữ chỗ');
+            if (lyDo !== null) {
+                const input = document.getElementById('cancel-lyDo-' + maHoSo);
+                if (input) input.value = lyDo.trim();
+                const form = document.getElementById('cancel-form-' + maHoSo);
+                if (form) form.submit();
+            }
+        }
+    }
 </script>
 
 <?php

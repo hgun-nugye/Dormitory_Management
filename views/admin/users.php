@@ -20,10 +20,10 @@ ob_start();
                     <i class="fa-solid fa-user-plus" style="margin-right: 6px;"></i> Thêm cán bộ mới
                 </button>
                 <button type="button" class="btn btn-outline" onclick="openImportUserModal()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; color: #2563eb; border-color: #bfdbfe; background: #eff6ff;" title="Nhập danh sách cán bộ từ file CSV">
-                    <i class="fa-solid fa-file-import" style="margin-right: 6px; color: #2563eb;"></i> Nhập file (Import)
+                    <i class="fa-solid fa-file-import" style="margin-right: 6px; color: #2563eb;"></i> Nhập file
                 </button>
                 <button type="button" class="btn btn-outline" id="btnExportUsers" onclick="exportFilteredUsers()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; color: #15803d; border-color: #86efac; background: #f0fdf4; cursor: pointer;" title="Xuất danh sách cán bộ theo kết quả lọc hiện tại ra Excel/CSV">
-                    <i class="fa-solid fa-file-excel" style="margin-right: 6px; color: #16a34a;"></i> <span id="btnExportText">Xuất Excel (CSV)</span>
+                    <i class="fa-solid fa-file-excel" style="margin-right: 6px; color: #16a34a;"></i> <span id="btnExportText">Xuất Excel</span>
                 </button>
                 <a href="<?= url('admin/dashboard') ?>" class="btn btn-outline" style="border-radius: 8px; text-decoration: none;">
                     &larr; Về Dashboard
