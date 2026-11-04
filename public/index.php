@@ -102,6 +102,9 @@ Router::post('/staff/rooms/remove-student', 'Staff\\RoomController@removeStudent
 
 // Staff - Hồ sơ Đăng ký & Giữ chỗ 72h
 Router::get('/staff/applications', 'Staff\\ApplicationController@applications', [AuthMiddleware::class]);
+Router::get('/staff/applications/export', 'Staff\\ApplicationController@exportApplications', [AuthMiddleware::class]);
+Router::get('/staff/applications/template', 'Staff\\ApplicationController@downloadTemplate', [AuthMiddleware::class]);
+Router::post('/staff/applications/import', 'Staff\\ApplicationController@importApplications', [AuthMiddleware::class]);
 Router::post('/staff/approve-application', 'Staff\\ApplicationController@approveApplication', [AuthMiddleware::class]);
 Router::post('/staff/reject-application', 'Staff\\ApplicationController@rejectApplication', [AuthMiddleware::class]);
 Router::post('/staff/applications/approve', 'Staff\\ApplicationController@approveApplication', [AuthMiddleware::class]);

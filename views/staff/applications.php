@@ -52,7 +52,7 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                         <i class="fa-solid fa-file-import" style="margin-right: 6px; color: #2563eb;"></i> Nhập file
                     </button>
                     <button type="button" class="btn btn-outline" onclick="exportApplications()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; color: #15803d; border-color: #86efac; background: #f0fdf4; cursor: pointer;" title="Xuất danh sách hồ sơ ra Excel">
-                        <i class="fa-solid fa-file-excel" style="margin-right: 6px; color: #16a34a;"></i> Xuất Excel (<?= count($pendingApplications ?? []) + count($active72hApplications ?? []) ?>)
+                        <i class="fa-solid fa-file-excel" style="margin-right: 6px; color: #16a34a;"></i> <span id="btnExportText">Xuất Excel</span>
                     </button>
                 <?php endif; ?>
                 <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 6px 14px;">
@@ -276,10 +276,10 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                                 <th style="text-align: right; width: 220px;">Thao tác phê duyệt</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="pendingTableBody">
                             <?php if (!empty($pendingApplications)): ?>
                                 <?php foreach ($pendingApplications as $app): ?>
-                                    <tr>
+                                    <tr class="pending-row">
                                         <td>
                                             <span style="font-weight: 700; color: var(--primary); font-family: monospace; font-size: 0.95rem;">
                                                 <?= htmlspecialchars($app['MaHoSo']) ?>
@@ -344,6 +344,28 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                         </tbody>
                     </table>
                 </div>
+
+                <!-- THANH PHÂN TRANG TAB CHỜ DUYỆT -->
+                <?php if (!empty($pendingApplications)): ?>
+                    <div id="pendingPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                            <span id="pendingPaginationInfo" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
+                                Hiển thị 1 - <?= min(10, count($pendingApplications)) ?> trên tổng số <?= count($pendingApplications) ?> hồ sơ
+                            </span>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <label for="pendingPageSize" style="font-size: 0.825rem; color: var(--text-secondary);">Hiển thị:</label>
+                                <select id="pendingPageSize" class="btn-outline" onchange="changeAppPageSize('pending', this.value)" style="padding: 4px 8px; border-radius: 6px; font-size: 0.825rem;">
+                                    <option value="10" selected>10 / trang</option>
+                                    <option value="25">25 / trang</option>
+                                    <option value="50">50 / trang</option>
+                                    <option value="100">100 / trang</option>
+                                    <option value="-1">Tất cả</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="pendingPaginationControls" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;"></div>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -376,7 +398,7 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                                 <th style="text-align: right; width: 140px;">Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="active72hTableBody">
                             <?php if (!empty($active72hApplications)): ?>
                                 <?php foreach ($active72hApplications as $act): ?>
                                     <?php
@@ -386,7 +408,7 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                                     // Tổng 72h = 4320 phút
                                     $percentElapsed = max(0, min(100, round((4320 - max(0, $phutConLai)) / 4320 * 100)));
                                     ?>
-                                    <tr>
+                                    <tr class="active72h-row">
                                         <td>
                                             <span style="font-weight: 700; color: var(--primary); font-family: monospace; font-size: 0.95rem;">
                                                 <?= htmlspecialchars($act['MaHoSo']) ?>
@@ -463,6 +485,28 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                         </tbody>
                     </table>
                 </div>
+
+                <!-- THANH PHÂN TRANG TAB ĐANG GIỮ CHỖ 72H -->
+                <?php if (!empty($active72hApplications)): ?>
+                    <div id="active72hPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                            <span id="active72hPaginationInfo" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
+                                Hiển thị 1 - <?= min(10, count($active72hApplications)) ?> trên tổng số <?= count($active72hApplications) ?> hồ sơ
+                            </span>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <label for="active72hPageSize" style="font-size: 0.825rem; color: var(--text-secondary);">Hiển thị:</label>
+                                <select id="active72hPageSize" class="btn-outline" onchange="changeAppPageSize('active72h', this.value)" style="padding: 4px 8px; border-radius: 6px; font-size: 0.825rem;">
+                                    <option value="10" selected>10 / trang</option>
+                                    <option value="25">25 / trang</option>
+                                    <option value="50">50 / trang</option>
+                                    <option value="100">100 / trang</option>
+                                    <option value="-1">Tất cả</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="active72hPaginationControls" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;"></div>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -493,10 +537,10 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                                 <th>Ghi chú / Lý do</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="historyTableBody">
                             <?php if (!empty($historyApplications)): ?>
                                 <?php foreach ($historyApplications as $h): ?>
-                                    <tr>
+                                    <tr class="history-row">
                                         <td>
                                             <span style="font-weight: 700; color: var(--primary); font-family: monospace; font-size: 0.95rem;">
                                                 <?= htmlspecialchars($h['MaHoSo']) ?>
@@ -549,6 +593,28 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                         </tbody>
                     </table>
                 </div>
+
+                <!-- THANH PHÂN TRANG TAB LỊCH SỬ -->
+                <?php if (!empty($historyApplications)): ?>
+                    <div id="historyPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                            <span id="historyPaginationInfo" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
+                                Hiển thị 1 - <?= min(10, count($historyApplications)) ?> trên tổng số <?= count($historyApplications) ?> hồ sơ
+                            </span>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <label for="historyPageSize" style="font-size: 0.825rem; color: var(--text-secondary);">Hiển thị:</label>
+                                <select id="historyPageSize" class="btn-outline" onchange="changeAppPageSize('history', this.value)" style="padding: 4px 8px; border-radius: 6px; font-size: 0.825rem;">
+                                    <option value="10" selected>10 / trang</option>
+                                    <option value="25">25 / trang</option>
+                                    <option value="50">50 / trang</option>
+                                    <option value="100">100 / trang</option>
+                                    <option value="-1">Tất cả</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="historyPaginationControls" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;"></div>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -582,10 +648,10 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                                 <th style="text-align: right; width: 180px;">Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="mienGiamTableBody">
                             <?php if (!empty($mienGiamList)): ?>
                                 <?php foreach ($mienGiamList as $mg): ?>
-                                    <tr>
+                                    <tr class="mienGiam-row">
                                         <td><b>MG-<?= htmlspecialchars($mg['MaMienGiam']) ?></b></td>
                                         <td>
                                             <div style="font-weight: 600; color: var(--text-primary);"><?= htmlspecialchars($mg['HoVaTen']) ?></div>
@@ -667,8 +733,28 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
+
+                <!-- THANH PHÂN TRANG TAB MIỄN GIẢM -->
+                <?php if (!empty($mienGiamList)): ?>
+                    <div id="mienGiamPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                            <span id="mienGiamPaginationInfo" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
+                                Hiển thị 1 - <?= min(10, count($mienGiamList)) ?> trên tổng số <?= count($mienGiamList) ?> hồ sơ
+                            </span>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <label for="mienGiamPageSize" style="font-size: 0.825rem; color: var(--text-secondary);">Hiển thị:</label>
+                                <select id="mienGiamPageSize" class="btn-outline" onchange="changeAppPageSize('mienGiam', this.value)" style="padding: 4px 8px; border-radius: 6px; font-size: 0.825rem;">
+                                    <option value="10" selected>10 / trang</option>
+                                    <option value="25">25 / trang</option>
+                                    <option value="50">50 / trang</option>
+                                    <option value="100">100 / trang</option>
+                                    <option value="-1">Tất cả</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="mienGiamPaginationControls" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;"></div>
+                    </div>
+                <?php endif; ?>
 
     <?php endif; ?>
 </div>
@@ -746,45 +832,230 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
     </div>
 </div>
 
+<!-- ========================================================================= -->
+<!-- MODAL IMPORT KẾT QUẢ XÉT DUYỆT TỪ FILE CSV -->
+<!-- ========================================================================= -->
+<div id="modalImportApplications" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 20px 16px; box-sizing: border-box; overflow-y: auto;">
+    <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 620px; max-height: calc(100vh - 40px); display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
+        <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; flex-shrink: 0;">
+            <div style="font-size: 1.05rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-file-import" style="color: #2563eb; margin-right: 6px;"></i>
+                <span>Nhập danh sách Xét duyệt Đợt đăng ký từ file CSV</span>
+            </div>
+            <button type="button" onclick="closeImportModal()" style="background: none; border: none; font-size: 1.25rem; color: #64748b; cursor: pointer; padding: 4px;" title="Đóng">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form action="<?= url('staff/applications/import') ?>" method="POST" enctype="multipart/form-data" style="margin: 0; display: flex; flex-direction: column; flex: 1 1 auto; overflow: hidden;">
+            <?= csrf_field() ?>
+            <div style="padding: 20px; overflow-y: auto; flex: 1 1 auto; max-height: calc(100vh - 170px);">
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 14px 16px; margin-bottom: 18px; font-size: 0.85rem; color: #1e40af;">
+                    <div style="font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-circle-info"></i> Quy định định dạng file nhập xét duyệt:
+                    </div>
+                    <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
+                        <li>Hỗ trợ file định dạng <b>.CSV</b> hoặc <b>.TXT</b> (mã hóa UTF-8), phân cách bởi dấu phẩy <code>,</code> hoặc chấm phẩy <code>;</code>.</li>
+                        <li><b>Cột 1 (bắt buộc):</b> <code>MaHoSo</code> (Mã hồ sơ đăng ký, ví dụ: <code>HS-2026-101</code>).</li>
+                        <li><b>Cột 2 (bắt buộc):</b> <code>KetQuaXetDuyet</code> (Điền <code>Duyet</code> để cấp hạn 72h, hoặc <code>TuChoi</code> để từ chối).</li>
+                        <li><b>Cột 3 (tùy chọn):</b> <code>LyDoTuChoi</code> (Lý do từ chối nếu không đồng ý cấp chỗ).</li>
+                        <li><i>Hệ thống tự động kích hoạt đồng hồ 72h, phát sinh hóa đơn học kỳ và cập nhật trạng thái giường tức thời!</i></li>
+                    </ul>
+                    <div style="margin-top: 12px; display: flex; justify-content: flex-end;">
+                        <a href="<?= url('staff/applications/template') ?>" class="btn btn-outline btn-sm" style="background: #fff; color: #1e40af; border-color: #93c5fd; font-weight: 600; text-decoration: none; border-radius: 6px; padding: 6px 14px; display: inline-flex; align-items: center;">
+                            <i class="fa-solid fa-download" style="margin-right: 6px;"></i> Tải tệp CSV mẫu chuẩn
+                        </a>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #1e293b; margin-bottom: 6px;">
+                        Chọn tệp CSV xét duyệt <span style="color: #dc2626;">*</span>
+                    </label>
+                    <input type="file" name="importFile" accept=".csv,.txt" required class="btn-outline" style="width: 100%; padding: 9px 12px; border-radius: 6px; font-size: 0.9rem; background: #fff;">
+                    <small style="color: var(--text-muted); display: block; margin-top: 4px;">Tệp tối đa 10MB, định dạng CSV UTF-8.</small>
+                </div>
+            </div>
+
+            <div style="padding: 14px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
+                <button type="button" class="btn btn-outline" onclick="closeImportModal()" style="border-radius: 6px; padding: 8px 18px;">
+                    Hủy bỏ
+                </button>
+                <button type="submit" class="btn btn-primary" style="border-radius: 6px; padding: 8px 20px; font-weight: 600;">
+                    <i class="fa-solid fa-file-import" style="margin-right: 6px;"></i> Bắt đầu xét duyệt
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+// =========================================================================
+// QUẢN LÝ PHÂN TRANG CLIENT-SIDE CHO CÁC BẢNG (ĐỒNG BỘ UX NHƯ STAFF/ROOMS)
+// =========================================================================
+const appPaginationState = {
+    pending: { page: 1, pageSize: 10, rowClass: 'pending-row', barId: 'pendingPaginationBar', infoId: 'pendingPaginationInfo', sizeId: 'pendingPageSize', ctrlId: 'pendingPaginationControls', name: 'hồ sơ' },
+    active72h: { page: 1, pageSize: 10, rowClass: 'active72h-row', barId: 'active72hPaginationBar', infoId: 'active72hPaginationInfo', sizeId: 'active72hPageSize', ctrlId: 'active72hPaginationControls', name: 'hồ sơ' },
+    history: { page: 1, pageSize: 10, rowClass: 'history-row', barId: 'historyPaginationBar', infoId: 'historyPaginationInfo', sizeId: 'historyPageSize', ctrlId: 'historyPaginationControls', name: 'bản ghi' },
+    mienGiam: { page: 1, pageSize: 10, rowClass: 'mienGiam-row', barId: 'mienGiamPaginationBar', infoId: 'mienGiamPaginationInfo', sizeId: 'mienGiamPageSize', ctrlId: 'mienGiamPaginationControls', name: 'hồ sơ' }
+};
+
+function renderAppPagination(tabKey) {
+    const state = appPaginationState[tabKey];
+    if (!state) return;
+
+    const rows = document.querySelectorAll('.' + state.rowClass);
+    const total = rows.length;
+
+    if (total === 0) {
+        const bar = document.getElementById(state.barId);
+        if (bar) bar.style.display = 'none';
+        return;
+    }
+
+    const pageSize = state.pageSize;
+    let totalPages = pageSize === -1 ? 1 : Math.ceil(total / pageSize);
+    if (totalPages < 1) totalPages = 1;
+
+    if (state.page > totalPages) state.page = totalPages;
+    if (state.page < 1) state.page = 1;
+
+    const startIdx = pageSize === -1 ? 0 : (state.page - 1) * pageSize;
+    const endIdx = pageSize === -1 ? total : startIdx + pageSize;
+
+    rows.forEach((row, idx) => {
+        if (idx >= startIdx && idx < endIdx) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    const infoEl = document.getElementById(state.infoId);
+    if (infoEl) {
+        const displayStart = startIdx + 1;
+        const displayEnd = Math.min(endIdx, total);
+        infoEl.innerHTML = `Hiển thị <b>${displayStart} - ${displayEnd}</b> trên tổng số <b>${total}</b> ${state.name} (Trang <b>${state.page}</b> / <b>${totalPages}</b>)`;
+    }
+
+    const controlsEl = document.getElementById(state.ctrlId);
+    if (!controlsEl) return;
+
+    if (totalPages <= 1) {
+        controlsEl.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+    const disabledFirst = state.page === 1 ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : `onclick="goToAppPage('${tabKey}', 1)" style="padding: 5px 9px; border-radius: 6px;"`;
+    html += `<button type="button" class="btn btn-outline btn-sm" ${disabledFirst} title="Trang đầu"><i class="fa-solid fa-angles-left"></i></button>`;
+
+    const disabledPrev = state.page === 1 ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : `onclick="goToAppPage('${tabKey}', ${state.page - 1})" style="padding: 5px 9px; border-radius: 6px;"`;
+    html += `<button type="button" class="btn btn-outline btn-sm" ${disabledPrev} title="Trang trước"><i class="fa-solid fa-angle-left"></i></button>`;
+
+    let startP = Math.max(1, state.page - 2);
+    let endP = Math.min(totalPages, state.page + 2);
+
+    if (startP > 1) {
+        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToAppPage('${tabKey}', 1)" style="padding: 5px 10px; border-radius: 6px;">1</button>`;
+        if (startP > 2) html += `<span style="padding: 0 4px; color: var(--text-muted);">...</span>`;
+    }
+
+    for (let p = startP; p <= endP; p++) {
+        if (p === state.page) {
+            html += `<button type="button" class="btn btn-primary btn-sm" style="padding: 5px 10px; border-radius: 6px; font-weight: 700;">${p}</button>`;
+        } else {
+            html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToAppPage('${tabKey}', ${p})" style="padding: 5px 10px; border-radius: 6px;">${p}</button>`;
+        }
+    }
+
+    if (endP < totalPages) {
+        if (endP < totalPages - 1) html += `<span style="padding: 0 4px; color: var(--text-muted);">...</span>`;
+        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToAppPage('${tabKey}', ${totalPages})" style="padding: 5px 10px; border-radius: 6px;">${totalPages}</button>`;
+    }
+
+    const disabledNext = state.page === totalPages ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : `onclick="goToAppPage('${tabKey}', ${state.page + 1})" style="padding: 5px 9px; border-radius: 6px;"`;
+    html += `<button type="button" class="btn btn-outline btn-sm" ${disabledNext} title="Trang sau"><i class="fa-solid fa-angle-left fa-rotate-180"></i></button>`;
+
+    const disabledLast = state.page === totalPages ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : `onclick="goToAppPage('${tabKey}', ${totalPages})" style="padding: 5px 9px; border-radius: 6px;"`;
+    html += `<button type="button" class="btn btn-outline btn-sm" ${disabledLast} title="Trang cuối"><i class="fa-solid fa-angles-right"></i></button>`;
+
+    controlsEl.innerHTML = html;
+}
+
+function goToAppPage(tabKey, page) {
+    if (appPaginationState[tabKey]) {
+        appPaginationState[tabKey].page = page;
+        renderAppPagination(tabKey);
+    }
+}
+
+function changeAppPageSize(tabKey, size) {
+    if (appPaginationState[tabKey]) {
+        appPaginationState[tabKey].pageSize = parseInt(size, 10);
+        appPaginationState[tabKey].page = 1;
+        renderAppPagination(tabKey);
+    }
+}
+
+function updateExportButtonCount(tabName) {
+    const btnText = document.getElementById('btnExportText');
+    if (!btnText) return;
+
+    let count = 0;
+    if (tabName === 'cho_duyet') {
+        count = document.querySelectorAll('.pending-row').length;
+    } else if (tabName === 'dang_giu_cho') {
+        count = document.querySelectorAll('.active72h-row').length;
+    } else if (tabName === 'lich_su') {
+        count = document.querySelectorAll('.history-row').length;
+    } else if (tabName === 'mien_giam') {
+        count = document.querySelectorAll('.mienGiam-row').length;
+    } else {
+        count = document.querySelectorAll('.pending-row, .active72h-row').length;
+    }
+    btnText.innerText = `Xuất Excel (${count})`;
+}
+
 function switchAppTab(tabName) {
-    document.getElementById('currentActiveTab').value = tabName;
+    const input = document.getElementById('currentActiveTab');
+    if (input) input.value = tabName;
+
     document.querySelectorAll('.tab-btn').forEach(b => {
         b.style.color = 'var(--text-secondary)';
         b.style.background = 'transparent';
         b.classList.remove('active');
     });
 
-    document.getElementById('tabContentPending').style.display = 'none';
-    document.getElementById('tabContentActive72h').style.display = 'none';
-    document.getElementById('tabContentHistory').style.display = 'none';
-    document.getElementById('tabContentMienGiam').style.display = 'none';
+    const pendingEl = document.getElementById('tabContentPending');
+    const activeEl = document.getElementById('tabContentActive72h');
+    const historyEl = document.getElementById('tabContentHistory');
+    const mienGiamEl = document.getElementById('tabContentMienGiam');
+
+    if (pendingEl) pendingEl.style.display = 'none';
+    if (activeEl) activeEl.style.display = 'none';
+    if (historyEl) historyEl.style.display = 'none';
+    if (mienGiamEl) mienGiamEl.style.display = 'none';
 
     if (tabName === 'cho_duyet') {
         const btn = document.getElementById('tabBtnPending');
-        btn.style.color = 'var(--primary)';
-        btn.style.background = '#eff6ff';
-        btn.classList.add('active');
-        document.getElementById('tabContentPending').style.display = 'block';
+        if (btn) { btn.style.color = 'var(--primary)'; btn.style.background = '#eff6ff'; btn.classList.add('active'); }
+        if (pendingEl) pendingEl.style.display = 'block';
     } else if (tabName === 'dang_giu_cho') {
         const btn = document.getElementById('tabBtnActive72h');
-        btn.style.color = 'var(--primary)';
-        btn.style.background = '#eff6ff';
-        btn.classList.add('active');
-        document.getElementById('tabContentActive72h').style.display = 'block';
+        if (btn) { btn.style.color = 'var(--primary)'; btn.style.background = '#eff6ff'; btn.classList.add('active'); }
+        if (activeEl) activeEl.style.display = 'block';
     } else if (tabName === 'lich_su') {
         const btn = document.getElementById('tabBtnHistory');
-        btn.style.color = 'var(--primary)';
-        btn.style.background = '#eff6ff';
-        btn.classList.add('active');
-        document.getElementById('tabContentHistory').style.display = 'block';
+        if (btn) { btn.style.color = 'var(--primary)'; btn.style.background = '#eff6ff'; btn.classList.add('active'); }
+        if (historyEl) historyEl.style.display = 'block';
     } else if (tabName === 'mien_giam') {
         const btn = document.getElementById('tabBtnMienGiam');
-        btn.style.color = 'var(--primary)';
-        btn.style.background = '#eff6ff';
-        btn.classList.add('active');
-        document.getElementById('tabContentMienGiam').style.display = 'block';
+        if (btn) { btn.style.color = 'var(--primary)'; btn.style.background = '#eff6ff'; btn.classList.add('active'); }
+        if (mienGiamEl) mienGiamEl.style.display = 'block';
     }
+
+    updateExportButtonCount(tabName);
 }
 
 function onKhuChange(khuVal) {
@@ -832,13 +1103,54 @@ function closeCancelModal() {
 }
 
 function openImportModal() {
-    alert('Tính năng Nhập file đợt xét duyệt đang được kích hoạt.');
+    const modal = document.getElementById('modalImportApplications');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeImportModal() {
+    const modal = document.getElementById('modalImportApplications');
+    if (modal) modal.style.display = 'none';
 }
 
 function exportApplications() {
     const urlParams = new URLSearchParams(window.location.search);
-    alert('Đang kết xuất danh sách hồ sơ đăng ký ra tệp Excel (.xlsx)...');
+    const input = document.getElementById('currentActiveTab');
+    const currentTab = input ? input.value : 'cho_duyet';
+    urlParams.set('tab', currentTab);
+    window.location.href = '<?= url('staff/applications/export') ?>?' + urlParams.toString();
 }
+
+// Khởi chạy phân trang và phím bấm
+document.addEventListener('DOMContentLoaded', function() {
+    renderAppPagination('pending');
+    renderAppPagination('active72h');
+    renderAppPagination('history');
+    renderAppPagination('mienGiam');
+
+    const input = document.getElementById('currentActiveTab');
+    const initialTab = input ? input.value : 'cho_duyet';
+    updateExportButtonCount(initialTab);
+});
+
+// Đóng modal khi bấm Escape hoặc click ra backdrop
+window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeImportModal();
+        closeRejectModal();
+        closeCancelModal();
+    }
+});
+
+window.addEventListener('click', function(e) {
+    const importModal = document.getElementById('modalImportApplications');
+    if (e.target === importModal) closeImportModal();
+
+    const rejectModal = document.getElementById('modalRejectApplication');
+    if (e.target === rejectModal) closeRejectModal();
+
+    const cancelModal = document.getElementById('modalCancelActive');
+    if (e.target === cancelModal) closeCancelModal();
+});
 </script>
 
 <?php
