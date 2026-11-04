@@ -77,20 +77,22 @@ ob_start();
         </a>
 
         <!-- 4. Sinh viên & Hợp đồng -->
-        <div class="card stat-card" style="border-left: 4px solid #f59e0b;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
-                    <div class="stat-label">Sinh viên nội trú</div>
-                    <div class="stat-val" style="color: #b45309;"><?= number_format($stats['active_residents'] ?? 0) ?></div>
+        <a href="<?= url('admin/students') ?>" style="text-decoration: none; color: inherit;">
+            <div class="card stat-card" style="border-left: 4px solid #f59e0b; transition: transform 0.15s ease, box-shadow 0.15s ease; cursor: pointer;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <div class="stat-label">Sinh viên nội trú</div>
+                        <div class="stat-val" style="color: #b45309;"><?= number_format($stats['active_residents'] ?? 0) ?></div>
+                    </div>
+                    <div style="width: 38px; height: 38px; border-radius: 8px; background: #fffbeb; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </div>
                 </div>
-                <div style="width: 38px; height: 38px; border-radius: 8px; background: #fffbeb; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
-                    <i class="fa-solid fa-user-graduate"></i>
+                <div class="stat-sub">
+                    Trên tổng số <b><?= number_format($stats['total_students'] ?? 0) ?></b> tài khoản sinh viên &bull; Quản lý
                 </div>
             </div>
-            <div class="stat-sub">
-                Trên tổng số <b><?= number_format($stats['total_students'] ?? 0) ?></b> hồ sơ sinh viên
-            </div>
-        </div>
+        </a>
     </div>
 
     <!-- PHÂN HỆ 1: QUẢN TRỊ TÀI KHOẢN & PHÂN QUYỀN CÁN BỘ -->
