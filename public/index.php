@@ -120,6 +120,12 @@ Router::post('/staff/maintenance/update-progress', 'Staff\\MaintenanceController
 Router::post('/staff/maintenance/complete', 'Staff\\MaintenanceController@complete', [AuthMiddleware::class]);
 Router::post('/staff/maintenance/cancel', 'Staff\\MaintenanceController@cancel', [AuthMiddleware::class]);
 Router::get('/staff/discipline', 'Staff\\DisciplineController@discipline', [AuthMiddleware::class]);
+Router::post('/staff/discipline/record', 'Staff\\DisciplineController@record', [AuthMiddleware::class]);
+Router::post('/staff/discipline/lock-submit', 'Staff\\DisciplineController@lockSubmit', [AuthMiddleware::class]);
+Router::post('/staff/discipline/simulate-scan', 'Staff\\DisciplineController@simulateScan', [AuthMiddleware::class]);
+Router::post('/staff/discipline/absence-action', 'Staff\\DisciplineController@absenceAction', [AuthMiddleware::class]);
+Router::get('/staff/discipline/history', 'Staff\\DisciplineController@history', [AuthMiddleware::class]);
+Router::get('/staff/discipline/export', 'Staff\\DisciplineController@export', [AuthMiddleware::class]);
 
 // Admin Routes - Tách theo từng nghiệp vụ chuẩn
 Router::get('/admin/dashboard', 'Admin\\DashboardController@index');
