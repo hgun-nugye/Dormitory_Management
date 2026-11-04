@@ -17,14 +17,50 @@ class DisciplineController extends Controller
     /**
      * Xác định phân quyền và phạm vi quản lý của cán bộ
      */
-    private function getStaffScope(?array $user): array
+    private function getStaffScope(?array $user = null): array
     {
+        if (!$user) {
+            $user = Auth::user() ?? [];
+        }
+
         $role = $user['MaVaiTro'] ?? $user['VaiTro'] ?? '';
         $cumQuanLy = $user['MaCumQuanLy'] ?? '';
+        $username = $user['TenDangNhap'] ?? '';
+        $chucVu = mb_strtolower($user['ChucVu'] ?? $user['profile']['ChucVu'] ?? '');
 
-        // 1. CẤP 4: Quản trị viên hệ thống / Quản lý toàn KTX
-        if ($role === 'ADMIN' || $role === 'NV_QUAN_LY_KTX' || empty($role)) {
+        // 1. CHẶN TUYỆT ĐỐI NHÂN VIÊN KHÔNG PHẢI CÁN BỘ QUẢN LÝ (Kế toán, Kỹ thuật điện nước, Nhân viên thường, Sinh viên)
+        $isNonManager = in_array($role, ['KE_TOAN', 'NV_THUONG', 'SINH_VIEN', 'TRUONG_PHONG'], true)
+            || str_starts_with($username, 'NV_KT')
+            || str_starts_with($username, 'KT')
+            || str_contains($chucVu, 'kế toán')
+            || str_contains($chucVu, 'kỹ thuật')
+            || str_contains($chucVu, 'điện nước');
+
+        // Danh sách vai trò Cán bộ Quản lý hợp lệ
+        $isManager = in_array($role, ['ADMIN', 'QuanTriVien', 'NV_QUAN_LY_KTX', 'TRUONG_KHU', 'TRUONG_CUM', 'TRUONG_TOA'], true);
+
+        if ($isNonManager || !$isManager) {
             return [
+                'isAllowed' => false,
+                'level' => 'DENIED',
+                'levelNumber' => -1,
+                'role' => $role,
+                'title' => 'Không có quyền truy cập',
+                'badgeClass' => 'badge-danger',
+                'maKhu' => null,
+                'maCum' => null,
+                'maToa' => null,
+                'canLockPoints' => false,
+                'canUnlockPoints' => false,
+                'canFilterAll' => false,
+                'message' => 'Từ chối quyền truy cập: Phân hệ An ninh, Vi phạm & Điểm rèn luyện chỉ dành riêng cho Cán bộ Quản lý KTX (Trưởng Tòa, Trưởng Cụm, Trưởng Khu, Ban Quản lý). Nhân viên Kế toán, Kỹ thuật điện nước không có quyền truy cập!'
+            ];
+        }
+
+        // 2. CẤP 4: Quản trị viên hệ thống / Quản lý toàn KTX
+        if ($role === 'ADMIN' || $role === 'QuanTriVien' || $role === 'NV_QUAN_LY_KTX') {
+            return [
+                'isAllowed' => true,
                 'level' => 'ALL',
                 'levelNumber' => 4,
                 'role' => $role,
@@ -39,16 +75,50 @@ class DisciplineController extends Controller
             ];
         }
 
-        // 2. CẤP 1: Trưởng Tòa nhà (TRUONG_TOA: ví dụ TT001 -> A01, TT002 -> H01, TT003 -> BA1...)
-        $isToaRole = ($role === 'TRUONG_TOA');
-        if (!$isToaRole && !empty($cumQuanLy)) {
-            $toaCheck = Database::fetch("SELECT MaToaNha FROM ToaNha WHERE MaToaNha = :t", ['t' => $cumQuanLy]);
-            if ($toaCheck) {
-                $isToaRole = true;
-            }
+        // 3. CẤP 3: Trưởng khu KTX (TRUONG_KHU: ví dụ TK001 -> Khu A, TK002 -> Khu B)
+        if ($role === 'TRUONG_KHU') {
+            $maKhu = in_array($cumQuanLy, ['A', 'B']) ? $cumQuanLy : 'A';
+            return [
+                'isAllowed' => true,
+                'level' => 'KHU',
+                'levelNumber' => 3,
+                'role' => $role,
+                'title' => "Trưởng ban Quản lý KTX Khu {$maKhu}",
+                'badgeClass' => 'badge-info',
+                'maKhu' => $maKhu,
+                'maCum' => null,
+                'maToa' => null,
+                'canLockPoints' => true,
+                'canUnlockPoints' => true,
+                'canFilterAll' => false
+            ];
         }
 
-        if ($isToaRole) {
+        // 4. CẤP 2: Trưởng Cụm nhà (TRUONG_CUM: ví dụ CUMAG -> AG, CUMAH -> AH...)
+        if ($role === 'TRUONG_CUM') {
+            $maCum = !empty($cumQuanLy) ? $cumQuanLy : 'AG';
+            $cumRow = Database::fetch("SELECT MaKhu, TenCum FROM CumNha WHERE MaCum = :c", ['c' => $maCum]);
+            $maKhu = $cumRow['MaKhu'] ?? 'A';
+
+            return [
+                'isAllowed' => true,
+                'level' => 'CUM',
+                'levelNumber' => 2,
+                'role' => $role,
+                'title' => "Trưởng BQL Cụm nhà " . ($cumRow['TenCum'] ?? $maCum),
+                'badgeClass' => 'badge-warning',
+                'maKhu' => $maKhu,
+                'maCum' => $maCum,
+                'maToa' => null,
+                'tenCum' => $cumRow['TenCum'] ?? $maCum,
+                'canLockPoints' => true,
+                'canUnlockPoints' => false,
+                'canFilterAll' => false
+            ];
+        }
+
+        // 5. CẤP 1: Trưởng Tòa nhà (TRUONG_TOA: ví dụ TT001 -> A01, TT002 -> H01, TT003 -> BA1...)
+        if ($role === 'TRUONG_TOA') {
             $maToa = !empty($cumQuanLy) ? $cumQuanLy : 'A01';
             $toaRow = Database::fetch("
                 SELECT t.TenToaNha, t.MaCum, c.MaKhu, c.TenCum
@@ -62,6 +132,7 @@ class DisciplineController extends Controller
             $maKhu = $toaRow['MaKhu'] ?? 'A';
 
             return [
+                'isAllowed' => true,
                 'level' => 'TOA',
                 'levelNumber' => 1,
                 'role' => $role,
@@ -78,59 +149,21 @@ class DisciplineController extends Controller
             ];
         }
 
-        // 3. CẤP 2: Trưởng Cụm nhà (TRUONG_CUM: ví dụ CUMAG -> AG, CUMAH -> AH...)
-        if ($role === 'TRUONG_CUM') {
-            $maCum = !empty($cumQuanLy) ? $cumQuanLy : 'AG';
-            $cumRow = Database::fetch("SELECT MaKhu, TenCum FROM CumNha WHERE MaCum = :c", ['c' => $maCum]);
-            $maKhu = $cumRow['MaKhu'] ?? 'A';
-
-            return [
-                'level' => 'CUM',
-                'levelNumber' => 2,
-                'role' => $role,
-                'title' => "Trưởng BQL Cụm nhà " . ($cumRow['TenCum'] ?? $maCum),
-                'badgeClass' => 'badge-warning',
-                'maKhu' => $maKhu,
-                'maCum' => $maCum,
-                'maToa' => null,
-                'tenCum' => $cumRow['TenCum'] ?? $maCum,
-                'canLockPoints' => true,
-                'canUnlockPoints' => false,
-                'canFilterAll' => false
-            ];
-        }
-
-        // 4. CẤP 3: Trưởng khu KTX (TRUONG_KHU: ví dụ TK001 -> Khu A, TK002 -> Khu B)
-        if ($role === 'TRUONG_KHU' || $cumQuanLy === 'A' || $cumQuanLy === 'B') {
-            $maKhu = in_array($cumQuanLy, ['A', 'B']) ? $cumQuanLy : 'A';
-            return [
-                'level' => 'KHU',
-                'levelNumber' => 3,
-                'role' => $role,
-                'title' => "Trưởng ban Quản lý KTX Khu {$maKhu}",
-                'badgeClass' => 'badge-info',
-                'maKhu' => $maKhu,
-                'maCum' => null,
-                'maToa' => null,
-                'canLockPoints' => true,
-                'canUnlockPoints' => true,
-                'canFilterAll' => false
-            ];
-        }
-
-        // Mặc định Cán bộ Cụm
+        // Mặc định từ chối nếu không xác định được cấp quản lý
         return [
-            'level' => 'CUM',
-            'levelNumber' => 2,
+            'isAllowed' => false,
+            'level' => 'DENIED',
+            'levelNumber' => -1,
             'role' => $role,
-            'title' => "Cán bộ KTX ({$cumQuanLy})",
-            'badgeClass' => 'badge-secondary',
-            'maKhu' => 'A',
-            'maCum' => !empty($cumQuanLy) ? $cumQuanLy : 'AG',
+            'title' => 'Không có quyền truy cập',
+            'badgeClass' => 'badge-danger',
+            'maKhu' => null,
+            'maCum' => null,
             'maToa' => null,
-            'canLockPoints' => true,
+            'canLockPoints' => false,
             'canUnlockPoints' => false,
-            'canFilterAll' => false
+            'canFilterAll' => false,
+            'message' => 'Bạn không thuộc danh mục Cán bộ Quản lý KTX có thẩm quyền truy cập phân hệ này.'
         ];
     }
 
@@ -141,6 +174,22 @@ class DisciplineController extends Controller
     {
         $user = Auth::user();
         $scope = $this->getStaffScope($user);
+
+        // Chặn tuyệt đối nếu không phải Cán bộ Quản lý (Kế toán, Kỹ thuật điện nước, v.v.)
+        if (!$scope['isAllowed']) {
+            Session::flash('error', $scope['message']);
+            $role = $user['MaVaiTro'] ?? '';
+            if ($role === 'KE_TOAN') {
+                $this->redirect('staff/utilities');
+                return;
+            }
+            if ($role === 'NV_THUONG' || str_starts_with($user['TenDangNhap'] ?? '', 'NV_KT')) {
+                $this->redirect('staff/maintenance');
+                return;
+            }
+            $this->redirect('staff/dashboard');
+            return;
+        }
 
         // Tham số lọc
         $namHoc = trim($_GET['namHoc'] ?? '2026-2027');
@@ -287,6 +336,12 @@ class DisciplineController extends Controller
         $user = Auth::user();
         $scope = $this->getStaffScope($user);
 
+        if (!$scope['isAllowed']) {
+            Session::flash('error', 'Từ chối quyền: Chỉ cán bộ quản lý KTX mới có quyền ghi nhận vi phạm và điểm rèn luyện!');
+            $this->redirect('staff/dashboard');
+            return;
+        }
+
         $maSinhVien = trim($_POST['maSinhVien'] ?? '');
         $namHoc = trim($_POST['namHoc'] ?? '2026-2027');
         $hocKy = (int)($_POST['hocKy'] ?? 1);
@@ -327,8 +382,8 @@ class DisciplineController extends Controller
         $user = Auth::user();
         $scope = $this->getStaffScope($user);
 
-        if (!$scope['canLockPoints']) {
-            Session::flash('error', 'Tài khoản của bạn không có quyền chốt điểm rèn luyện gửi trường.');
+        if (!$scope['isAllowed'] || !$scope['canLockPoints']) {
+            Session::flash('error', 'Từ chối quyền: Bạn không có quyền chốt điểm rèn luyện gửi trường.');
             $this->redirect('staff/discipline?tab=ren-luyen');
             return;
         }
@@ -359,6 +414,15 @@ class DisciplineController extends Controller
      */
     public function simulateScan(): void
     {
+        $user = Auth::user();
+        $scope = $this->getStaffScope($user);
+
+        if (!$scope['isAllowed']) {
+            Session::flash('error', 'Từ chối quyền: Bạn không có quyền thao tác trên hệ thống kiểm soát barrier!');
+            $this->redirect('staff/dashboard');
+            return;
+        }
+
         $maSinhVien = trim($_POST['maSinhVien'] ?? '');
         $congKiemSoat = trim($_POST['congKiemSoat'] ?? 'Cổng chính A01');
         $huongDi = trim($_POST['huongDi'] ?? 'Vào');
@@ -385,6 +449,15 @@ class DisciplineController extends Controller
      */
     public function absenceAction(): void
     {
+        $user = Auth::user();
+        $scope = $this->getStaffScope($user);
+
+        if (!$scope['isAllowed']) {
+            Session::flash('error', 'Từ chối quyền: Chỉ cán bộ quản lý mới có quyền xử lý cảnh báo vắng mặt!');
+            $this->redirect('staff/dashboard');
+            return;
+        }
+
         $maSinhVien = trim($_POST['maSinhVien'] ?? '');
         $hanhDong = trim($_POST['hanhDong'] ?? 'lien_he');
         $ghiChu = trim($_POST['ghiChu'] ?? '');
@@ -421,6 +494,14 @@ class DisciplineController extends Controller
     {
         header('Content-Type: application/json; charset=utf-8');
 
+        $user = Auth::user();
+        $scope = $this->getStaffScope($user);
+
+        if (!$scope['isAllowed']) {
+            echo json_encode(['success' => false, 'message' => 'Từ chối quyền truy cập!']);
+            exit;
+        }
+
         $maSinhVien = trim($_GET['sv'] ?? '');
         $namHoc = trim($_GET['nam'] ?? '2026-2027');
         $hocKy = (int)($_GET['hk'] ?? 1);
@@ -440,6 +521,15 @@ class DisciplineController extends Controller
      */
     public function export(): void
     {
+        $user = Auth::user();
+        $scope = $this->getStaffScope($user);
+
+        if (!$scope['isAllowed'] || ($scope['level'] !== 'ALL' && $scope['level'] !== 'KHU' && $scope['level'] !== 'CUM')) {
+            Session::flash('error', 'Từ chối quyền: Chỉ cán bộ quản lý cấp Cụm trở lên mới có quyền xuất báo cáo gửi trường!');
+            $this->redirect('staff/discipline?tab=ren-luyen');
+            return;
+        }
+
         $namHoc = trim($_GET['namHoc'] ?? '2026-2027');
         $hocKy = (int)($_GET['hocKy'] ?? 1);
         $maTruong = trim($_GET['maTruong'] ?? '');
