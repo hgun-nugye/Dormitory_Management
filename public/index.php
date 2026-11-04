@@ -141,6 +141,18 @@ Router::post('/admin/users/reset-password', 'Admin\\UserController@resetPassword
 Router::post('/admin/users/toggle-status', 'Admin\\UserController@toggleUserStatus');
 Router::post('/admin/users/delete', 'Admin\\UserController@deleteUser');
 
+// Admin - Quản lý Tài khoản & Hồ sơ Sinh viên
+Router::get('/admin/students', 'Admin\\StudentController@students');
+Router::get('/admin/students/export', 'Admin\\StudentController@exportStudents');
+Router::post('/admin/students/export', 'Admin\\StudentController@exportStudents');
+Router::get('/admin/students/template', 'Admin\\StudentController@downloadStudentTemplate');
+Router::post('/admin/students/import', 'Admin\\StudentController@importStudents');
+Router::post('/admin/students/save', 'Admin\\StudentController@saveStudent');
+Router::post('/admin/students/reset-password', 'Admin\\StudentController@resetPassword');
+Router::post('/admin/students/toggle-status', 'Admin\\StudentController@toggleStudentStatus');
+Router::post('/admin/students/delete', 'Admin\\StudentController@deleteStudent');
+Router::post('/admin/students/test-mail', 'Admin\\StudentController@testMail');
+
 Router::get('/admin/periods', 'Admin\\DashboardController@periods');
 Router::get('/admin/room-types', 'Admin\\DashboardController@roomTypes');
 

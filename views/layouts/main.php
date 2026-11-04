@@ -21,10 +21,12 @@
             display: inline-flex;
             align-items: center;
         }
+
         .nav-links a:not(.btn):hover {
             color: #2563eb;
             background-color: #f1f5f9;
         }
+
         .nav-links a:not(.btn).active {
             color: #1d4ed8 !important;
             background-color: #eff6ff !important;
@@ -50,7 +52,7 @@
                 <?php elseif (\App\Core\Auth::isNhanVien()): ?>
                     <li><a href="<?= url('staff/dashboard') ?>" class="<?= nav_active_class('staff/dashboard') ?>">BQL Cụm</a></li>
                     <?php if (\App\Core\Auth::isQuanLy()): ?>
-                        <li><a href="<?= url('staff/zones') ?>" class="<?= nav_active_class('staff/zones') ?>">Khu & Cụm</a></li>
+                        <li><a href="<?= url('staff/zones') ?>" class="<?= nav_active_class('staff/zones') ?>">Khu KTX</a></li>
                         <li><a href="<?= url('staff/rooms') ?>" class="<?= nav_active_class('staff/rooms') ?>">Sơ đồ phòng</a></li>
                         <li><a href="<?= url('staff/applications') ?>" class="<?= nav_active_class('staff/applications') ?>">Xét duyệt 72h</a></li>
                         <li><a href="<?= url('staff/utilities') ?>" class="<?= nav_active_class('staff/utilities') ?>">Điện nước</a></li>
@@ -66,6 +68,7 @@
                 <?php elseif (\App\Core\Auth::isQuanTriVien()): ?>
                     <li><a href="<?= url('admin/dashboard') ?>" class="<?= nav_active_class('admin/dashboard') ?>">Dashboard</a></li>
                     <li><a href="<?= url('admin/users') ?>" class="<?= nav_active_class('admin/users') ?>">Cán bộ</a></li>
+                    <li><a href="<?= url('admin/students') ?>" class="<?= nav_active_class('admin/students') ?>">Sinh viên</a></li>
                     <li><a href="<?= url('admin/universities') ?>" class="<?= nav_active_class('admin/universities') ?>">Trường ĐH</a></li>
                     <li><a href="<?= url('staff/maintenance') ?>" class="<?= nav_active_class('staff/maintenance') ?>">Bảo trì</a></li>
                     <li><a href="<?= url('staff/discipline') ?>" class="<?= nav_active_class('staff/discipline') ?>">An ninh</a></li>
@@ -107,7 +110,7 @@
                 try {
                     const url = new URL(href, window.location.origin);
                     const linkPath = url.pathname.replace(/\/+$/, '') || '/';
-                    
+
                     if (linkPath === currentPath) {
                         link.classList.add('active');
                         matched = true;

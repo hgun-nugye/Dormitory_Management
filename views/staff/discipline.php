@@ -14,7 +14,7 @@ ob_start();
         <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
             <div>
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
-                    <h1 class="page-title" style="margin: 0; font-size: 1.6rem; color: #0f172a;">🛡️ Giám sát An ninh Ra Vào & Điểm Rèn luyện</h1>
+                    <h1 class="page-title" style="margin: 0; font-size: 1.6rem; color: #0f172a;">Giám sát An ninh Ra Vào & Điểm Rèn luyện</h1>
                     <span class="badge <?= htmlspecialchars($scope['badgeClass'] ?? 'badge-info') ?>" style="padding: 4px 10px; font-size: 0.8rem; border-radius: 6px;">
                         <?= htmlspecialchars($scope['title'] ?? 'Cán bộ KTX') ?>
                     </span>
@@ -28,17 +28,6 @@ ob_start();
                     &larr; Về Dashboard
                 </a>
             </div>
-        </div>
-
-        <!-- Thanh phím tắt chuyển nhanh các phân hệ nghiệp vụ Staff -->
-        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;">
-            <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">📊 Tổng quan BQL</a>
-            <a href="<?= url('staff/rooms') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">🏢 1. Sơ đồ Phòng & Cư trú</a>
-            <a href="<?= url('staff/applications') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">📋 2. Xét duyệt Chỗ ở</a>
-            <a href="<?= url('staff/utilities') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">⚡ 3. Điện Nước & Công nợ</a>
-            <a href="<?= url('staff/requests') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">📬 4. Đơn Một Cửa</a>
-            <a href="<?= url('staff/maintenance') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">🛠️ 5. Điều phối Bảo trì</a>
-            <a href="<?= url('staff/discipline') ?>" class="btn btn-primary btn-sm" style="border-radius: 6px; background: #2563eb; color: #fff;">🛡️ 6. An ninh & Rèn luyện</a>
         </div>
     </div>
 
@@ -100,19 +89,6 @@ ob_start();
                 Đã gửi trường: <strong><?= $stats['lockedCount'] ?>/<?= $stats['totalResident'] ?></strong>
             </div>
         </div>
-    </div>
-
-    <!-- HỘP THÔNG TIN NGUYÊN TẮC BẢO TOÀN DỮ LIỆU & PHÂN QUYỀN -->
-    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px;">
-        <div style="font-weight: 700; color: #1e40af; font-size: 0.88rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
-            <span>🛡️ Nguyên tắc Giám sát An ninh & Bảo toàn Điểm Rèn luyện KTX:</span>
-        </div>
-        <ul style="font-size: 0.82rem; color: #1e3a8a; line-height: 1.55; padding-left: 20px; margin: 0;">
-            <li><strong>Nhật ký quét thẻ (Read-only):</strong> Dữ liệu bảng <code>NhatKyRaVao</code> được ghi nhận tự động từ barrier. Tuyệt đối không xóa sửa thủ công để đảm bảo tính khách quan an ninh.</li>
-            <li><strong>Cảnh báo vắng mặt &gt; 30 ngày:</strong> Tự động lọc các sinh viên không có lượt quét thẻ trong 30 ngày gần nhất và <em>không có đơn xin tạm vắng</em> hợp lệ trong hệ thống để cán bộ kiểm tra phòng và gọi phụ huynh.</li>
-            <li><strong>Điểm rèn luyện nội trú:</strong> Điểm chuẩn khởi điểm là 100 điểm/kỳ; ghi nhận các sự kiện cộng điểm (tình nguyện, dọn dẹp) hoặc trừ điểm vi phạm nội quy.</li>
-            <li><strong>Khóa điểm khi gửi trường:</strong> Khi chốt và đánh dấu <code>DaGuiVeTruong = 1</code>, hệ thống khóa toàn bộ chức năng sửa điểm đối với sinh viên đó.</li>
-        </ul>
     </div>
 
     <!-- KHUNG ĐIỀU HƯỚNG TAB & BỘ LỌC TỔNG THỂ -->
