@@ -124,7 +124,7 @@ class RoomController extends Controller
                 'level' => 'KHU',
                 'levelNumber' => 3,
                 'role' => $role,
-                'title' => "Trưởng ban Quản lý KTX Khu {$maKhu}",
+                'title' => "Trưởng BQL Khu {$maKhu}",
                 'badgeClass' => 'badge-info',
                 'maKhu' => $maKhu,
                 'maCum' => null,
@@ -147,6 +147,10 @@ class RoomController extends Controller
             $maKhu = $cumRow['MaKhu'] ?? 'A';
             $tenCum = $cumRow['TenCum'] ?? $maCum;
 
+            // Làm sạch nhãn cụm: tránh lặp từ "Trưởng BQL Cụm nhà Ban Quản lý Cụm nhà A.G"
+            $cleanCum = preg_replace('/^(Ban Quản lý\s*|Cụm\s*nhà\s*)+/ui', '', $tenCum);
+            $cumTitle = "Trưởng BQL Cụm " . (!empty($cleanCum) ? $cleanCum : $tenCum);
+
             $toas = Database::fetchAll("
                 SELECT t.MaToaNha, t.TenToaNha, t.TongSoTang, t.GioiTinhQuyDinh, t.TrangThaiToaNha, c.MaCum, c.TenCum, c.MaKhu, k.TenKhu
                 FROM ToaNha t
@@ -161,7 +165,7 @@ class RoomController extends Controller
                 'level' => 'CUM',
                 'levelNumber' => 2,
                 'role' => $role,
-                'title' => "Trưởng BQL Cụm nhà {$tenCum}",
+                'title' => $cumTitle,
                 'badgeClass' => 'badge-warning',
                 'maKhu' => $maKhu,
                 'maCum' => $maCum,
@@ -303,35 +307,71 @@ class RoomController extends Controller
         }
 
         // Xác định Tòa nhà mục tiêu hiển thị
-        $validToaCodes = array_column($availableToas, 'MaToaNha');
-        if (!empty($filterToa) && in_array($filterToa, $validToaCodes, true)) {
-            $maToa = $filterToa;
+        $validToaCodes = array_values(array_unique(array_filter(array_column($availableToas, 'MaToaNha'))));
+        $isAllToas = empty($filterToa) && ($scope['level'] !== 'TOA');
+
+        $baseParams = [];
+        if ($isAllToas) {
+            $maToa = '';
+            $inList = !empty($validToaCodes) ? $validToaCodes : ['__NONE__'];
+            $inPlaceholders = [];
+            foreach ($inList as $idx => $code) {
+                $phKey = 'tcode_' . $idx;
+                $inPlaceholders[] = ':' . $phKey;
+                $baseParams[$phKey] = $code;
+            }
+            $toaCondition = "p.MaToaNha IN (" . implode(',', $inPlaceholders) . ")";
+
+            $maxTang = 1;
+            foreach ($availableToas as $toaItem) {
+                if ((int)($toaItem['TongSoTang'] ?? 0) > $maxTang) {
+                    $maxTang = (int)$toaItem['TongSoTang'];
+                }
+            }
+            $toaInfo = [
+                'MaToaNha' => '',
+                'TenToaNha' => 'Tất cả Tòa nhà (' . count($validToaCodes) . ' tòa)',
+                'TongSoTang' => $maxTang,
+                'GioiTinhQuyDinh' => 'Nam / Nữ',
+                'TrangThaiToaNha' => 'Đang hoạt động',
+                'TenCum' => !empty($filterCum) ? ($availableCums[0]['TenCum'] ?? $filterCum) : 'Tất cả Cụm',
+                'TenKhu' => !empty($filterKhu) ? ($availableKhus[0]['TenKhu'] ?? $filterKhu) : 'Tất cả Khu'
+            ];
         } else {
-            $maToa = $validToaCodes[0] ?? ($scope['maToa'] ?? 'A01');
-        }
+            if (!empty($filterToa) && in_array($filterToa, $validToaCodes, true)) {
+                $maToa = $filterToa;
+            } else {
+                $maToa = $validToaCodes[0] ?? ($scope['maToa'] ?? 'A01');
+            }
 
-        $toaInfo = Database::fetch("
-            SELECT t.*, c.TenCum, c.MaKhu, k.TenKhu
-            FROM ToaNha t
-            JOIN CumNha c ON t.MaCum = c.MaCum
-            JOIN KhuKTX k ON c.MaKhu = k.MaKhu
-            WHERE t.MaToaNha = :toa
-        ", ['toa' => $maToa]);
+            $toaCondition = "p.MaToaNha = :targetToa";
+            $baseParams['targetToa'] = $maToa;
 
-        if (!$toaInfo) {
             $toaInfo = Database::fetch("
                 SELECT t.*, c.TenCum, c.MaKhu, k.TenKhu
                 FROM ToaNha t
                 JOIN CumNha c ON t.MaCum = c.MaCum
                 JOIN KhuKTX k ON c.MaKhu = k.MaKhu
-                ORDER BY t.MaToaNha ASC LIMIT 1
-            ");
-            $maToa = $toaInfo['MaToaNha'] ?? 'A01';
+                WHERE t.MaToaNha = :toa
+            ", ['toa' => $maToa]);
+
+            if (!$toaInfo) {
+                $toaInfo = Database::fetch("
+                    SELECT t.*, c.TenCum, c.MaKhu, k.TenKhu
+                    FROM ToaNha t
+                    JOIN CumNha c ON t.MaCum = c.MaCum
+                    JOIN KhuKTX k ON c.MaKhu = k.MaKhu
+                    ORDER BY t.MaToaNha ASC LIMIT 1
+                ");
+                $maToa = $toaInfo['MaToaNha'] ?? 'A01';
+                $baseParams['targetToa'] = $maToa;
+            }
         }
 
         // Danh sách phòng thuộc tòa
         $phongSql = "
             SELECT p.*,
+                   t.TenToaNha,
                    lp.TenLoaiPhong, lp.SoGiuongToiDa, lp.DonGiaLuuTruChuan, lp.DonGiaDichVuTangThem,
                    (SELECT COUNT(*) FROM Giuong g WHERE g.MaPhong = p.MaPhong) AS TongGiuong,
                    (SELECT COUNT(*) FROM Giuong g WHERE g.MaPhong = p.MaPhong AND g.TrangThaiGiuong = 'Trống') AS SoGiuongTrong,
@@ -339,11 +379,12 @@ class RoomController extends Controller
                    (SELECT COUNT(*) FROM Giuong g WHERE g.MaPhong = p.MaPhong AND g.TrangThaiGiuong = 'Đã có người ở') AS SoGiuongCoNguoi,
                    sv.HoVaTen AS TenTruongPhong
             FROM Phong p
+            JOIN ToaNha t ON p.MaToaNha = t.MaToaNha
             LEFT JOIN LoaiPhong lp ON p.MaLoaiPhong = lp.MaLoaiPhong
             LEFT JOIN SinhVien sv ON p.TruongPhong = sv.MaSinhVien
-            WHERE p.MaToaNha = :toa
+            WHERE {$toaCondition}
         ";
-        $phongParams = ['toa' => $maToa];
+        $phongParams = $baseParams;
 
         if ($filterTang > 0) {
             $phongSql .= " AND p.Tang = :tang";
@@ -373,11 +414,11 @@ class RoomController extends Controller
             $phongParams['kw6'] = $kwVal;
         }
 
-        $phongSql .= " ORDER BY p.Tang ASC, p.SoPhong ASC";
+        $phongSql .= " ORDER BY p.MaToaNha ASC, p.Tang ASC, p.SoPhong ASC";
         $phongList = Database::fetchAll($phongSql, $phongParams);
 
         // Danh sách giường và thông tin cư trú
-        $giuongList = Database::fetchAll("
+        $giuongSql = "
             SELECT g.*,
                    hd.MaHopDong, hd.MaSinhVien, hd.NgayNhanPhong, hd.DaNopMauCT01, hd.TrangThaiHopDong,
                    sv.MSSVTaiTruong, sv.HoVaTen, sv.GioiTinh, sv.SoCCCD, sv.SoDienThoai, sv.Email,
@@ -391,9 +432,10 @@ class RoomController extends Controller
             )
             LEFT JOIN SinhVien sv ON hd.MaSinhVien = sv.MaSinhVien
             LEFT JOIN TruongDaiHoc tdh ON sv.MaTruong = tdh.MaTruong
-            WHERE p.MaToaNha = :toa
+            WHERE {$toaCondition}
             ORDER BY g.MaPhong ASC, g.KyHieuGiuong ASC
-        ", ['toa' => $maToa]);
+        ";
+        $giuongList = Database::fetchAll($giuongSql, $baseParams);
 
         $giuongByPhong = [];
         foreach ($giuongList as $g) {
@@ -401,7 +443,7 @@ class RoomController extends Controller
         }
 
         // Thống kê nhanh toàn tòa
-        $stats = Database::fetch("
+        $statsSql = "
             SELECT 
                 COUNT(DISTINCT p.MaPhong) AS TongPhong,
                 SUM(CASE WHEN p.TrangThaiPhong != 'Khóa bảo trì' THEN 1 ELSE 0 END) AS PhongHoatDong,
@@ -412,8 +454,9 @@ class RoomController extends Controller
                 SUM(CASE WHEN g.TrangThaiGiuong = 'Khóa bảo trì' THEN 1 ELSE 0 END) AS GiuongBaoTri
             FROM Phong p
             LEFT JOIN Giuong g ON p.MaPhong = g.MaPhong
-            WHERE p.MaToaNha = :toa
-        ", ['toa' => $maToa]);
+            WHERE {$toaCondition}
+        ";
+        $stats = Database::fetch($statsSql, $baseParams);
 
         $loaiPhongList = Database::fetchAll("SELECT * FROM LoaiPhong ORDER BY SoGiuongToiDa ASC");
 
@@ -422,11 +465,13 @@ class RoomController extends Controller
             'scope' => $scope,
             'isAllowed' => true,
             'isTruongToa' => ($scope['level'] === 'TOA'),
+            'isAllToas' => $isAllToas,
             'canCrudPhong' => $scope['canCrudPhong'] ?? true,
             'canUpdateToa' => $scope['canUpdateToa'] ?? true,
             'canCrudToa' => $scope['canCrudToa'] ?? false,
             'toaInfo' => $toaInfo,
             'maToa' => $maToa,
+            'filterToa' => $filterToa,
             'phongList' => $phongList,
             'giuongByPhong' => $giuongByPhong,
             'stats' => $stats ?: [
@@ -445,7 +490,7 @@ class RoomController extends Controller
             'filters' => [
                 'khu' => $filterKhu,
                 'cum' => $filterCum,
-                'toa' => $maToa,
+                'toa' => $filterToa,
                 'tang' => $filterTang,
                 'loaiPhong' => $filterLoaiPhong,
                 'trangThai' => $filterTrangThai,
