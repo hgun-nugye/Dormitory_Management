@@ -600,6 +600,62 @@ class MaintenanceController extends Controller
             return;
         }
 
+        // Xử lý upload tệp hình ảnh hiện trường nếu người dùng chọn tệp
+        if (isset($_FILES['hinhAnhFile']) && $_FILES['hinhAnhFile']['error'] === UPLOAD_ERR_OK) {
+            $file = $_FILES['hinhAnhFile'];
+
+            // 1. Kiểm tra dung lượng tối đa (5MB)
+            $maxSize = 5 * 1024 * 1024;
+            if ($file['size'] > $maxSize) {
+                Session::flash('error', 'Dung lượng ảnh hiện trường vượt quá 5MB. Vui lòng nén hoặc chọn ảnh nhỏ hơn.');
+                $this->redirect('staff/maintenance');
+                return;
+            }
+
+            // 2. Kiểm tra phần mở rộng tệp
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+            if (!in_array($ext, $allowedExts, true)) {
+                Session::flash('error', 'Định dạng tệp không được hỗ trợ! Vui lòng chỉ tải lên ảnh JPG, PNG, WEBP hoặc GIF.');
+                $this->redirect('staff/maintenance');
+                return;
+            }
+
+            // 3. Kiểm tra MIME Type thực tế
+            $mime = '';
+            if (function_exists('mime_content_type')) {
+                $mime = mime_content_type($file['tmp_name']);
+            }
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+            if ($mime && !in_array($mime, $allowedMimes, true)) {
+                Session::flash('error', 'Nội dung tệp không phải là tệp ảnh hợp lệ!');
+                $this->redirect('staff/maintenance');
+                return;
+            }
+
+            // 4. Tạo thư mục public/uploads/maintenance/ nếu chưa có
+            $uploadDir = dirname(__DIR__, 2) . '/public/uploads/maintenance/';
+            if (!is_dir($uploadDir)) {
+                if (!mkdir($uploadDir, 0777, true) && !is_dir($uploadDir)) {
+                    Session::flash('error', 'Không thể khởi tạo thư mục lưu trữ ảnh tải lên trên máy chủ.');
+                    $this->redirect('staff/maintenance');
+                    return;
+                }
+            }
+
+            // 5. Đặt tên tệp duy nhất, an toàn chống tấn công path traversal
+            $safeFileName = 'scene_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+            $targetPath = $uploadDir . $safeFileName;
+
+            if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+                $hinhAnh = 'uploads/maintenance/' . $safeFileName;
+            } else {
+                Session::flash('error', 'Không thể lưu trữ tệp ảnh lên máy chủ. Vui lòng kiểm tra lại quyền ghi thư mục.');
+                $this->redirect('staff/maintenance');
+                return;
+            }
+        }
+
         $maNhanVien = $user['profile']['MaNhanVien'] ?? $user['MaNhanVien'] ?? $user['TenDangNhap'] ?? null;
         if (!$maNhanVien && !empty($user['MaTaiKhoan'])) {
             $nvRow = Database::fetch("SELECT MaNhanVien FROM NhanVien WHERE MaTaiKhoan = :id", ['id' => $user['MaTaiKhoan']]);

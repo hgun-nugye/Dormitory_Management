@@ -566,7 +566,7 @@ ob_start();
             Dành cho cán bộ ghi nhận sự cố công cộng (nứt tường, hư cây, đèn hành lang, vỡ kính, hỏng cổng...). Phiếu sẽ được chuyển lên cấp trên phê duyệt & cử thợ.
         </p>
 
-        <form action="<?= url('staff/maintenance/create-staff-ticket') ?>" method="POST">
+        <form action="<?= url('staff/maintenance/create-staff-ticket') ?>" method="POST" enctype="multipart/form-data">
             <div style="margin-bottom: 14px;">
                 <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #334155; margin-bottom: 6px;">
                     Tòa nhà xảy ra sự cố: <span style="color: #dc2626;">*</span>
@@ -594,9 +594,41 @@ ob_start();
                 <textarea name="moTa" rows="3" required placeholder="Mô tả cụ thể sự cố (ví dụ: Nứt tường ban công tầng 2 có nguy cơ thấm dột, cây đổ gãy cành chắn lối đi...)" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.85rem; box-sizing: border-box;"></textarea>
             </div>
 
-            <div style="margin-bottom: 18px;">
-                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Đường dẫn ảnh hiện trường (tùy chọn):</label>
-                <input type="text" name="hinhAnh" placeholder="/uploads/baohong/sư_co_tuong.jpg" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.85rem; box-sizing: border-box;">
+            <!-- Upload hình ảnh hiện trường -->
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #334155; margin-bottom: 6px;">
+                    Ảnh chụp sự cố hiện trường:
+                </label>
+
+                <!-- Input ẩn dạng file -->
+                <input type="file" name="hinhAnhFile" id="staffTicketImageInput" accept="image/png, image/jpeg, image/jpg, image/webp, image/gif" style="display: none;" onchange="handleImageSelect(this)">
+
+                <!-- Khung kéo thả / Chọn tệp -->
+                <div id="dropZone" onclick="document.getElementById('staffTicketImageInput').click()" style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 16px 12px; text-align: center; cursor: pointer; background: #f8fafc; transition: all 0.2s ease;">
+                    <div id="uploadPrompt">
+                        <div style="font-size: 1.8rem; line-height: 1; margin-bottom: 6px;">📷</div>
+                        <div style="font-size: 0.85rem; font-weight: 600; color: #334155;">Nhấn để chọn ảnh tải lên hoặc kéo thả vào đây</div>
+                        <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Định dạng hỗ trợ: JPG, PNG, WEBP, GIF (Tối đa 5MB)</div>
+                    </div>
+
+                    <div id="imagePreviewContainer" style="display: none; position: relative;">
+                        <img id="imagePreview" src="" alt="Xem trước ảnh" style="max-height: 150px; max-width: 100%; border-radius: 6px; border: 1px solid #e2e8f0; object-fit: contain;">
+                        <div style="margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                            <span id="imageFileName" style="font-size: 0.75rem; color: #475569; font-weight: 500; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+                            <button type="button" onclick="removeSelectedImage(event)" style="background: #fee2e2; border: 1px solid #fecaca; color: #dc2626; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">✕ Xóa ảnh</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tùy chọn dán URL dự phòng -->
+                <div style="margin-top: 8px;">
+                    <span onclick="toggleUrlInput()" style="font-size: 0.75rem; color: #2563eb; cursor: pointer; text-decoration: underline;">
+                        🔗 Hoặc dán đường dẫn ảnh trực tiếp (URL)
+                    </span>
+                    <div id="urlInputContainer" style="display: none; margin-top: 6px;">
+                        <input type="text" name="hinhAnh" id="hinhAnhUrlInput" placeholder="Ví dụ: uploads/maintenance/su_co_tuong.jpg" style="width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.82rem; box-sizing: border-box;">
+                    </div>
+                </div>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
@@ -820,6 +852,76 @@ function openStaffTicketModal() {
 }
 function closeStaffTicketModal() {
     document.getElementById('staffTicketModal').style.display = 'none';
+    removeSelectedImage(null);
+    const urlInput = document.getElementById('hinhAnhUrlInput');
+    if (urlInput) urlInput.value = '';
+}
+
+/**
+ * Xử lý xem trước ảnh khi người dùng chọn tệp
+ */
+function handleImageSelect(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+
+        // Giới hạn 5MB
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Dung lượng ảnh vượt quá 5MB. Vui lòng nén hoặc chọn tệp khác!');
+            input.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('imagePreview');
+            const fileName = document.getElementById('imageFileName');
+            const prompt = document.getElementById('uploadPrompt');
+            const container = document.getElementById('imagePreviewContainer');
+            const dropZone = document.getElementById('dropZone');
+
+            preview.src = e.target.result;
+            fileName.textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+            prompt.style.display = 'none';
+            container.style.display = 'block';
+            dropZone.style.borderColor = '#10b981';
+            dropZone.style.background = '#f0fdf4';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+/**
+ * Hủy bỏ ảnh hiện trường đã chọn
+ */
+function removeSelectedImage(e) {
+    if (e) e.stopPropagation();
+    const input = document.getElementById('staffTicketImageInput');
+    if (input) input.value = '';
+
+    const preview = document.getElementById('imagePreview');
+    const fileName = document.getElementById('imageFileName');
+    const prompt = document.getElementById('uploadPrompt');
+    const container = document.getElementById('imagePreviewContainer');
+    const dropZone = document.getElementById('dropZone');
+
+    if (preview) preview.src = '';
+    if (fileName) fileName.textContent = '';
+    if (container) container.style.display = 'none';
+    if (prompt) prompt.style.display = 'block';
+    if (dropZone) {
+        dropZone.style.borderColor = '#cbd5e1';
+        dropZone.style.background = '#f8fafc';
+    }
+}
+
+/**
+ * Đóng mở ô nhập URL trực tiếp
+ */
+function toggleUrlInput() {
+    const box = document.getElementById('urlInputContainer');
+    if (box) {
+        box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
+    }
 }
 
 /**
@@ -916,6 +1018,40 @@ document.addEventListener('DOMContentLoaded', function() {
         if (note && defaultKhu) {
             note.textContent = `(Lọc theo Khu ${defaultKhu})`;
         }
+    }
+
+    // Kéo thả ảnh vào dropZone của Modal lập phiếu
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('staffTicketImageInput');
+    if (dropZone && fileInput) {
+        ['dragenter', 'dragover'].forEach(name => {
+            dropZone.addEventListener(name, function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.style.borderColor = '#2563eb';
+                dropZone.style.background = '#eff6ff';
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(name => {
+            dropZone.addEventListener(name, function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (name === 'dragleave') {
+                    dropZone.style.borderColor = '#cbd5e1';
+                    dropZone.style.background = '#f8fafc';
+                }
+            }, false);
+        });
+
+        dropZone.addEventListener('drop', function(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files && files.length > 0) {
+                fileInput.files = files;
+                handleImageSelect(fileInput);
+            }
+        }, false);
     }
 });
 </script>
