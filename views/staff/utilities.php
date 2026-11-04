@@ -15,15 +15,12 @@ $meta = $roomMetadata ?? [];
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('staff/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">BQL Cụm nhà</a>
             <span>/</span>
-            <span style="color: var(--text-primary); font-weight: 500;">Ghi nhận Điện Nước & Quản lý Hóa đơn Công nợ</span>
+            <span style="color: var(--text-primary); font-weight: 500;">Ghi nhận Điện Nước</span>
         </div>
 
         <div class="page-header" style="align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
             <div>
-                <h1 class="page-title">Ghi nhận Điện Nước & Quản lý Công nợ</h1>
-                <p class="page-subtitle">
-                    <strong>Phân hệ Điện Nước:</strong> Tính tiền điện theo <strong>biểu giá bậc thang 6 bậc EVN</strong>, phát hiện bất thường &gt; 3 lần và đối soát gạch nợ mô phỏng (Cụm <?= htmlspecialchars($maCum ?? 'AG') ?>).
-                </p>
+                <h1 class="page-title">Ghi nhận Điện Nước</h1>
             </div>
 
             <!-- Bộ lọc chọn Kỳ ghi nhận Tháng / Năm -->
@@ -44,17 +41,6 @@ $meta = $roomMetadata ?? [];
                 </button>
             </form>
         </div>
-
-        <!-- Thanh phím tắt chuyển nhanh các phân hệ nghiệp vụ Staff -->
-        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;">
-            <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">📊 Tổng quan BQL</a>
-            <a href="<?= url('staff/rooms') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">🏢 1. Sơ đồ Phòng & Cư trú</a>
-            <a href="<?= url('staff/applications') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">📋 2. Xét duyệt Chỗ ở & Miễn giảm</a>
-            <a href="<?= url('staff/utilities') ?>" class="btn btn-primary btn-sm" style="border-radius: 6px;">⚡ 3. Điện Nước & Công nợ</a>
-            <a href="<?= url('staff/requests') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">📬 4. Đơn Một Cửa</a>
-            <a href="<?= url('staff/maintenance') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">🛠️ 5. Điều phối Bảo trì</a>
-            <a href="<?= url('staff/discipline') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">🛡️ 6. An ninh & Rèn luyện</a>
-        </div>
     </div>
 
     <!-- FLASH MESSAGES -->
@@ -72,24 +58,10 @@ $meta = $roomMetadata ?? [];
         </div>
     <?php endif; ?>
 
-    <!-- HỘP THÔNG TIN NGUYÊN TẮC BẢO TOÀN DỮ LIỆU & BIỂU GIÁ (THEO PDF) -->
-    <div class="card" style="margin-bottom: 24px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px;">
-        <div style="font-weight: 700; color: #1e40af; font-size: 0.9rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
-            <span>⚡ Biểu giá Điện bậc thang EVN & Quy tắc phát hiện rò rỉ (Mục 1, 3, 4 PDF):</span>
-        </div>
-        <ul style="font-size: 0.85rem; color: #1e3a8a; line-height: 1.6; padding-left: 20px; margin: 0;">
-            <li><strong>Biểu giá điện 6 bậc chuẩn EVN:</strong> Bậc 1 (0-50 kWh): 1.806 đ &bull; Bậc 2 (51-100 kWh): 1.866 đ &bull; Bậc 3 (101-200 kWh): 2.167 đ &bull; Bậc 4 (201-300 kWh): 2.729 đ &bull; Bậc 5 (301-400 kWh): 3.050 đ &bull; Bậc 6 (&gt;400 kWh): 3.151 đ.</li>
-            <li><strong>Đơn giá nước sạch KTX:</strong> 12.500 đ/m³.</li>
-            <li><strong>Cảnh báo bất thường (Smart Anomaly):</strong> Nếu mức tiêu thụ điện hoặc nước tăng vọt gấp &gt;= 3 lần trung bình 3 tháng gần nhất, hệ thống tự động gắn cờ <code>CanhBaoBatThuong = 1</code> để nhân viên kỹ thuật kiểm tra rò rỉ hoặc chập điện trước khi phát hành hóa đơn.</li>
-            <li><strong>Đối soát gạch nợ mô phỏng:</strong> Cho phép cán bộ nhấn <em>"Xác nhận thanh toán mô phỏng"</em> để kiểm thử luồng gạch nợ tức thì mà không cần tích hợp cổng thanh toán ngân hàng thật.</li>
-        </ul>
-    </div>
-
     <!-- KHỐI 1: BIỂU MẪU NHẬP CHỈ SỐ ĐIỆN NƯỚC THEO PHÒNG -->
     <div class="card" style="margin-bottom: 24px;">
         <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
             <span>Biểu mẫu ghi nhận chỉ số công tơ Điện & Nước (Kỳ tháng <?= $currentMonth ?>/<?= $currentYear ?>)</span>
-            <span class="badge badge-info">Bảng: ChiSoDienNuoc</span>
         </div>
 
         <form action="<?= url('staff/utilities/save-reading') ?>" method="POST" id="formSaveReading" onsubmit="return validateReadingForm();">
@@ -156,7 +128,7 @@ $meta = $roomMetadata ?? [];
 
             <!-- Nút phát hành hóa đơn toàn Cụm -->
             <form method="POST" action="<?= url('staff/utilities/publish-cluster') ?>" style="display: inline;"
-                  onsubmit="return confirm('Bạn có chắc chắn muốn chốt sổ và phát hành hóa đơn điện nước tháng <?= $currentMonth ?>/<?= $currentYear ?> cho tất cả phòng trong Cụm <?= htmlspecialchars($maCum ?? 'AG') ?> không?');">
+                onsubmit="return confirm('Bạn có chắc chắn muốn chốt sổ và phát hành hóa đơn điện nước tháng <?= $currentMonth ?>/<?= $currentYear ?> cho tất cả phòng trong Cụm <?= htmlspecialchars($maCum ?? 'AG') ?> không?');">
                 <input type="hidden" name="thang" value="<?= $currentMonth ?>">
                 <input type="hidden" name="nam" value="<?= $currentYear ?>">
                 <button type="submit" class="btn btn-primary btn-sm" style="border-radius: 6px; font-weight: 500;">
@@ -244,7 +216,7 @@ $meta = $roomMetadata ?? [];
                                         </span>
                                     <?php else: ?>
                                         <form method="POST" action="<?= url('staff/utilities/publish-invoice') ?>" style="display: inline;"
-                                              onsubmit="return confirm('Xác nhận phát hành hóa đơn điện nước cho phòng <?= htmlspecialchars($r['MaPhong']) ?>?');">
+                                            onsubmit="return confirm('Xác nhận phát hành hóa đơn điện nước cho phòng <?= htmlspecialchars($r['MaPhong']) ?>?');">
                                             <input type="hidden" name="maPhong" value="<?= htmlspecialchars($r['MaPhong']) ?>">
                                             <input type="hidden" name="thang" value="<?= $currentMonth ?>">
                                             <input type="hidden" name="nam" value="<?= $currentYear ?>">
@@ -267,7 +239,6 @@ $meta = $roomMetadata ?? [];
         <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
             <div>
                 <span>Theo dõi Hóa đơn Công nợ Điện Nước & Gạch nợ Mô phỏng</span>
-                <span class="badge badge-info">Bảng: HoaDon + GiaoDichThanhToan</span>
             </div>
             <span style="font-size: 0.85rem; color: var(--text-muted);">
                 Hiển thị <?= count($invoiceList) ?> hóa đơn gần nhất
@@ -344,7 +315,7 @@ $meta = $roomMetadata ?? [];
                                     <?php else: ?>
                                         <!-- Nút xác nhận thanh toán mô phỏng -->
                                         <form method="POST" action="<?= url('staff/utilities/confirm-payment') ?>" style="display: inline;"
-                                              onsubmit="return confirm('Xác nhận thanh toán mô phỏng cho hóa đơn <?= htmlspecialchars($inv['MaHoaDon']) ?> với số tiền <?= number_format($inv['SoTienPhaiDong'], 0, ',', '.') ?> đ?');">
+                                            onsubmit="return confirm('Xác nhận thanh toán mô phỏng cho hóa đơn <?= htmlspecialchars($inv['MaHoaDon']) ?> với số tiền <?= number_format($inv['SoTienPhaiDong'], 0, ',', '.') ?> đ?');">
                                             <input type="hidden" name="maHoaDon" value="<?= htmlspecialchars($inv['MaHoaDon']) ?>">
                                             <input type="hidden" name="phuongThuc" value="Mã QR KTX">
                                             <input type="hidden" name="thang" value="<?= $currentMonth ?>">
@@ -366,80 +337,80 @@ $meta = $roomMetadata ?? [];
 
 <!-- JAVASCRIPT HỖ TRỢ AUTO-FILL & TÍNH TIỀN THỰC THỜI -->
 <script>
-const roomMeta = <?= json_encode($meta, JSON_UNESCAPED_UNICODE) ?>;
+    const roomMeta = <?= json_encode($meta, JSON_UNESCAPED_UNICODE) ?>;
 
-function onRoomChanged(maPhong) {
-    if (!maPhong || !roomMeta[maPhong]) {
-        document.getElementById('inputDienCu').value = '';
-        document.getElementById('inputNuocCu').value = '';
-        document.getElementById('inputSoSV').value = '1';
-        clearPreview();
-        return;
+    function onRoomChanged(maPhong) {
+        if (!maPhong || !roomMeta[maPhong]) {
+            document.getElementById('inputDienCu').value = '';
+            document.getElementById('inputNuocCu').value = '';
+            document.getElementById('inputSoSV').value = '1';
+            clearPreview();
+            return;
+        }
+
+        const data = roomMeta[maPhong];
+        document.getElementById('inputDienCu').value = data.dienCu || 0;
+        document.getElementById('inputNuocCu').value = data.nuocCu || 0;
+        document.getElementById('inputSoSV').value = data.soSV || 1;
+
+        calculatePreview();
     }
 
-    const data = roomMeta[maPhong];
-    document.getElementById('inputDienCu').value = data.dienCu || 0;
-    document.getElementById('inputNuocCu').value = data.nuocCu || 0;
-    document.getElementById('inputSoSV').value = data.soSV || 1;
-
-    calculatePreview();
-}
-
-function clearPreview() {
-    document.getElementById('previewDien').innerText = '';
-    document.getElementById('previewNuoc').innerText = '';
-    document.getElementById('previewTongTien').innerText = '';
-}
-
-function calculatePreview() {
-    const dienCu = parseInt(document.getElementById('inputDienCu').value) || 0;
-    const dienMoi = parseInt(document.getElementById('inputDienMoi').value);
-    const nuocCu = parseInt(document.getElementById('inputNuocCu').value) || 0;
-    const nuocMoi = parseInt(document.getElementById('inputNuocMoi').value);
-    const soSV = parseInt(document.getElementById('inputSoSV').value) || 1;
-
-    if (isNaN(dienMoi) && isNaN(nuocMoi)) {
-        clearPreview();
-        return;
+    function clearPreview() {
+        document.getElementById('previewDien').innerText = '';
+        document.getElementById('previewNuoc').innerText = '';
+        document.getElementById('previewTongTien').innerText = '';
     }
 
-    if (!isNaN(dienMoi)) {
+    function calculatePreview() {
+        const dienCu = parseInt(document.getElementById('inputDienCu').value) || 0;
+        const dienMoi = parseInt(document.getElementById('inputDienMoi').value);
+        const nuocCu = parseInt(document.getElementById('inputNuocCu').value) || 0;
+        const nuocMoi = parseInt(document.getElementById('inputNuocMoi').value);
+        const soSV = parseInt(document.getElementById('inputSoSV').value) || 1;
+
+        if (isNaN(dienMoi) && isNaN(nuocMoi)) {
+            clearPreview();
+            return;
+        }
+
+        if (!isNaN(dienMoi)) {
+            if (dienMoi < dienCu) {
+                document.getElementById('previewDien').innerHTML = '<span style="color: #b91c1c;">⚠️ Điện mới < cũ!</span>';
+            } else {
+                const diffDien = dienMoi - dienCu;
+                document.getElementById('previewDien').innerHTML = `Tiêu thụ: <b>${diffDien} kWh</b>`;
+            }
+        }
+
+        if (!isNaN(nuocMoi)) {
+            if (nuocMoi < nuocCu) {
+                document.getElementById('previewNuoc').innerHTML = '<span style="color: #b91c1c;">⚠️ Nước mới < cũ!</span>';
+            } else {
+                const diffNuoc = nuocMoi - nuocCu;
+                document.getElementById('previewNuoc').innerHTML = `Tiêu thụ: <b>${diffNuoc} m³</b>`;
+            }
+        }
+    }
+
+    function validateReadingForm() {
+        const dienCu = parseInt(document.getElementById('inputDienCu').value) || 0;
+        const dienMoi = parseInt(document.getElementById('inputDienMoi').value);
+        const nuocCu = parseInt(document.getElementById('inputNuocCu').value) || 0;
+        const nuocMoi = parseInt(document.getElementById('inputNuocMoi').value);
+
         if (dienMoi < dienCu) {
-            document.getElementById('previewDien').innerHTML = '<span style="color: #b91c1c;">⚠️ Điện mới < cũ!</span>';
-        } else {
-            const diffDien = dienMoi - dienCu;
-            document.getElementById('previewDien').innerHTML = `Tiêu thụ: <b>${diffDien} kWh</b>`;
+            alert('Lỗi: Chỉ số điện mới (' + dienMoi + ') không được nhỏ hơn chỉ số cũ (' + dienCu + ')!');
+            return false;
         }
-    }
 
-    if (!isNaN(nuocMoi)) {
         if (nuocMoi < nuocCu) {
-            document.getElementById('previewNuoc').innerHTML = '<span style="color: #b91c1c;">⚠️ Nước mới < cũ!</span>';
-        } else {
-            const diffNuoc = nuocMoi - nuocCu;
-            document.getElementById('previewNuoc').innerHTML = `Tiêu thụ: <b>${diffNuoc} m³</b>`;
+            alert('Lỗi: Chỉ số nước mới (' + nuocMoi + ') không được nhỏ hơn chỉ số cũ (' + nuocCu + ')!');
+            return false;
         }
+
+        return true;
     }
-}
-
-function validateReadingForm() {
-    const dienCu = parseInt(document.getElementById('inputDienCu').value) || 0;
-    const dienMoi = parseInt(document.getElementById('inputDienMoi').value);
-    const nuocCu = parseInt(document.getElementById('inputNuocCu').value) || 0;
-    const nuocMoi = parseInt(document.getElementById('inputNuocMoi').value);
-
-    if (dienMoi < dienCu) {
-        alert('Lỗi: Chỉ số điện mới (' + dienMoi + ') không được nhỏ hơn chỉ số cũ (' + dienCu + ')!');
-        return false;
-    }
-
-    if (nuocMoi < nuocCu) {
-        alert('Lỗi: Chỉ số nước mới (' + nuocMoi + ') không được nhỏ hơn chỉ số cũ (' + nuocCu + ')!');
-        return false;
-    }
-
-    return true;
-}
 </script>
 
 <?php

@@ -14,9 +14,6 @@ ob_start();
         <div class="page-header" style="align-items: center;">
             <div>
                 <h1 class="page-title">Giám sát An ninh Ra Vào & Điểm Rèn luyện</h1>
-                <p class="page-subtitle">
-                    <strong>Phân hệ An ninh & Kỷ luật:</strong> Theo dõi quét thẻ cổng, phát hiện vắng mặt quá 30 ngày, ghi nhận lỗi vi phạm/khen thưởng và tổng kết điểm rèn luyện gửi về trường.
-                </p>
             </div>
             <div>
                 <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline" style="border-radius: 8px;">
@@ -24,41 +21,14 @@ ob_start();
                 </a>
             </div>
         </div>
-
-        <!-- Thanh phím tắt chuyển nhanh các phân hệ nghiệp vụ Staff -->
-        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;">
-            <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">📊 Tổng quan BQL</a>
-            <a href="<?= url('staff/rooms') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">🏢 1. Sơ đồ Phòng & Cư trú</a>
-            <a href="<?= url('staff/applications') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">📋 2. Xét duyệt Chỗ ở & Miễn giảm</a>
-            <a href="<?= url('staff/utilities') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">⚡ 3. Điện Nước & Công nợ</a>
-            <a href="<?= url('staff/requests') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">📬 4. Đơn Một Cửa</a>
-            <a href="<?= url('staff/maintenance') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">🛠️ 5. Điều phối Bảo trì</a>
-            <a href="<?= url('staff/discipline') ?>" class="btn btn-primary btn-sm" style="border-radius: 6px;">🛡️ 6. An ninh & Rèn luyện</a>
-        </div>
-    </div>
-
-    <!-- HỘP THÔNG TIN NGUYÊN TẮC BẢO TOÀN DỮ LIỆU & PHÂN QUYỀN (THEO PDF) -->
-    <div class="card" style="margin-bottom: 24px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px;">
-        <div style="font-weight: 700; color: #1e40af; font-size: 0.9rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
-            <span>🛡️ Nguyên tắc giám sát an ninh & bảo toàn điểm rèn luyện (Mục 1, 3, 4 PDF):</span>
-        </div>
-        <ul style="font-size: 0.85rem; color: #1e3a8a; line-height: 1.6; padding-left: 20px; margin: 0;">
-            <li><strong>Nhật ký quét thẻ (Read-only):</strong> Dữ liệu bảng <code>NhatKyRaVao</code> được đồng bộ tự động từ đầu đọc cổng barrier. Tuyệt đối không thêm/sửa/xóa thủ công để đảm bảo tính khách quan an ninh.</li>
-            <li><strong>Cảnh báo vắng &gt; 30 ngày:</strong> Tự động lọc các sinh viên không có lượt quét thẻ trong 30 ngày gần nhất và <em>không có đơn xin tạm vắng</em> hợp lệ trong hệ thống. Cán bộ tiến hành kiểm tra phòng trực tiếp.</li>
-            <li><strong>Điểm rèn luyện nội trú:</strong> Điểm chuẩn khởi điểm là 100 điểm/kỳ; ghi nhận các sự kiện cộng điểm (tham gia hoạt động tình nguyện, vệ sinh chung) hoặc trừ điểm vi phạm nội quy.</li>
-            <li><strong>Khóa điểm khi gửi trường:</strong> Khi Quản lý KTX chốt điểm và đánh dấu <code>DaGuiVeTruong = 1</code>, hệ thống khóa toàn bộ chức năng sửa điểm đối với sinh viên đó.</li>
-        </ul>
     </div>
 
     <!-- KHỐI 1: CẢNH BÁO SINH VIÊN VẮNG MẶT > 30 NGÀY KHÔNG CÓ ĐƠN TẠM VẮNG -->
     <div class="card" style="margin-bottom: 24px; border-left: 4px solid #dc2626;">
         <div class="card-title">
-            <span>1. Danh sách Cảnh báo Sinh viên vắng mặt quá 30 ngày (Cụm <?= htmlspecialchars($maCum ?? 'AG') ?>)</span>
+            <span>Danh sách Cảnh báo Sinh viên vắng mặt quá 30 ngày (Cụm <?= htmlspecialchars($maCum ?? 'AG') ?>)</span>
             <span class="badge badge-danger">1 trường hợp cần xác minh</span>
         </div>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
-            Đối soát tự động giữa lần quét cổng cuối cùng và bảng <code>DonTuMotCua</code>. Trường hợp không nộp đơn cần cử cán bộ kiểm tra phòng trực tiếp:
-        </p>
 
         <div class="table-responsive">
             <table class="data-table">
@@ -102,8 +72,7 @@ ob_start();
     <!-- KHỐI 2: NHẬT KÝ QUÉT THẺ RA VÀO CỔNG (READ-ONLY) -->
     <div class="card" style="margin-bottom: 24px;">
         <div class="card-title">
-            <span>2. Nhật ký Quét thẻ Ra - Vào Cổng KTX (Chỉ đọc từ Barrier)</span>
-            <span class="badge badge-info">Bảng: NhatKyRaVao</span>
+            <span>Nhật ký Quét thẻ Ra - Vào Cổng KTX </span>
         </div>
 
         <div class="table-responsive">
@@ -155,7 +124,7 @@ ob_start();
     <!-- KHỐI 3: ĐÁNH GIÁ ĐIỂM RÈN LUYỆN NỘI TRÚ -->
     <div class="card" style="margin-bottom: 24px;">
         <div class="card-title">
-            <span>3. Quản lý Điểm Rèn luyện Nội trú & Kỷ luật (Học kỳ 1 / 2026-2027)</span>
+            <span>Quản lý Điểm Rèn luyện Nội trú & Kỷ luật (Học kỳ 1 / 2026-2027)</span>
             <div style="display: flex; gap: 8px;">
                 <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px;" onclick="alert('Đã xuất báo cáo điểm rèn luyện toàn Cụm nhà ra file Excel!')">
                     📥 Xuất báo cáo gửi trường

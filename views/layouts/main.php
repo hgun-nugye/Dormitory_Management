@@ -21,10 +21,12 @@
             display: inline-flex;
             align-items: center;
         }
+
         .nav-links a:not(.btn):hover {
             color: #2563eb;
             background-color: #f1f5f9;
         }
+
         .nav-links a:not(.btn).active {
             color: #1d4ed8 !important;
             background-color: #eff6ff !important;
@@ -49,7 +51,7 @@
                     <li><a href="<?= url('student/payments') ?>" class="<?= nav_active_class('student/payments') ?>">Thanh toán</a></li>
                 <?php elseif (\App\Core\Auth::isNhanVien()): ?>
                     <li><a href="<?= url('staff/dashboard') ?>" class="<?= nav_active_class('staff/dashboard') ?>">BQL Cụm</a></li>
-                    <li><a href="<?= url('staff/zones') ?>" class="<?= nav_active_class('staff/zones') ?>">Khu & Cụm</a></li>
+                    <li><a href="<?= url('staff/zones') ?>" class="<?= nav_active_class('staff/zones') ?>">Khu KTX</a></li>
                     <li><a href="<?= url('staff/rooms') ?>" class="<?= nav_active_class('staff/rooms') ?>">Sơ đồ phòng</a></li>
                     <li><a href="<?= url('staff/applications') ?>" class="<?= nav_active_class('staff/applications') ?>">Xét duyệt 72h</a></li>
                     <li><a href="<?= url('staff/utilities') ?>" class="<?= nav_active_class('staff/utilities') ?>">Điện nước</a></li>
@@ -99,7 +101,7 @@
                 try {
                     const url = new URL(href, window.location.origin);
                     const linkPath = url.pathname.replace(/\/+$/, '') || '/';
-                    
+
                     if (linkPath === currentPath) {
                         link.classList.add('active');
                         matched = true;

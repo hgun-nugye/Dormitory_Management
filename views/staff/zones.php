@@ -13,7 +13,7 @@ ob_start();
 
         <div class="page-header" style="align-items: center; flex-wrap: wrap; gap: 12px; display: flex; justify-content: space-between;">
             <div>
-                <h1 class="page-title">Quản lý Hạ tầng KTX: Khu, Cụm, Tòa & Phòng ở</h1>
+                <h1 class="page-title">Quản lý Hạ tầng KTX</h1>
                 <p class="page-subtitle" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
                     <span>Phạm vi cán bộ:</span>
                     <span class="badge <?= htmlspecialchars($scope['badgeClass'] ?? 'badge-primary') ?>" style="font-size: 0.8rem; padding: 4px 10px;">

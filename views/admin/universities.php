@@ -20,10 +20,10 @@ ob_start();
                     <i class="fa-solid fa-plus-circle" style="margin-right: 6px;"></i> Thêm trường mới
                 </button>
                 <button type="button" class="btn btn-outline" onclick="openImportUniversityModal()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; color: #2563eb; border-color: #bfdbfe; background: #eff6ff;" title="Nhập danh sách trường đại học từ file CSV">
-                    <i class="fa-solid fa-file-import" style="margin-right: 6px; color: #2563eb;"></i> Nhập file (Import)
+                    <i class="fa-solid fa-file-import" style="margin-right: 6px; color: #2563eb;"></i> Nhập file
                 </button>
                 <button type="button" class="btn btn-outline" id="btnExportUniversities" onclick="exportFilteredUniversities()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; color: #15803d; border-color: #86efac; background: #f0fdf4; cursor: pointer;" title="Xuất danh sách trường theo kết quả lọc hiện tại ra Excel/CSV">
-                    <i class="fa-solid fa-file-excel" style="margin-right: 6px; color: #16a34a;"></i> <span id="btnExportUniText">Xuất Excel (CSV)</span>
+                    <i class="fa-solid fa-file-excel" style="margin-right: 6px; color: #16a34a;"></i> <span id="btnExportUniText">Xuất Excel</span>
                 </button>
                 <a href="<?= url('admin/dashboard') ?>" class="btn btn-outline" style="border-radius: 8px; text-decoration: none;">
                     &larr; Về Dashboard
@@ -138,11 +138,6 @@ ob_start();
             <div style="display: flex; align-items: center; gap: 8px;">
                 <span>Danh sách các trường đại học thành viên & liên kết</span>
                 <span class="badge badge-info" id="uniCountBadge"><?= count($universityList ?? []) ?> trường</span>
-            </div>
-            <div>
-                <span id="filterSummaryBadge" class="badge badge-info" style="font-size: 0.775rem;">
-                    Hiển thị tất cả (<?= count($universityList ?? []) ?> trường)
-                </span>
             </div>
         </div>
 

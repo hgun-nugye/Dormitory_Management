@@ -14,33 +14,19 @@ ob_start();
         <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <div>
                 <h1 class="page-title" style="margin: 0; font-size: 1.6rem; color: var(--text-primary, #1e293b);">
-                    🛠️ Điều phối Sửa chữa & Phiếu Báo Hỏng
+                    Điều phối Sửa chữa & Phiếu Báo Hỏng
                 </h1>
-                <p class="page-subtitle" style="margin: 5px 0 0 0; color: var(--text-muted, #64748b); font-size: 0.9rem;">
-                    <strong>Phân hệ Kỹ thuật - Bảo trì:</strong> Phân cấp quyền hạn chặt chẽ (Tòa &bull; Cụm &bull; Khu &bull; Quản lý KTX); điều phối kỹ thuật viên đúng Khu và tự động hoàn nguyên thiết bị về <strong>'Tốt'</strong>.
-                </p>
             </div>
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <?php if ($scope['canCreateStaffTicket']): ?>
                     <button type="button" class="btn btn-primary" onclick="openStaffTicketModal()" style="border-radius: 8px; padding: 8px 16px; font-size: 0.88rem; background: #059669; border: none; color: #fff; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
-                        <span>➕</span> Lập phiếu sự cố hạ tầng chung
+                        Lập phiếu sự cố hạ tầng chung
                     </button>
                 <?php endif; ?>
                 <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline" style="border-radius: 8px; text-decoration: none; padding: 8px 16px; border: 1px solid #cbd5e1; color: #334155;">
                     &larr; Về Dashboard
                 </a>
             </div>
-        </div>
-
-        <!-- Thanh phím tắt chuyển nhanh các phân hệ nghiệp vụ Staff -->
-        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;">
-            <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 6px 12px; font-size: 0.85rem; border: 1px solid #e2e8f0; color: #475569; text-decoration: none;">📊 Tổng quan BQL</a>
-            <a href="<?= url('staff/rooms') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 6px 12px; font-size: 0.85rem; border: 1px solid #e2e8f0; color: #475569; text-decoration: none;">🏢 1. Sơ đồ Phòng & Cư trú</a>
-            <a href="<?= url('staff/applications') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 6px 12px; font-size: 0.85rem; border: 1px solid #e2e8f0; color: #475569; text-decoration: none;">📋 2. Xét duyệt Chỗ ở & Miễn giảm</a>
-            <a href="<?= url('staff/utilities') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 6px 12px; font-size: 0.85rem; border: 1px solid #e2e8f0; color: #475569; text-decoration: none;">⚡ 3. Điện Nước & Công nợ</a>
-            <a href="<?= url('staff/requests') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 6px 12px; font-size: 0.85rem; border: 1px solid #e2e8f0; color: #475569; text-decoration: none;">📬 4. Đơn Một Cửa</a>
-            <a href="<?= url('staff/maintenance') ?>" class="btn btn-primary btn-sm" style="border-radius: 6px; padding: 6px 12px; font-size: 0.85rem; background: #2563eb; color: #fff; text-decoration: none;">🛠️ 5. Điều phối Bảo trì</a>
-            <a href="<?= url('staff/discipline') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 6px 12px; font-size: 0.85rem; border: 1px solid #e2e8f0; color: #475569; text-decoration: none;">🛡️ 6. An ninh & Rèn luyện</a>
         </div>
     </div>
 
@@ -123,7 +109,7 @@ ob_start();
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 16px;">
                     <div>
                         <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 6px;">
-                            1. Phiếu sự cố chờ xử lý (trong phạm vi phân quyền): <span style="color: #dc2626;">*</span>
+                            Phiếu sự cố chờ xử lý (trong phạm vi phân quyền): <span style="color: #dc2626;">*</span>
                         </label>
                         <select name="maPhieu" id="selectMaPhieu" required onchange="onTicketChange()" style="width: 100%; padding: 9px 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #cbd5e1; background: #fff;">
                             <option value="">-- Chọn phiếu báo hỏng cần xử lý --</option>
@@ -145,7 +131,7 @@ ob_start();
 
                     <div>
                         <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 6px;">
-                            2. Kỹ thuật viên phụ trách: <span style="color: #dc2626;">*</span>
+                            Kỹ thuật viên phụ trách: <span style="color: #dc2626;">*</span>
                             <span id="techKhuNote" style="font-size: 0.75rem; font-weight: normal; color: #0284c7; margin-left: 4px;"></span>
                         </label>
                         <select name="maNhanVien" id="selectMaNhanVien" required style="width: 100%; padding: 9px 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #cbd5e1; background: #fff;">
@@ -155,7 +141,7 @@ ob_start();
 
                     <div>
                         <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 6px;">
-                            3. Trạng thái điều phối:
+                            Trạng thái điều phối:
                         </label>
                         <select name="trangThai" id="selectTrangThai" style="width: 100%; padding: 9px 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #cbd5e1; background: #fff;">
                             <option value="Đang sửa chữa" selected>Đang sửa chữa (Đồng bộ TB sang 'Đang bảo trì')</option>
@@ -167,7 +153,7 @@ ob_start();
 
                 <div style="display: flex; justify-content: flex-end; align-items: center; gap: 12px;">
                     <button type="submit" class="btn btn-primary" style="background: #2563eb; color: #fff; padding: 9px 20px; border-radius: 6px; border: none; font-size: 0.88rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        <span>🛠️</span> Phê duyệt & Gán thợ kỹ thuật
+                        Phê duyệt & Gán thợ kỹ thuật
                     </button>
                 </div>
             </form>
@@ -489,7 +475,7 @@ ob_start();
                                                 <span style="font-size: 0.78rem; color: #166534; font-style: italic;">Đã hoàn thành</span>
                                             <?php endif; ?>
 
-                                        <!-- DÀNH CHO CÁN BỘ QUẢN LÝ (TRƯỞNG TÒA, CỤM, KHU, ADMIN) -->
+                                            <!-- DÀNH CHO CÁN BỘ QUẢN LÝ (TRƯỞNG TÒA, CỤM, KHU, ADMIN) -->
                                         <?php else: ?>
                                             <?php if (in_array($t['TrangThaiSua'], ['Chờ xử lý', 'Đang sửa chữa'])): ?>
                                                 <!-- Nút Duyệt & Phân công -->
@@ -776,284 +762,289 @@ ob_start();
 </div>
 
 <script>
-// Danh sách Kỹ thuật viên đã chuẩn hóa theo Khu
-const allTechnicians = <?= json_encode($technicians, JSON_UNESCAPED_UNICODE) ?>;
-const currentViewKhu = '<?= htmlspecialchars($currentKhu) ?>';
+    // Danh sách Kỹ thuật viên đã chuẩn hóa theo Khu
+    const allTechnicians = <?= json_encode($technicians, JSON_UNESCAPED_UNICODE) ?>;
+    const currentViewKhu = '<?= htmlspecialchars($currentKhu) ?>';
 
-/**
- * Hàm nạp danh sách Kỹ thuật viên vào thẻ <select> chỉ lọc đúng theo Khu A hoặc Khu B
- */
-function renderTechnicianOptions(selectElement, targetKhu, selectedId = null) {
-    if (!selectElement) return;
-    selectElement.innerHTML = '';
+    /**
+     * Hàm nạp danh sách Kỹ thuật viên vào thẻ <select> chỉ lọc đúng theo Khu A hoặc Khu B
+     */
+    function renderTechnicianOptions(selectElement, targetKhu, selectedId = null) {
+        if (!selectElement) return;
+        selectElement.innerHTML = '';
 
-    const defaultOpt = document.createElement('option');
-    defaultOpt.value = '';
-    if (targetKhu && targetKhu !== 'all') {
-        defaultOpt.textContent = `-- Chọn Kỹ thuật viên (Chỉ Khu ${targetKhu}) --`;
-    } else {
-        defaultOpt.textContent = '-- Chọn nhân viên kỹ thuật --';
-    }
-    selectElement.appendChild(defaultOpt);
-
-    const filtered = allTechnicians.filter(t => {
-        if (!targetKhu || targetKhu === 'all') return true;
-        return t.MaKhu === targetKhu;
-    });
-
-    filtered.forEach(tech => {
-        const opt = document.createElement('option');
-        opt.value = tech.MaTaiKhoan;
-        opt.setAttribute('data-khu', tech.MaKhu);
-        opt.textContent = `${tech.HoVaTen} (Khu ${tech.MaKhu} - ${tech.TenDangNhap}${tech.SoDienThoai ? ' - 📞' + tech.SoDienThoai : ''})`;
-        if (selectedId && parseInt(selectedId) === parseInt(tech.MaTaiKhoan)) {
-            opt.selected = true;
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = '';
+        if (targetKhu && targetKhu !== 'all') {
+            defaultOpt.textContent = `-- Chọn Kỹ thuật viên (Chỉ Khu ${targetKhu}) --`;
+        } else {
+            defaultOpt.textContent = '-- Chọn nhân viên kỹ thuật --';
         }
-        selectElement.appendChild(opt);
-    });
+        selectElement.appendChild(defaultOpt);
 
-    if (filtered.length === 0) {
-        const emptyOpt = document.createElement('option');
-        emptyOpt.disabled = true;
-        emptyOpt.textContent = `(Không tìm thấy nhân viên kỹ thuật thuộc Khu ${targetKhu})`;
-        selectElement.appendChild(emptyOpt);
-    }
-}
+        const filtered = allTechnicians.filter(t => {
+            if (!targetKhu || targetKhu === 'all') return true;
+            return t.MaKhu === targetKhu;
+        });
 
-/**
- * Xử lý khi người dùng chọn phiếu sự cố ở Form trên đầu trang
- */
-function onTicketChange() {
-    const selectPhieu = document.getElementById('selectMaPhieu');
-    const selectNV = document.getElementById('selectMaNhanVien');
-    const note = document.getElementById('techKhuNote');
-    if (!selectPhieu || !selectNV) return;
+        filtered.forEach(tech => {
+            const opt = document.createElement('option');
+            opt.value = tech.MaTaiKhoan;
+            opt.setAttribute('data-khu', tech.MaKhu);
+            opt.textContent = `${tech.HoVaTen} (Khu ${tech.MaKhu} - ${tech.TenDangNhap}${tech.SoDienThoai ? ' - 📞' + tech.SoDienThoai : ''})`;
+            if (selectedId && parseInt(selectedId) === parseInt(tech.MaTaiKhoan)) {
+                opt.selected = true;
+            }
+            selectElement.appendChild(opt);
+        });
 
-    const selectedOption = selectPhieu.options[selectPhieu.selectedIndex];
-    if (!selectedOption || !selectedOption.value) {
-        const defaultKhu = (currentViewKhu !== 'all') ? currentViewKhu : null;
-        renderTechnicianOptions(selectNV, defaultKhu);
-        if (note) note.textContent = defaultKhu ? `(Lọc theo Khu ${defaultKhu})` : '';
-        return;
+        if (filtered.length === 0) {
+            const emptyOpt = document.createElement('option');
+            emptyOpt.disabled = true;
+            emptyOpt.textContent = `(Không tìm thấy nhân viên kỹ thuật thuộc Khu ${targetKhu})`;
+            selectElement.appendChild(emptyOpt);
+        }
     }
 
-    const ticketKhu = selectedOption.getAttribute('data-khu') || 'A';
-    const assignedNV = selectedOption.getAttribute('data-nv') || 0;
+    /**
+     * Xử lý khi người dùng chọn phiếu sự cố ở Form trên đầu trang
+     */
+    function onTicketChange() {
+        const selectPhieu = document.getElementById('selectMaPhieu');
+        const selectNV = document.getElementById('selectMaNhanVien');
+        const note = document.getElementById('techKhuNote');
+        if (!selectPhieu || !selectNV) return;
 
-    renderTechnicianOptions(selectNV, ticketKhu, assignedNV);
-    if (note) note.textContent = `(Tự động khóa chỉ hiển thị KTV Khu ${ticketKhu})`;
-}
-
-/**
- * Modal lập phiếu sự cố hạ tầng cán bộ
- */
-function openStaffTicketModal() {
-    document.getElementById('staffTicketModal').style.display = 'flex';
-}
-function closeStaffTicketModal() {
-    document.getElementById('staffTicketModal').style.display = 'none';
-    removeSelectedImage(null);
-    const urlInput = document.getElementById('hinhAnhUrlInput');
-    if (urlInput) urlInput.value = '';
-}
-
-/**
- * Xử lý xem trước ảnh khi người dùng chọn tệp
- */
-function handleImageSelect(input) {
-    if (input.files && input.files[0]) {
-        const file = input.files[0];
-
-        // Giới hạn 5MB
-        if (file.size > 5 * 1024 * 1024) {
-            alert('Dung lượng ảnh vượt quá 5MB. Vui lòng nén hoặc chọn tệp khác!');
-            input.value = '';
+        const selectedOption = selectPhieu.options[selectPhieu.selectedIndex];
+        if (!selectedOption || !selectedOption.value) {
+            const defaultKhu = (currentViewKhu !== 'all') ? currentViewKhu : null;
+            renderTechnicianOptions(selectNV, defaultKhu);
+            if (note) note.textContent = defaultKhu ? `(Lọc theo Khu ${defaultKhu})` : '';
             return;
         }
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const preview = document.getElementById('imagePreview');
-            const fileName = document.getElementById('imageFileName');
-            const prompt = document.getElementById('uploadPrompt');
-            const container = document.getElementById('imagePreviewContainer');
-            const dropZone = document.getElementById('dropZone');
+        const ticketKhu = selectedOption.getAttribute('data-khu') || 'A';
+        const assignedNV = selectedOption.getAttribute('data-nv') || 0;
 
-            preview.src = e.target.result;
-            fileName.textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
-            prompt.style.display = 'none';
-            container.style.display = 'block';
-            dropZone.style.borderColor = '#10b981';
-            dropZone.style.background = '#f0fdf4';
-        };
-        reader.readAsDataURL(file);
+        renderTechnicianOptions(selectNV, ticketKhu, assignedNV);
+        if (note) note.textContent = `(Tự động khóa chỉ hiển thị KTV Khu ${ticketKhu})`;
     }
-}
 
-/**
- * Hủy bỏ ảnh hiện trường đã chọn
- */
-function removeSelectedImage(e) {
-    if (e) e.stopPropagation();
-    const input = document.getElementById('staffTicketImageInput');
-    if (input) input.value = '';
-
-    const preview = document.getElementById('imagePreview');
-    const fileName = document.getElementById('imageFileName');
-    const prompt = document.getElementById('uploadPrompt');
-    const container = document.getElementById('imagePreviewContainer');
-    const dropZone = document.getElementById('dropZone');
-
-    if (preview) preview.src = '';
-    if (fileName) fileName.textContent = '';
-    if (container) container.style.display = 'none';
-    if (prompt) prompt.style.display = 'block';
-    if (dropZone) {
-        dropZone.style.borderColor = '#cbd5e1';
-        dropZone.style.background = '#f8fafc';
+    /**
+     * Modal lập phiếu sự cố hạ tầng cán bộ
+     */
+    function openStaffTicketModal() {
+        document.getElementById('staffTicketModal').style.display = 'flex';
     }
-}
 
-/**
- * Đóng mở ô nhập URL trực tiếp
- */
-function toggleUrlInput() {
-    const box = document.getElementById('urlInputContainer');
-    if (box) {
-        box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
+    function closeStaffTicketModal() {
+        document.getElementById('staffTicketModal').style.display = 'none';
+        removeSelectedImage(null);
+        const urlInput = document.getElementById('hinhAnhUrlInput');
+        if (urlInput) urlInput.value = '';
     }
-}
 
-/**
- * Modal Phân công nhanh theo từng dòng phiếu
- */
-function openAssignModal(maPhieu, maPhong, tenTB, maKhu, currentNhanVienId) {
-    document.getElementById('modalMaPhieu').value = maPhieu;
-    document.getElementById('modalMaPhieuText').textContent = maPhieu;
-    document.getElementById('modalMaPhongText').textContent = maPhong;
-    document.getElementById('modalMaKhuBadge').textContent = 'Khu ' + maKhu;
-    document.getElementById('modalTenTBText').textContent = tenTB;
+    /**
+     * Xử lý xem trước ảnh khi người dùng chọn tệp
+     */
+    function handleImageSelect(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
 
-    const modalSelectNV = document.getElementById('modalSelectMaNhanVien');
-    const modalNote = document.getElementById('modalTechKhuNote');
-    if (modalNote) modalNote.textContent = `(Chỉ hiển thị KTV phụ trách Khu ${maKhu})`;
+            // Giới hạn 5MB
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Dung lượng ảnh vượt quá 5MB. Vui lòng nén hoặc chọn tệp khác!');
+                input.value = '';
+                return;
+            }
 
-    renderTechnicianOptions(modalSelectNV, maKhu, currentNhanVienId);
-    document.getElementById('assignModal').style.display = 'flex';
-}
-function closeAssignModal() {
-    document.getElementById('assignModal').style.display = 'none';
-}
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('imagePreview');
+                const fileName = document.getElementById('imageFileName');
+                const prompt = document.getElementById('uploadPrompt');
+                const container = document.getElementById('imagePreviewContainer');
+                const dropZone = document.getElementById('dropZone');
 
-/**
- * Modal cập nhật tiến độ cho KTV
- */
-function openProgressModal(maPhieu, ghiChu, trangThai) {
-    document.getElementById('progressMaPhieu').value = maPhieu;
-    document.getElementById('progressGhiChu').value = ghiChu || '';
-    if (trangThai) {
-        document.getElementById('progressTrangThai').value = trangThai;
-    }
-    document.getElementById('progressModal').style.display = 'flex';
-}
-function closeProgressModal() {
-    document.getElementById('progressModal').style.display = 'none';
-}
-
-/**
- * Modal nghiệm thu hoàn thành
- */
-function openCompleteModal(maPhieu) {
-    document.getElementById('completeMaPhieu').value = maPhieu;
-    document.getElementById('completeMaPhieuText').textContent = maPhieu;
-    document.getElementById('completeModal').style.display = 'flex';
-}
-function closeCompleteModal() {
-    document.getElementById('completeModal').style.display = 'none';
-}
-
-/**
- * Modal Hủy phiếu
- */
-function openCancelModal(maPhieu) {
-    document.getElementById('cancelMaPhieu').value = maPhieu;
-    document.getElementById('cancelModal').style.display = 'flex';
-}
-function closeCancelModal() {
-    document.getElementById('cancelModal').style.display = 'none';
-}
-
-/**
- * Xem ảnh hiện trường
- */
-function viewImage(rawUrl) {
-    const img = document.getElementById('imgViewer');
-    const fallback = document.getElementById('imgFallback');
-    const pathText = document.getElementById('imgFallbackPath');
-    
-    img.style.display = 'block';
-    fallback.style.display = 'none';
-
-    let finalUrl = rawUrl;
-    if (rawUrl && !rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
-        finalUrl = '<?= url() ?>/' + rawUrl.replace(/^\/+/, '');
-    }
-    
-    img.src = finalUrl;
-    pathText.textContent = rawUrl;
-    document.getElementById('imageModal').style.display = 'flex';
-}
-
-// Khởi tạo ban đầu khi tải trang
-document.addEventListener('DOMContentLoaded', function() {
-    const selectNV = document.getElementById('selectMaNhanVien');
-    const selectPhieu = document.getElementById('selectMaPhieu');
-
-    if (selectPhieu && selectPhieu.value) {
-        onTicketChange();
-    } else if (selectNV) {
-        const defaultKhu = (currentViewKhu !== 'all') ? currentViewKhu : null;
-        renderTechnicianOptions(selectNV, defaultKhu);
-        const note = document.getElementById('techKhuNote');
-        if (note && defaultKhu) {
-            note.textContent = `(Lọc theo Khu ${defaultKhu})`;
+                preview.src = e.target.result;
+                fileName.textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+                prompt.style.display = 'none';
+                container.style.display = 'block';
+                dropZone.style.borderColor = '#10b981';
+                dropZone.style.background = '#f0fdf4';
+            };
+            reader.readAsDataURL(file);
         }
     }
 
-    // Kéo thả ảnh vào dropZone của Modal lập phiếu
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('staffTicketImageInput');
-    if (dropZone && fileInput) {
-        ['dragenter', 'dragover'].forEach(name => {
-            dropZone.addEventListener(name, function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                dropZone.style.borderColor = '#2563eb';
-                dropZone.style.background = '#eff6ff';
-            }, false);
-        });
+    /**
+     * Hủy bỏ ảnh hiện trường đã chọn
+     */
+    function removeSelectedImage(e) {
+        if (e) e.stopPropagation();
+        const input = document.getElementById('staffTicketImageInput');
+        if (input) input.value = '';
 
-        ['dragleave', 'drop'].forEach(name => {
-            dropZone.addEventListener(name, function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (name === 'dragleave') {
-                    dropZone.style.borderColor = '#cbd5e1';
-                    dropZone.style.background = '#f8fafc';
+        const preview = document.getElementById('imagePreview');
+        const fileName = document.getElementById('imageFileName');
+        const prompt = document.getElementById('uploadPrompt');
+        const container = document.getElementById('imagePreviewContainer');
+        const dropZone = document.getElementById('dropZone');
+
+        if (preview) preview.src = '';
+        if (fileName) fileName.textContent = '';
+        if (container) container.style.display = 'none';
+        if (prompt) prompt.style.display = 'block';
+        if (dropZone) {
+            dropZone.style.borderColor = '#cbd5e1';
+            dropZone.style.background = '#f8fafc';
+        }
+    }
+
+    /**
+     * Đóng mở ô nhập URL trực tiếp
+     */
+    function toggleUrlInput() {
+        const box = document.getElementById('urlInputContainer');
+        if (box) {
+            box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
+        }
+    }
+
+    /**
+     * Modal Phân công nhanh theo từng dòng phiếu
+     */
+    function openAssignModal(maPhieu, maPhong, tenTB, maKhu, currentNhanVienId) {
+        document.getElementById('modalMaPhieu').value = maPhieu;
+        document.getElementById('modalMaPhieuText').textContent = maPhieu;
+        document.getElementById('modalMaPhongText').textContent = maPhong;
+        document.getElementById('modalMaKhuBadge').textContent = 'Khu ' + maKhu;
+        document.getElementById('modalTenTBText').textContent = tenTB;
+
+        const modalSelectNV = document.getElementById('modalSelectMaNhanVien');
+        const modalNote = document.getElementById('modalTechKhuNote');
+        if (modalNote) modalNote.textContent = `(Chỉ hiển thị KTV phụ trách Khu ${maKhu})`;
+
+        renderTechnicianOptions(modalSelectNV, maKhu, currentNhanVienId);
+        document.getElementById('assignModal').style.display = 'flex';
+    }
+
+    function closeAssignModal() {
+        document.getElementById('assignModal').style.display = 'none';
+    }
+
+    /**
+     * Modal cập nhật tiến độ cho KTV
+     */
+    function openProgressModal(maPhieu, ghiChu, trangThai) {
+        document.getElementById('progressMaPhieu').value = maPhieu;
+        document.getElementById('progressGhiChu').value = ghiChu || '';
+        if (trangThai) {
+            document.getElementById('progressTrangThai').value = trangThai;
+        }
+        document.getElementById('progressModal').style.display = 'flex';
+    }
+
+    function closeProgressModal() {
+        document.getElementById('progressModal').style.display = 'none';
+    }
+
+    /**
+     * Modal nghiệm thu hoàn thành
+     */
+    function openCompleteModal(maPhieu) {
+        document.getElementById('completeMaPhieu').value = maPhieu;
+        document.getElementById('completeMaPhieuText').textContent = maPhieu;
+        document.getElementById('completeModal').style.display = 'flex';
+    }
+
+    function closeCompleteModal() {
+        document.getElementById('completeModal').style.display = 'none';
+    }
+
+    /**
+     * Modal Hủy phiếu
+     */
+    function openCancelModal(maPhieu) {
+        document.getElementById('cancelMaPhieu').value = maPhieu;
+        document.getElementById('cancelModal').style.display = 'flex';
+    }
+
+    function closeCancelModal() {
+        document.getElementById('cancelModal').style.display = 'none';
+    }
+
+    /**
+     * Xem ảnh hiện trường
+     */
+    function viewImage(rawUrl) {
+        const img = document.getElementById('imgViewer');
+        const fallback = document.getElementById('imgFallback');
+        const pathText = document.getElementById('imgFallbackPath');
+
+        img.style.display = 'block';
+        fallback.style.display = 'none';
+
+        let finalUrl = rawUrl;
+        if (rawUrl && !rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
+            finalUrl = '<?= url() ?>/' + rawUrl.replace(/^\/+/, '');
+        }
+
+        img.src = finalUrl;
+        pathText.textContent = rawUrl;
+        document.getElementById('imageModal').style.display = 'flex';
+    }
+
+    // Khởi tạo ban đầu khi tải trang
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectNV = document.getElementById('selectMaNhanVien');
+        const selectPhieu = document.getElementById('selectMaPhieu');
+
+        if (selectPhieu && selectPhieu.value) {
+            onTicketChange();
+        } else if (selectNV) {
+            const defaultKhu = (currentViewKhu !== 'all') ? currentViewKhu : null;
+            renderTechnicianOptions(selectNV, defaultKhu);
+            const note = document.getElementById('techKhuNote');
+            if (note && defaultKhu) {
+                note.textContent = `(Lọc theo Khu ${defaultKhu})`;
+            }
+        }
+
+        // Kéo thả ảnh vào dropZone của Modal lập phiếu
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('staffTicketImageInput');
+        if (dropZone && fileInput) {
+            ['dragenter', 'dragover'].forEach(name => {
+                dropZone.addEventListener(name, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.style.borderColor = '#2563eb';
+                    dropZone.style.background = '#eff6ff';
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(name => {
+                dropZone.addEventListener(name, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (name === 'dragleave') {
+                        dropZone.style.borderColor = '#cbd5e1';
+                        dropZone.style.background = '#f8fafc';
+                    }
+                }, false);
+            });
+
+            dropZone.addEventListener('drop', function(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files && files.length > 0) {
+                    fileInput.files = files;
+                    handleImageSelect(fileInput);
                 }
             }, false);
-        });
-
-        dropZone.addEventListener('drop', function(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            if (files && files.length > 0) {
-                fileInput.files = files;
-                handleImageSelect(fileInput);
-            }
-        }, false);
-    }
-});
+        }
+    });
 </script>
 
 <?php
