@@ -114,6 +114,11 @@ Router::get('/staff/requests', 'Staff\\RequestController@requests', [AuthMiddlew
 Router::post('/staff/requests/approve', 'Staff\\RequestController@approveRequest', [AuthMiddleware::class]);
 Router::post('/staff/requests/reject', 'Staff\\RequestController@rejectRequest', [AuthMiddleware::class]);
 Router::get('/staff/maintenance', 'Staff\\MaintenanceController@maintenance', [AuthMiddleware::class]);
+Router::post('/staff/maintenance/assign', 'Staff\\MaintenanceController@assign', [AuthMiddleware::class]);
+Router::post('/staff/maintenance/create-staff-ticket', 'Staff\\MaintenanceController@createStaffTicket', [AuthMiddleware::class]);
+Router::post('/staff/maintenance/update-progress', 'Staff\\MaintenanceController@updateProgress', [AuthMiddleware::class]);
+Router::post('/staff/maintenance/complete', 'Staff\\MaintenanceController@complete', [AuthMiddleware::class]);
+Router::post('/staff/maintenance/cancel', 'Staff\\MaintenanceController@cancel', [AuthMiddleware::class]);
 Router::get('/staff/discipline', 'Staff\\DisciplineController@discipline', [AuthMiddleware::class]);
 
 // Admin Routes - Tách theo từng nghiệp vụ chuẩn
