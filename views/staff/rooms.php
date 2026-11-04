@@ -12,43 +12,29 @@ $maToa = $maToa ?? ($toaInfo['MaToaNha'] ?? '');
 $isAllToas = $isAllToas ?? empty($filterToa);
 ?>
 
-<div class="container" style="max-width: 1400px; margin: 0 auto; padding: 20px;">
+<div class="container">
     <!-- Breadcrumb & Header -->
     <div style="margin-bottom: 20px;">
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('staff/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">BQL KTX</a>
             <span>/</span>
-            <span style="color: var(--text-primary); font-weight: 500;">Quản lý Tòa nhà</span>
+            <span style="color: var(--text-muted);">Quản lý Tòa nhà</span>
             <span>/</span>
-            <span style="color: var(--text-primary); font-weight: 600;">Sơ đồ Phòng & Giường</span>
+            <span style="color: var(--text-primary); font-weight: 500;">Sơ đồ Phòng & Giường</span>
         </div>
 
-        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+        <div class="page-header" style="align-items: center; flex-wrap: wrap; gap: 12px; display: flex; justify-content: space-between;">
             <div>
-                <h1 class="page-title" style="margin: 0; font-size: 1.6rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <span>Sơ đồ Phòng & Giường</span>
-                    <?php if (!empty($scope['level'])): ?>
-                        <?php if ($scope['level'] === 'ALL'): ?>
-                            <span class="badge badge-primary" style="font-size: 0.85rem; font-weight: 600; padding: 5px 12px;">
-                                Toàn KTX (Ban Giám đốc / Admin)
-                            </span>
-                        <?php elseif ($scope['level'] === 'KHU'): ?>
-                            <span class="badge badge-info" style="font-size: 0.85rem; font-weight: 600; padding: 5px 12px;">
-                                <?= htmlspecialchars($scope['title'] ?? 'Trưởng Khu') ?>
-                            </span>
-                        <?php elseif ($scope['level'] === 'CUM'): ?>
-                            <span class="badge badge-warning" style="font-size: 0.85rem; font-weight: 600; padding: 5px 12px;">
-                                <?= htmlspecialchars($scope['title'] ?? 'Trưởng Cụm') ?>
-                            </span>
-                        <?php else: ?>
-                            <span class="badge badge-success" style="font-size: 0.85rem; font-weight: 600; padding: 5px 12px;">
-                                <?= htmlspecialchars($formatTenToa($toaInfo['TenToaNha'] ?? $maToa, $maToa ?? '')) ?>
-                            </span>
-                        <?php endif; ?>
-                    <?php endif; ?>
-                </h1>
+                <h1 class="page-title">Sơ đồ Phòng & Giường</h1>
+                <p class="page-subtitle" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+                    <span>Phạm vi cán bộ:</span>
+                    <span class="badge <?= htmlspecialchars($scope['badgeClass'] ?? 'badge-primary') ?>" style="font-size: 0.8rem; padding: 4px 10px;">
+                        <i class="fa-solid fa-building-user" style="margin-right: 6px;"></i> <?= htmlspecialchars($scope['title'] ?? 'Cán bộ quản trị') ?>
+                    </span>
+                </p>
             </div>
 
+            <!-- CÁC NÚT THAO TÁC HEADER (ĐỒNG BỘ ADMIN & ZONES: THÊM MỚI, NHẬP FILE, XUẤT EXCEL, CẬP NHẬT TÒA, VỀ DASHBOARD) -->
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                 <?php if (!empty($isAllowed)): ?>
                     <?php if (!empty($canCrudPhong)): ?>
@@ -68,8 +54,8 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                         </button>
                     <?php endif; ?>
                 <?php endif; ?>
-                <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline" style="border-radius: 8px; text-decoration: none;">
-                    &larr; Về Dashboard
+                <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 6px 14px;">
+                    <i class="fa-solid fa-arrow-left" style="margin-right: 6px;"></i> Về Dashboard
                 </a>
             </div>
         </div>
