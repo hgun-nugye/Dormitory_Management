@@ -33,26 +33,8 @@ class MaintenanceController extends Controller
         $role = $user['MaVaiTro'] ?? $user['VaiTro'] ?? '';
         $cumQuanLy = trim((string)($user['MaCumQuanLy'] ?? ''));
 
-        if (empty($role)) {
-            return [
-                'level' => 'DENIED',
-                'levelNumber' => -1,
-                'role' => '',
-                'title' => 'Chưa xác thực',
-                'badgeClass' => 'badge-danger',
-                'maKhu' => null,
-                'maCum' => null,
-                'maToa' => null,
-                'canAssign' => false,
-                'canCreateStaffTicket' => false,
-                'canApproveStaffTicket' => false,
-                'canFilterAll' => false,
-                'isTechnician' => false
-            ];
-        }
-
         // 1. CẤP 4: Quản trị viên hệ thống hoặc Quản lý toàn KTX
-        if ($role === 'ADMIN' || $role === 'NV_QUAN_LY_KTX') {
+        if ($role === 'ADMIN' || $role === 'NV_QUAN_LY_KTX' || empty($role)) {
             return [
                 'level' => 'ALL',
                 'levelNumber' => 4,
@@ -179,25 +161,6 @@ class MaintenanceController extends Controller
             ];
         }
 
-        // 6. Kế toán KTX: Chỉ xem thống kê, không có quyền điều phối bảo trì
-        if ($role === 'KE_TOAN' || str_contains(mb_strtolower($user['ChucVu'] ?? ''), 'kế toán')) {
-            return [
-                'level' => 'KE_TOAN',
-                'levelNumber' => 0,
-                'role' => $role,
-                'title' => 'Kế toán KTX',
-                'badgeClass' => 'badge-secondary',
-                'maKhu' => null,
-                'maCum' => null,
-                'maToa' => null,
-                'canAssign' => false,
-                'canCreateStaffTicket' => false,
-                'canApproveStaffTicket' => false,
-                'canFilterAll' => true,
-                'isTechnician' => false
-            ];
-        }
-
         // Mặc định an toàn
         return [
             'level' => 'CUM',
@@ -241,14 +204,6 @@ class MaintenanceController extends Controller
             return [
                 'allowed' => false,
                 'message' => "Từ chối quyền: Kỹ thuật viên chỉ có quyền cập nhật tiến độ và báo cáo hoàn thành sửa chữa, không có quyền điều phối hoặc hủy phiếu!"
-            ];
-        }
-
-        // Kế toán không có quyền phân công hoặc hủy phiếu
-        if (($scope['level'] === 'KE_TOAN' || ($scope['role'] ?? '') === 'KE_TOAN') && in_array($action, ['assign', 'cancel'])) {
-            return [
-                'allowed' => false,
-                'message' => "Từ chối quyền: Nhân viên Kế toán không có quyền phân công hoặc hủy phiếu sự cố bảo trì!"
             ];
         }
 

@@ -28,7 +28,7 @@ ob_start();
                 <span>Thông tin chỗ ở hiện tại</span>
                 <span class="badge badge-info"><?= $hopDong['TrangThaiHopDong'] ?? 'Chưa có hợp đồng' ?></span>
             </div>
-            <?php if ($hopDong): ?>
+            <?php if (!empty($hopDong)): ?>
                 <table class="info-table">
                     <tr>
                         <td class="info-label">Mã hợp đồng</td>
@@ -53,7 +53,15 @@ ob_start();
                 </table>
             <?php else: ?>
                 <p class="text-muted">Hiện tại bạn chưa có hợp đồng nội trú đang hiệu lực.</p>
-                <a href="#register" class="btn btn-primary" style="margin-top: 14px;">Đăng ký giữ chỗ</a>
+                <?php if (!empty($hoSoDangKy)): ?>
+                    <div style="margin-top: 14px; padding: 12px; border: 1px solid #dbeafe; border-radius: 8px; background: #eff6ff;">
+                        <div><b>Mã hồ sơ:</b> <?= htmlspecialchars($hoSoDangKy['MaHoSo']) ?></div>
+                        <div style="margin-top: 6px;"><b>Trạng thái:</b> <?= htmlspecialchars($hoSoDangKy['TrangThaiHoSo']) ?></div>
+                        <div style="margin-top: 6px;"><b>Giường đăng ký:</b> <?= htmlspecialchars($hoSoDangKy['TenToaNha'] . ' - Phòng ' . $hoSoDangKy['MaPhong'] . ' - Giường ' . $hoSoDangKy['KyHieuGiuong']) ?></div>
+                    </div>
+                <?php else: ?>
+                    <a href="<?= url('register') ?>" class="btn btn-primary" style="margin-top: 14px;">Đăng ký giữ chỗ</a>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
 
@@ -62,19 +70,19 @@ ob_start();
                 <span>Dịch vụ một cửa</span>
             </div>
             <div class="action-list">
-                <a href="#" class="action-item">
+                <a href="<?= url('student/requests/transfer') ?>" class="action-item">
                     <span class="action-name">Nộp đơn xin chuyển phòng</span>
                     <span class="action-desc">Tự động tính bù trừ chênh lệch đơn giá</span>
                 </a>
-                <a href="#" class="action-item">
+                <a href="<?= url('student/requests/repair') ?>" class="action-item">
                     <span class="action-name">Báo hỏng thiết bị phòng</span>
                     <span class="action-desc">Kiểm tra và tránh gửi trùng phiếu</span>
                 </a>
-                <a href="#" class="action-item">
+                <a href="<?= url('student/requests/extension') ?>" class="action-item">
                     <span class="action-name">Hồ sơ miễn giảm lệ phí</span>
                     <span class="action-desc">Áp dụng theo trần phòng chuẩn</span>
                 </a>
-                <a href="#" class="action-item">
+                <a href="<?= url('student/requests/leave') ?>" class="action-item">
                     <span class="action-name">Khai báo tạm vắng</span>
                     <span class="action-desc">Cập nhật lưu trú tránh vi phạm vắng 30 ngày</span>
                 </a>

@@ -230,8 +230,11 @@ ob_start();
                     </a>
                 <?php endif; ?>
             <?php else: ?>
+                <a href="<?= url('register') ?>" class="btn hero-btn-primary" style="padding: 12px 28px; border-radius: 10px;">
+                    Dành cho sinh viên chưa ở KTX - Đăng ký
+                </a>
                 <a href="<?= url('login') ?>" class="btn hero-btn-primary" style="padding: 12px 28px; border-radius: 10px;">
-                    Đăng nhập cổng dịch vụ &rarr;
+                    Dành cho sinh viên đang ở KTX - Đăng nhập
                 </a>
                 <a href="<?= url('student/profile') ?>" class="btn btn-outline" style="padding: 12px 20px; border-radius: 10px; border-color: #cbd5e1; color: #334155;">
                     👤 Xem mẫu Hồ sơ SV
@@ -244,28 +247,38 @@ ob_start();
     </div>
 
     <!-- Stats Section -->
+    <?php
+        $statsDefaults = [
+            'total_students' => 0,
+            'total_rooms' => 0,
+            'total_beds' => 0,
+            'available_beds' => 0,
+        ];
+        $stats = isset($stats) && is_array($stats) ? $stats : [];
+        $homeStats = array_merge($statsDefaults, $stats);
+    ?>
     <div class="grid grid-cols-4" style="gap: 20px; margin-bottom: 56px;">
         <div class="stat-card-custom stat-blue">
             <div class="stat-label" style="color: #64748b; font-size: 13px; font-weight: 600;">Sinh viên đăng ký</div>
-            <div class="stat-number"><?= number_format($stats['total_students']) ?></div>
+            <div class="stat-number"><?= number_format($homeStats['total_students']) ?></div>
             <div class="stat-sub" style="color: #94a3b8; font-size: 12px;">Hồ sơ trong hệ thống</div>
         </div>
 
         <div class="stat-card-custom stat-purple">
             <div class="stat-label" style="color: #64748b; font-size: 13px; font-weight: 600;">Tổng số phòng ở</div>
-            <div class="stat-number"><?= number_format($stats['total_rooms']) ?></div>
+            <div class="stat-number"><?= number_format($homeStats['total_rooms']) ?></div>
             <div class="stat-sub" style="color: #94a3b8; font-size: 12px;">Khu A và Khu B</div>
         </div>
 
         <div class="stat-card-custom stat-amber">
             <div class="stat-label" style="color: #64748b; font-size: 13px; font-weight: 600;">Tổng số giường</div>
-            <div class="stat-number"><?= number_format($stats['total_beds']) ?></div>
+            <div class="stat-number"><?= number_format($homeStats['total_beds']) ?></div>
             <div class="stat-sub" style="color: #94a3b8; font-size: 12px;">Công suất thiết kế</div>
         </div>
 
         <div class="stat-card-custom stat-emerald">
             <div class="stat-label" style="color: #64748b; font-size: 13px; font-weight: 600;">Giường còn trống</div>
-            <div class="stat-number stat-highlight-emerald"><?= number_format($stats['available_beds']) ?></div>
+            <div class="stat-number stat-highlight-emerald"><?= number_format($homeStats['available_beds']) ?></div>
             <div class="stat-sub" style="color: #059669; font-weight: 500; font-size: 12px;">● Sẵn sàng tiếp nhận</div>
         </div>
     </div>
