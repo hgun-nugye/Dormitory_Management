@@ -44,6 +44,9 @@ class MailService
         $port = (int)($config['port'] ?? (getenv('MAIL_PORT') ?: 2525));
         $username = $config['username'] ?? getenv('MAIL_USERNAME');
         $password = $config['password'] ?? getenv('MAIL_PASSWORD');
+        if (is_string($password)) {
+            $password = preg_replace('/\s+/', '', $password) ?? $password;
+        }
         $encryption = $config['encryption'] ?? (getenv('MAIL_ENCRYPTION') ?: 'tls');
         $fromEmail = $config['from']['address'] ?? (getenv('MAIL_FROM_ADDRESS') ?: 'no-reply@ktx.vnuhcm.edu.vn');
         $fromName = $config['from']['name'] ?? (getenv('MAIL_FROM_NAME') ?: 'KTX ĐHQG-HCM');

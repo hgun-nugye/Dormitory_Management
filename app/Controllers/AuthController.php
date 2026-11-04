@@ -6,6 +6,8 @@ use App\Core\Auth;
 use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Session;
+use App\Core\Database;
+use App\Services\MailService;
 
 class AuthController extends Controller {
     public function showLogin(): void {
@@ -15,13 +17,22 @@ class AuthController extends Controller {
         }
 
         $error = Session::flash('error');
-        $this->view('auth.login', ['error' => $error]);
+        $success = Session::flash('success');
+        $this->view('auth.login', ['error' => $error, 'success' => $success]);
     }
 
     public function login(): void {
         $request = new Request();
         $username = trim($request->input('username', ''));
-        $password = trim($request->input('password', ''));
+        $password = (string) $request->input('password', '');
+
+        $submittedToken = (string) $request->input('csrf_token', '');
+        $sessionToken = (string) Session::get('csrf_token', '');
+        if ($submittedToken === '' || $sessionToken === '' || !hash_equals($sessionToken, $submittedToken)) {
+            Session::flash('error', 'Phiên đăng nhập đã hết hạn. Vui lòng tải lại trang.');
+            $this->redirect('login');
+            return;
+        }
 
         if (empty($username) || empty($password)) {
             Session::flash('error', 'Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.');
@@ -41,6 +52,7 @@ class AuthController extends Controller {
         Auth::logout();
         $this->redirect('login');
     }
+
 
     private function redirectBasedOnRole(): void {
         if (Auth::isSinhVien()) {
