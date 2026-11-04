@@ -3,10 +3,8 @@ ob_start();
 
 $formatTenToa = function(?string $name, string $code = '') {
     $str = trim((string)($name ?: $code));
-    if (!str_starts_with($str, 'Tòa')) {
-        $str = 'Tòa ' . $str;
-    }
-    return $str;
+    $cleaned = preg_replace('/^(tòa\s*|toà\s*)+/ui', '', $str);
+    return 'Tòa ' . (!empty($cleaned) ? $cleaned : $str);
 };
 
 $filterToa = $filterToa ?? ($filters['toa'] ?? '');
@@ -450,13 +448,13 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     <table class="data-table" id="tableStaffRooms">
                         <thead>
                             <tr>
-                                <th style="width: 110px;">Mã phòng</th>
-                                <th style="width: 130px;">Số phòng</th>
-                                <th style="width: 190px;">Loại phòng</th>
-                                <th style="width: 100px;">Sức chứa</th>
-                                <th>Sơ đồ Giường</th>
-                                <th style="width: 150px;">Trưởng phòng</th>
-                                <th style="width: 120px;">Trạng thái</th>
+                                <th style="width: 100px;">Mã phòng</th>
+                                <th style="width: 120px;">Số phòng</th>
+                                <th style="width: 180px;">Loại phòng</th>
+                                <th style="width: 130px;">Sức chứa</th>
+                                <th style="width: 230px;">Sơ đồ Giường</th>
+                                <th style="width: 140px;">Trưởng phòng</th>
+                                <th style="width: 120px; text-align: center;">Trạng thái</th>
                                 <th style="text-align: right; min-width: 220px;">Thao tác</th>
                             </tr>
                         </thead>
@@ -468,16 +466,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                 $occupied = (int)($p['SoSVDangO'] ?? 0);
                                 $fillPercent = ($maxCap > 0) ? round(($occupied / $maxCap) * 100) : 0;
                                 $isLocked = ($p['TrangThaiPhong'] === 'Khóa bảo trì');
-
-                                if ($isLocked) {
-                                    $stBadge = 'badge-warning';
-                                } elseif ($p['TrangThaiPhong'] === 'Đầy chỗ') {
-                                    $stBadge = 'badge-danger';
-                                } elseif ($p['TrangThaiPhong'] === 'Đang sử dụng' || $occupied > 0) {
-                                    $stBadge = 'badge-primary';
-                                } else {
-                                    $stBadge = 'badge-success';
-                                }
                                 ?>
                                 <tr class="room-row"
                                     data-id="<?= htmlspecialchars($p['MaPhong'], ENT_QUOTES, 'UTF-8') ?>"
@@ -512,66 +500,73 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                     </td>
 
                                     <!-- 4. Sĩ số & Tiến độ -->
-                                    <td>
-                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                            <b style="font-size: 0.85rem; color: #0f172a;"><?= $occupied ?> / <?= $maxCap ?> SV</b>
-                                            <span style="font-size: 0.75rem; color: var(--text-muted);"><?= $fillPercent ?>%</span>
-                                        </div>
-                                        <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
-                                            <div style="width: <?= min(100, $fillPercent) ?>%; height: 100%; background: <?= $isLocked ? '#f59e0b' : ($fillPercent >= 100 ? '#ef4444' : ($fillPercent > 0 ? '#3b82f6' : '#10b981')) ?>; border-radius: 3px;"></div>
+                                    <td style="vertical-align: middle;">
+                                        <div style="min-width: 105px; max-width: 125px;">
+                                            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px;">
+                                                <span style="font-weight: 700; color: #0f172a; font-size: 0.875rem;">
+                                                    <?= $occupied ?> <span style="font-weight: 500; font-size: 0.75rem; color: #64748b;">/ <?= $maxCap ?> chỗ</span>
+                                                </span>
+                                                <span style="font-size: 0.75rem; font-weight: 700; color: <?= $isLocked ? '#d97706' : ($fillPercent >= 100 ? '#dc2626' : ($fillPercent > 0 ? '#2563eb' : '#94a3b8')) ?>;">
+                                                    <?= $fillPercent ?>%
+                                                </span>
+                                            </div>
+                                            <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 9999px; overflow: hidden;">
+                                                <div style="width: <?= min(100, $fillPercent) ?>%; height: 100%; background: <?= $isLocked ? '#f59e0b' : ($fillPercent >= 100 ? '#ef4444' : ($fillPercent > 0 ? '#3b82f6' : '#cbd5e1')) ?>; border-radius: 9999px;"></div>
+                                            </div>
                                         </div>
                                     </td>
 
-                                    <!-- 5. Sơ đồ Giường (Pills trực quan) -->
-                                    <td>
-                                        <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
+                                    <!-- 5. Sơ đồ Giường (Pills trực quan, đồng bộ) -->
+                                    <td style="vertical-align: middle;">
+                                        <div style="display: flex; gap: 5px; align-items: center; flex-wrap: wrap; max-width: 230px;">
                                             <?php foreach ($beds as $g): ?>
                                                 <?php
                                                 $bOccupied = !empty($g['MaSinhVien']) || ($g['TrangThaiGiuong'] === 'Đã có người ở');
-                                                $bLocked = ($g['TrangThaiGiuong'] === 'Khóa bảo trì');
+                                                $bLocked = ($g['TrangThaiGiuong'] === 'Khóa bảo trì' || $g['TrangThaiGiuong'] === 'Đang bảo trì');
                                                 $bLeader = (!empty($p['TruongPhong']) && $p['TruongPhong'] === $g['MaSinhVien']);
 
                                                 if ($bOccupied) {
-                                                    $pillBg = '#f0fdf4';
-                                                    $pillBorder = '#bbf7d0';
-                                                    $pillColor = '#166534';
-                                                    $pillIcon = $bLeader ? 'fa-solid fa-star' : 'fa-solid fa-user';
-                                                    $pillTitle = $g['KyHieuGiuong'] . ': ' . ($g['HoVaTen'] ?? 'Sinh viên') . ' (' . ($g['MSSVTaiTruong'] ?? '') . ')';
+                                                    if ($bLeader) {
+                                                        $pillBg = '#fef3c7';
+                                                        $pillColor = '#b45309';
+                                                        $pillBorder = '#fde68a';
+                                                        $pillIcon = 'fa-solid fa-star';
+                                                        $pillTitle = $g['KyHieuGiuong'] . ': ' . ($g['HoVaTen'] ?? 'Sinh viên') . ' (Trưởng phòng)';
+                                                    } else {
+                                                        $pillBg = '#dcfce7';
+                                                        $pillColor = '#15803d';
+                                                        $pillBorder = '#bbf7d0';
+                                                        $pillIcon = 'fa-solid fa-user';
+                                                        $pillTitle = $g['KyHieuGiuong'] . ': ' . ($g['HoVaTen'] ?? 'Sinh viên') . ' (' . ($g['MSSVTaiTruong'] ?? '') . ')';
+                                                    }
                                                 } elseif ($bLocked) {
-                                                    $pillBg = '#fffbeb';
-                                                    $pillBorder = '#fde68a';
-                                                    $pillColor = '#b45309';
+                                                    $pillBg = '#fee2e2';
+                                                    $pillColor = '#991b1b';
+                                                    $pillBorder = '#fecaca';
                                                     $pillIcon = 'fa-solid fa-lock';
-                                                    $pillTitle = $g['KyHieuGiuong'] . ': Khóa bảo trì';
+                                                    $pillTitle = $g['KyHieuGiuong'] . ': Đang bảo trì';
                                                 } else {
                                                     $pillBg = '#f8fafc';
-                                                    $pillBorder = '#e2e8f0';
                                                     $pillColor = '#64748b';
+                                                    $pillBorder = '#e2e8f0';
                                                     $pillIcon = 'fa-solid fa-bed';
                                                     $pillTitle = $g['KyHieuGiuong'] . ': Trống';
                                                 }
                                                 ?>
                                                 <span title="<?= htmlspecialchars($pillTitle) ?>"
-                                                    style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; background: <?= $pillBg ?>; border: 1px solid <?= $pillBorder ?>; color: <?= $pillColor ?>; cursor: pointer;"
+                                                    style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 46px; height: 24px; padding: 0 6px; border-radius: 5px; font-size: 0.725rem; font-weight: 600; background: <?= $pillBg ?>; border: 1px solid <?= $pillBorder ?>; color: <?= $pillColor ?>; cursor: pointer; box-sizing: border-box;"
                                                     onclick="openBedDetailModal('<?= htmlspecialchars($p['MaPhong']) ?>')">
                                                     <i class="<?= $pillIcon ?>" style="font-size: 0.65rem;"></i>
-                                                    <?= htmlspecialchars($g['KyHieuGiuong']) ?>
+                                                    <span><?= htmlspecialchars($g['KyHieuGiuong']) ?></span>
                                                 </span>
                                             <?php endforeach; ?>
-
-                                            <button type="button" class="btn btn-outline btn-sm"
-                                                style="border-radius: 4px; padding: 2px 6px; font-size: 0.725rem; height: 22px; line-height: 1; color: var(--primary); border-color: var(--primary); background: #eff6ff;"
-                                                onclick="openBedDetailModal('<?= htmlspecialchars($p['MaPhong']) ?>')"
-                                                title="Xem chi tiết & Quản lý toàn bộ giường">
-                                                <i class="fa-solid fa-gear" style="font-size: 0.65rem; margin-right: 3px;"></i> Giường
-                                            </button>
                                         </div>
                                     </td>
 
                                     <!-- 6. Trưởng phòng -->
-                                    <td>
+                                    <td style="vertical-align: middle;">
                                         <?php if (!empty($p['TruongPhong'])): ?>
-                                            <span class="badge badge-success" style="font-size: 0.8rem; font-weight: 600;" title="MSSV: <?= htmlspecialchars($p['TruongPhong']) ?>">
+                                            <span style="display: inline-block; padding: 3px 8px; border-radius: 6px; background: #f0fdf4; color: #166534; font-size: 0.8rem; font-weight: 600; border: none;" title="MSSV: <?= htmlspecialchars($p['TruongPhong']) ?>">
                                                 <?= htmlspecialchars($p['TenTruongPhong'] ?? $p['TruongPhong']) ?>
                                             </span>
                                         <?php elseif ($occupied > 0): ?>
@@ -587,10 +582,29 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                         <?php endif; ?>
                                     </td>
 
-                                    <!-- 7. Trạng thái -->
-                                    <td>
-                                        <span class="badge <?= $stBadge ?>" style="font-size: 0.8rem;">
-                                            <?= htmlspecialchars($p['TrangThaiPhong']) ?>
+                                    <!-- 7. Trạng thái (BỎ VIỀN 100%) -->
+                                    <td style="vertical-align: middle; text-align: center;">
+                                        <?php
+                                        if ($isLocked || $p['TrangThaiPhong'] === 'Khóa bảo trì' || $p['TrangThaiPhong'] === 'Đang bảo trì') {
+                                            $stBg = '#fef3c7';
+                                            $stColor = '#b45309';
+                                            $stLabel = 'Khóa bảo trì';
+                                        } elseif ($p['TrangThaiPhong'] === 'Đầy chỗ') {
+                                            $stBg = '#fee2e2';
+                                            $stColor = '#b91c1c';
+                                            $stLabel = 'Đầy chỗ';
+                                        } elseif ($p['TrangThaiPhong'] === 'Đang sử dụng' || $occupied > 0) {
+                                            $stBg = '#dbeafe';
+                                            $stColor = '#1d4ed8';
+                                            $stLabel = 'Đang sử dụng';
+                                        } else {
+                                            $stBg = '#dcfce7';
+                                            $stColor = '#15803d';
+                                            $stLabel = 'Còn chỗ';
+                                        }
+                                        ?>
+                                        <span style="display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.775rem; font-weight: 600; background: <?= $stBg ?>; color: <?= $stColor ?>; border: none; white-space: nowrap; line-height: 1.2;">
+                                            <?= $stLabel ?>
                                         </span>
                                     </td>
 
@@ -1172,7 +1186,7 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     if (total === allRoomRows.length) {
                         exportBtnText.innerText = `Xuất Excel (${total})`;
                     } else {
-                        exportBtnText.innerText = `Xuất Excel (${total} đã lọc)`;
+                        exportBtnText.innerText = `Xuất Excel (${total})`;
                     }
                 }
 
