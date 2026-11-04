@@ -162,4 +162,13 @@ class DashboardController extends Controller
     public function exportUniversities(): void { (new UniversityController())->exportUniversities(); }
     public function downloadUniversityTemplate(): void { (new UniversityController())->downloadUniversityTemplate(); }
     public function importUniversities(): void { (new UniversityController())->importUniversities(); }
+
+    public function students(): void { (new StudentController())->students(); }
+    public function saveStudent(): void { (new StudentController())->saveStudent(); }
+    public function resetStudentPassword(): void { (new StudentController())->resetPassword(); }
+    public function toggleStudentStatus(): void { (new StudentController())->toggleStudentStatus(); }
+    public function deleteStudent(): void { (new StudentController())->deleteStudent(); }
+    public function exportStudents(): void { (new StudentController())->exportStudents(); }
+    public function downloadStudentTemplate(): void { (new StudentController())->downloadStudentTemplate(); }
+    public function importStudents(): void { (new StudentController())->importStudents(); }
 }

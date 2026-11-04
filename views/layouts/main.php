@@ -59,6 +59,7 @@
                 <?php elseif (\App\Core\Auth::isQuanTriVien()): ?>
                     <li><a href="<?= url('admin/dashboard') ?>" class="<?= nav_active_class('admin/dashboard') ?>">Dashboard</a></li>
                     <li><a href="<?= url('admin/users') ?>" class="<?= nav_active_class('admin/users') ?>">Cán bộ</a></li>
+                    <li><a href="<?= url('admin/students') ?>" class="<?= nav_active_class('admin/students') ?>">Sinh viên</a></li>
                     <li><a href="<?= url('admin/universities') ?>" class="<?= nav_active_class('admin/universities') ?>">Trường ĐH</a></li>
                 <?php endif; ?>
                 <li>
