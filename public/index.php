@@ -106,6 +106,10 @@ Router::post('/staff/reject-application', 'Staff\\ApplicationController@rejectAp
 
 // Staff - Tiện ích, Yêu cầu, Bảo trì, Kỷ luật
 Router::get('/staff/utilities', 'Staff\\UtilityController@utilities', [AuthMiddleware::class]);
+Router::post('/staff/utilities/save-reading', 'Staff\\UtilityController@saveReading', [AuthMiddleware::class]);
+Router::post('/staff/utilities/publish-invoice', 'Staff\\UtilityController@publishInvoice', [AuthMiddleware::class]);
+Router::post('/staff/utilities/publish-cluster', 'Staff\\UtilityController@publishClusterInvoices', [AuthMiddleware::class]);
+Router::post('/staff/utilities/confirm-payment', 'Staff\\UtilityController@confirmPayment', [AuthMiddleware::class]);
 Router::get('/staff/requests', 'Staff\\RequestController@requests', [AuthMiddleware::class]);
 Router::post('/staff/requests/approve', 'Staff\\RequestController@approveRequest', [AuthMiddleware::class]);
 Router::post('/staff/requests/reject', 'Staff\\RequestController@rejectRequest', [AuthMiddleware::class]);
