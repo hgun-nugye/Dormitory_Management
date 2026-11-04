@@ -104,6 +104,11 @@ Router::post('/staff/rooms/remove-student', 'Staff\\RoomController@removeStudent
 Router::get('/staff/applications', 'Staff\\ApplicationController@applications', [AuthMiddleware::class]);
 Router::post('/staff/approve-application', 'Staff\\ApplicationController@approveApplication', [AuthMiddleware::class]);
 Router::post('/staff/reject-application', 'Staff\\ApplicationController@rejectApplication', [AuthMiddleware::class]);
+Router::post('/staff/applications/approve', 'Staff\\ApplicationController@approveApplication', [AuthMiddleware::class]);
+Router::post('/staff/applications/reject', 'Staff\\ApplicationController@rejectApplication', [AuthMiddleware::class]);
+Router::post('/staff/applications/scan-release', 'Staff\\ApplicationController@scanRelease72h', [AuthMiddleware::class]);
+Router::post('/staff/applications/approve-miengiam', 'Staff\\ApplicationController@approveMienGiam', [AuthMiddleware::class]);
+Router::post('/staff/applications/reject-miengiam', 'Staff\\ApplicationController@rejectMienGiam', [AuthMiddleware::class]);
 
 // Staff - Tiện ích, Yêu cầu, Bảo trì, Kỷ luật
 Router::get('/staff/utilities', 'Staff\\UtilityController@utilities', [AuthMiddleware::class]);
