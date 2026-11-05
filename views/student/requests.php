@@ -225,7 +225,7 @@ $services = [
                                         <?php endif; ?>
                                         <?php if (!empty($item['TepMinhChung'])): ?>
                                             <div style="margin-top: 4px;">
-                                                <a href="<?= asset($item['TepMinhChung']) ?>" target="_blank" style="font-size: 0.75rem; color: #0284c7; text-decoration: none;">
+                                                <a href="<?= url('student/requests/attachment') ?>?kind=proof&amp;id=<?= rawurlencode($item['MaDon']) ?>" target="_blank" rel="noopener" style="font-size: 0.75rem; color: #0284c7; text-decoration: none;">
                                                     Tệp minh chứng
                                                 </a>
                                             </div>
@@ -542,7 +542,7 @@ function viewRequestDetails(item) {
         extraHtml += `<tr><td class="info-label">Thời gian áp dụng:</td><td class="info-value">Từ ngày ${escapeHtml(item.TuNgay)} ${item.DenNgay ? 'đến ' + escapeHtml(item.DenNgay) : ''}</td></tr>`;
     }
     if (item.TepMinhChung) {
-        extraHtml += `<tr><td class="info-label">Tệp minh chứng:</td><td class="info-value"><a href="<?= asset('') ?>${escapeHtml(item.TepMinhChung)}" target="_blank" style="color: #0284c7; text-decoration: underline;">Tải / Xem tệp đính kèm</a></td></tr>`;
+        extraHtml += `<tr><td class="info-label">Tệp minh chứng:</td><td class="info-value"><a href="<?= url('student/requests/attachment') ?>?kind=proof&id=${encodeURIComponent(item.MaDon)}" target="_blank" rel="noopener" style="color: #0284c7; text-decoration: underline;">Tải / Xem tệp đính kèm</a></td></tr>`;
     }
 
     document.getElementById('modalBody').innerHTML = `
@@ -581,6 +581,7 @@ function viewRepairDetails(item) {
             <label style="display:block; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">Mô tả hiện tượng hư hỏng:</label>
             <div style="background: #f8fafc; padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.875rem; color: var(--text-primary); line-height: 1.6; white-space: pre-wrap;">${escapeHtml(item.MoTaHuHong || 'Không có')}</div>
         </div>
+        ${item.HinhAnh ? `<div style="margin-top:14px"><a href="<?= url('student/requests/attachment') ?>?kind=repair&id=${encodeURIComponent(item.MaPhieu)}" target="_blank" rel="noopener" style="color:#0284c7;text-decoration:underline">Xem ảnh hiện trường</a></div>` : ''}
     `;
 
     const modal = document.getElementById('detailModal');

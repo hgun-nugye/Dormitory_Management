@@ -68,6 +68,7 @@ Router::get('/student/payments', 'Student\\PaymentController@index', [AuthMiddle
 
 // Student - Dịch vụ một cửa (Yêu cầu & Đơn từ trực tuyến)
 Router::get('/student/requests', 'Student\\RequestController@index', [AuthMiddleware::class]);
+Router::get('/student/requests/attachment', 'Student\\RequestController@attachment', [AuthMiddleware::class]);
 Router::get('/student/requests/transfer', 'Student\\RequestController@transfer', [AuthMiddleware::class]);
 Router::get('/student/requests/repair', 'Student\\RequestController@repair', [AuthMiddleware::class]);
 Router::get('/student/requests/leave', 'Student\\RequestController@leave', [AuthMiddleware::class]);

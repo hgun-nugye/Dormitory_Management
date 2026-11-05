@@ -9,6 +9,66 @@ use App\Core\Request;
 use App\Core\Session;
 
 class RequestController extends Controller {
+    public function attachment(): void {
+        $request = new Request();
+        $kind = (string) $request->input('kind', '');
+        $id = trim((string) $request->input('id', ''));
+        $mssv = $this->studentId();
+        $isStudent = Auth::isSinhVien();
+        $isStaff = Auth::isNhanVien() || Auth::isQuanLy() || Auth::isQuanTriVien();
+
+        if ($id === '' || (!$isStudent && !$isStaff)) {
+            http_response_code(403);
+            exit('Không tìm thấy tệp.');
+        }
+
+        if ($kind === 'proof') {
+            $proof = $isStudent
+                ? Database::fetch('SELECT TepMinhChung AS FilePath FROM DonTuMotCua WHERE MaDon = :id AND MaSinhVien = :student LIMIT 1', ['id' => $id, 'student' => $mssv])
+                : Database::fetch('SELECT TepMinhChung AS FilePath FROM DonTuMotCua WHERE MaDon = :id LIMIT 1', ['id' => $id]);
+            $storedPath = $proof['FilePath'] ?? null;
+            $directory = 'student-requests';
+            $allowedMimes = ['image/jpeg', 'image/png', 'application/pdf'];
+        } elseif ($kind === 'repair') {
+            $repair = $isStudent
+                ? Database::fetch('SELECT HinhAnh AS FilePath FROM PhieuBaoHong WHERE MaPhieu = :id AND MaSinhVienBao = :student LIMIT 1', ['id' => $id, 'student' => $mssv])
+                : Database::fetch('SELECT HinhAnh AS FilePath FROM PhieuBaoHong WHERE MaPhieu = :id LIMIT 1', ['id' => $id]);
+            $storedPath = $repair['FilePath'] ?? null;
+            $directory = 'repairs';
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+        } else {
+            http_response_code(404);
+            exit('Không tìm thấy tệp.');
+        }
+
+        $expectedPrefix = 'storage/uploads/' . $directory . '/';
+        if (!is_string($storedPath) || !str_starts_with(str_replace('\\', '/', $storedPath), $expectedPrefix)) {
+            http_response_code(404);
+            exit('Không tìm thấy tệp.');
+        }
+
+        $root = dirname(__DIR__, 3);
+        $uploadRoot = realpath($root . '/storage/uploads/' . $directory);
+        $filePath = $uploadRoot ? realpath($uploadRoot . DIRECTORY_SEPARATOR . basename($storedPath)) : false;
+        if (!$uploadRoot || !$filePath || !is_file($filePath) || !str_starts_with($filePath, $uploadRoot . DIRECTORY_SEPARATOR)) {
+            http_response_code(404);
+            exit('Không tìm thấy tệp.');
+        }
+
+        $mime = mime_content_type($filePath) ?: 'application/octet-stream';
+        if (!in_array($mime, $allowedMimes, true)) {
+            http_response_code(415);
+            exit('Định dạng tệp không được hỗ trợ.');
+        }
+
+        header('Content-Type: ' . $mime);
+        header('Content-Length: ' . filesize($filePath));
+        header('Content-Disposition: inline; filename="' . rawurlencode(basename($filePath)) . '"');
+        header('X-Content-Type-Options: nosniff');
+        readfile($filePath);
+        exit;
+    }
+
     public function index(): void {
         $mssv = $this->studentId();
         $requests = $mssv ? Database::fetchAll(
