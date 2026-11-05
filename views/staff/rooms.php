@@ -18,8 +18,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('staff/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">BQL KTX</a>
             <span>/</span>
-            <span style="color: var(--text-muted);">Quản lý Tòa nhà</span>
-            <span>/</span>
             <span style="color: var(--text-primary); font-weight: 500;">Sơ đồ Phòng & Giường</span>
         </div>
 
@@ -459,9 +457,9 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                     }
                                 }
                                 $isMaintenance = in_array($rawStatus, ['Bảo trì', 'Đang bảo trì', 'Khóa bảo trì'], true)
-                                    || str_contains(mb_strtolower($rawStatus), 'bảo trì') 
-                                    || str_contains(mb_strtolower($rawStatus), 'bao tri') 
-                                    || str_contains(mb_strtolower($rawStatus), 'khóa') 
+                                    || str_contains(mb_strtolower($rawStatus), 'bảo trì')
+                                    || str_contains(mb_strtolower($rawStatus), 'bao tri')
+                                    || str_contains(mb_strtolower($rawStatus), 'khóa')
                                     || str_contains(mb_strtolower($rawStatus), 'khoa');
 
                                 $isFull = !$isMaintenance && (($occupied >= $maxCap && $maxCap > 0) || in_array($rawStatus, ['Đã đầy', 'Đầy', 'Đầy chỗ'], true));
@@ -1378,7 +1376,7 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                 if (card) card.style.display = 'none';
             }
 
-                        document.getElementById('roomActionForm')?.addEventListener('submit', function() {
+            document.getElementById('roomActionForm')?.addEventListener('submit', function() {
                 const toaSelect = document.getElementById('roomMaToaSelect');
                 if (toaSelect) toaSelect.disabled = false;
             });
@@ -1445,7 +1443,7 @@ $isAllToas = $isAllToas ?? empty($filterToa);
 
                 document.getElementById('roomTang').value = room.Tang;
                 document.getElementById('roomMaLoaiPhong').value = room.MaLoaiPhong;
-                
+
                 let curStatus = (room.TrangThaiPhong || 'Còn chỗ').trim();
                 if (curStatus.toLowerCase().includes('trì') || curStatus.toLowerCase().includes('khóa')) {
                     curStatus = 'Bảo trì';

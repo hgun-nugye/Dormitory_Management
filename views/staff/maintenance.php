@@ -36,8 +36,6 @@ function renderMaintenanceNote(?string $note): void
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('staff/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">BQL KTX</a>
             <span>/</span>
-            <span style="color: var(--text-muted);">Cơ sở vật chất & Hạ tầng</span>
-            <span>/</span>
             <span style="color: var(--text-primary); font-weight: 500;">Điều phối Sửa chữa & Phiếu Báo Hỏng</span>
         </div>
 

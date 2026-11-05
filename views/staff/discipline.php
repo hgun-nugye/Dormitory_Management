@@ -19,9 +19,6 @@ ob_start();
                         <?= htmlspecialchars($scope['title'] ?? 'Cán bộ KTX') ?>
                     </span>
                 </div>
-                <p class="page-subtitle" style="margin: 0; font-size: 0.875rem; color: #64748b;">
-                    Theo dõi lịch sử quét thẻ cổng barrier, tự động đối soát phát hiện vắng mặt > 30 ngày, ghi nhận lỗi vi phạm/khen thưởng và tổng kết điểm rèn luyện gửi các Trường ĐH thành viên.
-                </p>
             </div>
             <div style="display: flex; gap: 8px;">
                 <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
@@ -97,7 +94,7 @@ ob_start();
             <!-- Tabs điều hướng -->
             <div style="display: flex; gap: 6px; background: #f1f5f9; padding: 4px; border-radius: 8px;">
                 <a href="<?= url('staff/discipline?tab=canh-bao&namHoc=' . urlencode($namHoc) . '&hocKy=' . $hocKy . '&cum=' . urlencode($selectedCum)) ?>"
-                   style="padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 6px; <?= ($activeTab === 'canh-bao') ? 'background: #fff; color: #dc2626; box-shadow: 0 1px 3px rgba(0,0,0,0.1);' : 'color: #64748b;' ?>">
+                    style="padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 6px; <?= ($activeTab === 'canh-bao') ? 'background: #fff; color: #dc2626; box-shadow: 0 1px 3px rgba(0,0,0,0.1);' : 'color: #64748b;' ?>">
                     Cảnh báo Vắng mặt > 30 ngày
                     <?php if ($stats['absenceWarnings'] > 0): ?>
                         <span style="background: #dc2626; color: #fff; border-radius: 10px; padding: 1px 6px; font-size: 0.7rem;">
@@ -107,12 +104,12 @@ ob_start();
                 </a>
 
                 <a href="<?= url('staff/discipline?tab=barrier&namHoc=' . urlencode($namHoc) . '&hocKy=' . $hocKy . '&cum=' . urlencode($selectedCum)) ?>"
-                   style="padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 6px; <?= ($activeTab === 'barrier') ? 'background: #fff; color: #2563eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1);' : 'color: #64748b;' ?>">
+                    style="padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 6px; <?= ($activeTab === 'barrier') ? 'background: #fff; color: #2563eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1);' : 'color: #64748b;' ?>">
                     Giám sát Quét thẻ Barrier (<?= $stats['totalBarrierScans'] ?>)
                 </a>
 
                 <a href="<?= url('staff/discipline?tab=ren-luyen&namHoc=' . urlencode($namHoc) . '&hocKy=' . $hocKy . '&cum=' . urlencode($selectedCum)) ?>"
-                   style="padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 6px; <?= ($activeTab === 'ren-luyen') ? 'background: #fff; color: #16a34a; box-shadow: 0 1px 3px rgba(0,0,0,0.1);' : 'color: #64748b;' ?>">
+                    style="padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 6px; <?= ($activeTab === 'ren-luyen') ? 'background: #fff; color: #16a34a; box-shadow: 0 1px 3px rgba(0,0,0,0.1);' : 'color: #64748b;' ?>">
                     Điểm Rèn luyện & Kỷ luật (<?= $stats['totalResident'] ?>)
                 </a>
             </div>
@@ -147,7 +144,7 @@ ob_start();
 
                 <div style="position: relative;">
                     <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Tìm MSSV, họ tên, phòng..."
-                           style="padding: 7px 10px 7px 28px; border-radius: 6px; font-size: 0.82rem; border: 1px solid #cbd5e1; width: 190px;">
+                        style="padding: 7px 10px 7px 28px; border-radius: 6px; font-size: 0.82rem; border: 1px solid #cbd5e1; width: 190px;">
                     <span style="position: absolute; left: 8px; top: 7px; color: #94a3b8; font-size: 0.8rem;">🔍</span>
                 </div>
 
@@ -239,11 +236,11 @@ ob_start();
                                     <td style="padding: 12px 10px; text-align: right;">
                                         <div style="display: flex; gap: 6px; justify-content: flex-end;">
                                             <button type="button" class="btn btn-outline btn-sm" style="height: 30px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;"
-                                                    onclick="openAbsenceActionModal('<?= htmlspecialchars($w['maSinhVien']) ?>', '<?= htmlspecialchars($w['hoVaTen']) ?>', '<?= htmlspecialchars($w['sdtPhuHuynh']) ?>', 'lien_he')">
+                                                onclick="openAbsenceActionModal('<?= htmlspecialchars($w['maSinhVien']) ?>', '<?= htmlspecialchars($w['hoVaTen']) ?>', '<?= htmlspecialchars($w['sdtPhuHuynh']) ?>', 'lien_he')">
                                                 <i class="fa-solid fa-phone"></i> Liên hệ
                                             </button>
                                             <button type="button" class="btn btn-danger btn-sm" style="height: 30px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px; background: #dc2626; border-color: #dc2626; color: #fff;"
-                                                    onclick="openAbsenceActionModal('<?= htmlspecialchars($w['maSinhVien']) ?>', '<?= htmlspecialchars($w['hoVaTen']) ?>', '<?= htmlspecialchars($w['sdtPhuHuynh']) ?>', 'lap_bien_ban')">
+                                                onclick="openAbsenceActionModal('<?= htmlspecialchars($w['maSinhVien']) ?>', '<?= htmlspecialchars($w['hoVaTen']) ?>', '<?= htmlspecialchars($w['sdtPhuHuynh']) ?>', 'lap_bien_ban')">
                                                 <i class="fa-solid fa-file-pen"></i> Lập biên bản (-25đ)
                                             </button>
                                         </div>
@@ -273,7 +270,7 @@ ob_start();
                 </div>
                 <div style="display: flex; gap: 8px;">
                     <button type="button" class="btn btn-primary btn-sm" style="height: 36px; border-radius: 8px; background: #0284c7; border: none; font-size: 0.85rem; font-weight: 600; padding: 7px 14px; display: inline-flex; align-items: center; gap: 6px;"
-                            onclick="openSimulateScanModal()">
+                        onclick="openSimulateScanModal()">
                         <i class="fa-solid fa-bolt"></i> Giả lập quét thẻ Barrier (Demo)
                     </button>
                 </div>
@@ -283,15 +280,15 @@ ob_start();
             <div style="display: flex; gap: 10px; margin-bottom: 14px; align-items: center; flex-wrap: wrap;">
                 <span style="font-size: 0.82rem; font-weight: 600; color: #475569;">Lọc hướng:</span>
                 <a href="<?= url('staff/discipline?tab=barrier&huongDi=&namHoc=' . urlencode($namHoc) . '&hocKy=' . $hocKy . '&cum=' . urlencode($selectedCum)) ?>"
-                   class="badge" style="padding: 5px 10px; border-radius: 6px; text-decoration: none; font-size: 0.78rem; <?= empty($huongDi) ? 'background: #0f172a; color: #fff;' : 'background: #f1f5f9; color: #475569;' ?>">
+                    class="badge" style="padding: 5px 10px; border-radius: 6px; text-decoration: none; font-size: 0.78rem; <?= empty($huongDi) ? 'background: #0f172a; color: #fff;' : 'background: #f1f5f9; color: #475569;' ?>">
                     Tất cả hướng
                 </a>
                 <a href="<?= url('staff/discipline?tab=barrier&huongDi=Vào&namHoc=' . urlencode($namHoc) . '&hocKy=' . $hocKy . '&cum=' . urlencode($selectedCum)) ?>"
-                   class="badge" style="padding: 5px 10px; border-radius: 6px; text-decoration: none; font-size: 0.78rem; <?= ($huongDi === 'Vào') ? 'background: #16a34a; color: #fff;' : 'background: #f1f5f9; color: #475569;' ?>">
+                    class="badge" style="padding: 5px 10px; border-radius: 6px; text-decoration: none; font-size: 0.78rem; <?= ($huongDi === 'Vào') ? 'background: #16a34a; color: #fff;' : 'background: #f1f5f9; color: #475569;' ?>">
                     ⬇️ Vào KTX
                 </a>
                 <a href="<?= url('staff/discipline?tab=barrier&huongDi=Ra&namHoc=' . urlencode($namHoc) . '&hocKy=' . $hocKy . '&cum=' . urlencode($selectedCum)) ?>"
-                   class="badge" style="padding: 5px 10px; border-radius: 6px; text-decoration: none; font-size: 0.78rem; <?= ($huongDi === 'Ra') ? 'background: #2563eb; color: #fff;' : 'background: #f1f5f9; color: #475569;' ?>">
+                    class="badge" style="padding: 5px 10px; border-radius: 6px; text-decoration: none; font-size: 0.78rem; <?= ($huongDi === 'Ra') ? 'background: #2563eb; color: #fff;' : 'background: #f1f5f9; color: #475569;' ?>">
                     ⬆️ Ra ngoài KTX
                 </a>
             </div>
@@ -384,19 +381,19 @@ ob_start();
                 <!-- Các nút tác vụ nhanh -->
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <button type="button" class="btn btn-primary btn-sm" style="height: 36px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; background: #059669; border: none; padding: 7px 14px; display: inline-flex; align-items: center; gap: 6px;"
-                            onclick="openRecordModal()">
+                        onclick="openRecordModal()">
                         <i class="fa-solid fa-plus"></i> Ghi nhận Vi phạm / Khen thưởng
                     </button>
 
                     <?php if ($scope['canLockPoints']): ?>
                         <button type="button" class="btn btn-outline btn-sm" style="height: 36px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; border-color: #f59e0b; color: #b45309; padding: 7px 14px; display: inline-flex; align-items: center; gap: 6px;"
-                                onclick="openLockSubmitModal()">
+                            onclick="openLockSubmitModal()">
                             <i class="fa-solid fa-lock"></i> Chốt & Gửi điểm về Trường
                         </button>
                     <?php endif; ?>
 
                     <a href="<?= url('staff/discipline/export?namHoc=' . urlencode($namHoc) . '&hocKy=' . $hocKy) ?>"
-                       class="btn btn-outline btn-sm" style="height: 36px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; padding: 7px 14px; display: inline-flex; align-items: center; gap: 6px;">
+                        class="btn btn-outline btn-sm" style="height: 36px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; padding: 7px 14px; display: inline-flex; align-items: center; gap: 6px;">
                         <i class="fa-solid fa-file-excel"></i> Xuất Excel/CSV
                     </a>
                 </div>
@@ -494,13 +491,13 @@ ob_start();
                                     <td style="padding: 12px 10px; text-align: right;">
                                         <div style="display: flex; gap: 6px; justify-content: flex-end;">
                                             <button type="button" class="btn btn-outline btn-sm" style="height: 30px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;"
-                                                    onclick="viewStudentHistory('<?= htmlspecialchars($row['MaSinhVien']) ?>')">
+                                                onclick="viewStudentHistory('<?= htmlspecialchars($row['MaSinhVien']) ?>')">
                                                 <i class="fa-solid fa-clock-rotate-left"></i> Lịch sử
                                             </button>
 
                                             <?php if (!$isLocked): ?>
                                                 <button type="button" class="btn btn-primary btn-sm" style="height: 30px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px; background: #059669; border-color: #059669; color: #fff;"
-                                                        onclick="openRecordModalForStudent('<?= htmlspecialchars($row['MaSinhVien']) ?>', '<?= htmlspecialchars($row['HoVaTen']) ?>')">
+                                                    onclick="openRecordModalForStudent('<?= htmlspecialchars($row['MaSinhVien']) ?>', '<?= htmlspecialchars($row['HoVaTen']) ?>')">
                                                     <i class="fa-solid fa-plus"></i> Ghi nhận
                                                 </button>
                                             <?php else: ?>
@@ -753,100 +750,105 @@ ob_start();
 </div>
 
 <script>
-/**
- * Đóng mở Modal Ghi nhận
- */
-function openRecordModal() {
-    document.getElementById('recordSelectSinhVien').value = '';
-    document.getElementById('selectLoaiGhiNhan').value = 'Hoạt động';
-    document.getElementById('inputDiemThayDoi').value = '10';
-    document.getElementById('inputNoiDung').value = '';
-    document.getElementById('recordModal').style.display = 'flex';
-}
-function openRecordModalForStudent(maSv, hoTen) {
-    document.getElementById('recordSelectSinhVien').value = maSv;
-    document.getElementById('selectLoaiGhiNhan').value = 'Vi phạm';
-    document.getElementById('inputDiemThayDoi').value = '-10';
-    document.getElementById('inputNoiDung').value = '';
-    document.getElementById('recordModal').style.display = 'flex';
-}
-function closeRecordModal() {
-    document.getElementById('recordModal').style.display = 'none';
-}
-
-function onLoaiGhiNhanChange() {
-    const loai = document.getElementById('selectLoaiGhiNhan').value;
-    const diem = document.getElementById('inputDiemThayDoi');
-    if (loai === 'Vi phạm') {
-        if (parseInt(diem.value) > 0) diem.value = '-10';
-    } else if (loai === 'Khen thưởng') {
-        if (parseInt(diem.value) < 0) diem.value = '15';
-    } else {
-        if (parseInt(diem.value) < 0) diem.value = '10';
+    /**
+     * Đóng mở Modal Ghi nhận
+     */
+    function openRecordModal() {
+        document.getElementById('recordSelectSinhVien').value = '';
+        document.getElementById('selectLoaiGhiNhan').value = 'Hoạt động';
+        document.getElementById('inputDiemThayDoi').value = '10';
+        document.getElementById('inputNoiDung').value = '';
+        document.getElementById('recordModal').style.display = 'flex';
     }
-}
 
-/**
- * Đóng mở Modal Xử lý Vắng mặt kéo dài
- */
-function openAbsenceActionModal(maSv, hoTen, sdtPhuHuynh, hanhDong) {
-    document.getElementById('absenceMaSinhVien').value = maSv;
-    document.getElementById('absenceStudentName').textContent = hoTen;
-    document.getElementById('absenceStudentCode').textContent = maSv;
-    document.getElementById('absenceParentPhone').textContent = sdtPhuHuynh || 'Chưa cập nhật';
-    document.getElementById('absenceHanhDong').value = hanhDong || 'lien_he';
-    document.getElementById('absenceActionModal').style.display = 'flex';
-}
-function closeAbsenceActionModal() {
-    document.getElementById('absenceActionModal').style.display = 'none';
-}
+    function openRecordModalForStudent(maSv, hoTen) {
+        document.getElementById('recordSelectSinhVien').value = maSv;
+        document.getElementById('selectLoaiGhiNhan').value = 'Vi phạm';
+        document.getElementById('inputDiemThayDoi').value = '-10';
+        document.getElementById('inputNoiDung').value = '';
+        document.getElementById('recordModal').style.display = 'flex';
+    }
 
-/**
- * Đóng mở Modal Quét thẻ Giả lập
- */
-function openSimulateScanModal() {
-    document.getElementById('simulateScanModal').style.display = 'flex';
-}
-function closeSimulateScanModal() {
-    document.getElementById('simulateScanModal').style.display = 'none';
-}
+    function closeRecordModal() {
+        document.getElementById('recordModal').style.display = 'none';
+    }
 
-/**
- * Đóng mở Modal Khóa điểm gửi trường
- */
-function openLockSubmitModal() {
-    document.getElementById('lockSubmitModal').style.display = 'flex';
-}
-function closeLockSubmitModal() {
-    document.getElementById('lockSubmitModal').style.display = 'none';
-}
+    function onLoaiGhiNhanChange() {
+        const loai = document.getElementById('selectLoaiGhiNhan').value;
+        const diem = document.getElementById('inputDiemThayDoi');
+        if (loai === 'Vi phạm') {
+            if (parseInt(diem.value) > 0) diem.value = '-10';
+        } else if (loai === 'Khen thưởng') {
+            if (parseInt(diem.value) < 0) diem.value = '15';
+        } else {
+            if (parseInt(diem.value) < 0) diem.value = '10';
+        }
+    }
 
-/**
- * Đóng mở & Gọi AJAX Modal Xem lịch sử chi tiết
- */
-function viewStudentHistory(maSv) {
-    const infoBox = document.getElementById('historyStudentInfo');
-    const container = document.getElementById('historyTimelineContainer');
-    infoBox.innerHTML = '<em>Đang tải thông tin sinh viên...</em>';
-    container.innerHTML = '<div style="text-align: center; padding: 20px; color: #64748b;">Đang truy vấn lịch sử rèn luyện...</div>';
+    /**
+     * Đóng mở Modal Xử lý Vắng mặt kéo dài
+     */
+    function openAbsenceActionModal(maSv, hoTen, sdtPhuHuynh, hanhDong) {
+        document.getElementById('absenceMaSinhVien').value = maSv;
+        document.getElementById('absenceStudentName').textContent = hoTen;
+        document.getElementById('absenceStudentCode').textContent = maSv;
+        document.getElementById('absenceParentPhone').textContent = sdtPhuHuynh || 'Chưa cập nhật';
+        document.getElementById('absenceHanhDong').value = hanhDong || 'lien_he';
+        document.getElementById('absenceActionModal').style.display = 'flex';
+    }
 
-    document.getElementById('historyModal').style.display = 'flex';
+    function closeAbsenceActionModal() {
+        document.getElementById('absenceActionModal').style.display = 'none';
+    }
 
-    const url = '<?= url('staff/discipline/history') ?>?sv=' + encodeURIComponent(maSv) +
-                '&nam=' + encodeURIComponent('<?= $namHoc ?>') + '&hk=<?= $hocKy ?>';
+    /**
+     * Đóng mở Modal Quét thẻ Giả lập
+     */
+    function openSimulateScanModal() {
+        document.getElementById('simulateScanModal').style.display = 'flex';
+    }
 
-    fetch(url)
-        .then(response => response.json())
-        .then(res => {
-            if (!res.success) {
-                container.innerHTML = '<div style="color: #dc2626; padding: 10px;">' + res.message + '</div>';
-                return;
-            }
+    function closeSimulateScanModal() {
+        document.getElementById('simulateScanModal').style.display = 'none';
+    }
 
-            const data = res.data;
-            const stu = data.student || {};
+    /**
+     * Đóng mở Modal Khóa điểm gửi trường
+     */
+    function openLockSubmitModal() {
+        document.getElementById('lockSubmitModal').style.display = 'flex';
+    }
 
-            infoBox.innerHTML = `
+    function closeLockSubmitModal() {
+        document.getElementById('lockSubmitModal').style.display = 'none';
+    }
+
+    /**
+     * Đóng mở & Gọi AJAX Modal Xem lịch sử chi tiết
+     */
+    function viewStudentHistory(maSv) {
+        const infoBox = document.getElementById('historyStudentInfo');
+        const container = document.getElementById('historyTimelineContainer');
+        infoBox.innerHTML = '<em>Đang tải thông tin sinh viên...</em>';
+        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #64748b;">Đang truy vấn lịch sử rèn luyện...</div>';
+
+        document.getElementById('historyModal').style.display = 'flex';
+
+        const url = '<?= url('staff/discipline/history') ?>?sv=' + encodeURIComponent(maSv) +
+            '&nam=' + encodeURIComponent('<?= $namHoc ?>') + '&hk=<?= $hocKy ?>';
+
+        fetch(url)
+            .then(response => response.json())
+            .then(res => {
+                if (!res.success) {
+                    container.innerHTML = '<div style="color: #dc2626; padding: 10px;">' + res.message + '</div>';
+                    return;
+                }
+
+                const data = res.data;
+                const stu = data.student || {};
+
+                infoBox.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
                     <div>
                         <div style="font-weight: 700; font-size: 0.95rem; color: #1e293b;">${stu.HoVaTen || maSv} (${stu.MaSinhVien})</div>
@@ -864,25 +866,25 @@ function viewStudentHistory(maSv) {
                 </div>
             `;
 
-            if (!data.events || data.events.length === 0) {
-                container.innerHTML = `
+                if (!data.events || data.events.length === 0) {
+                    container.innerHTML = `
                     <div style="text-align: center; padding: 30px; background: #f8fafc; border-radius: 8px; color: #64748b;">
                         <div>✨</div>
                         <strong>Sinh viên chưa có sự kiện cộng hoặc trừ điểm nào trong học kỳ này.</strong>
                         <div style="font-size: 0.78rem; margin-top: 4px;">Điểm rèn luyện khởi điểm mặc định: 100/100 (Xuất sắc)</div>
                     </div>
                 `;
-                return;
-            }
+                    return;
+                }
 
-            let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
-            data.events.forEach((ev, idx) => {
-                const isPositive = (parseInt(ev.DiemThayDoi) > 0);
-                const isZero = (parseInt(ev.DiemThayDoi) === 0);
-                const color = isPositive ? '#16a34a' : (isZero ? '#64748b' : '#dc2626');
-                const sign = isPositive ? '+' : '';
+                let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+                data.events.forEach((ev, idx) => {
+                    const isPositive = (parseInt(ev.DiemThayDoi) > 0);
+                    const isZero = (parseInt(ev.DiemThayDoi) === 0);
+                    const color = isPositive ? '#16a34a' : (isZero ? '#64748b' : '#dc2626');
+                    const sign = isPositive ? '+' : '';
 
-                html += `
+                    html += `
                     <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; background: #fff; border-left: 4px solid ${color};">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                             <span class="badge" style="background: ${isPositive ? '#dcfce7' : '#fee2e2'}; color: ${color}; font-size: 0.74rem; font-weight: 700;">
@@ -897,19 +899,19 @@ function viewStudentHistory(maSv) {
                         </div>
                     </div>
                 `;
+                });
+                html += '</div>';
+
+                container.innerHTML = html;
+            })
+            .catch(err => {
+                container.innerHTML = '<div style="color: #dc2626; padding: 10px;">Lỗi kết nối khi tải lịch sử: ' + err + '</div>';
             });
-            html += '</div>';
+    }
 
-            container.innerHTML = html;
-        })
-        .catch(err => {
-            container.innerHTML = '<div style="color: #dc2626; padding: 10px;">Lỗi kết nối khi tải lịch sử: ' + err + '</div>';
-        });
-}
-
-function closeHistoryModal() {
-    document.getElementById('historyModal').style.display = 'none';
-}
+    function closeHistoryModal() {
+        document.getElementById('historyModal').style.display = 'none';
+    }
 </script>
 
 <?php

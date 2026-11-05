@@ -21,8 +21,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('staff/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">BQL KTX</a>
             <span>/</span>
-            <span style="color: var(--text-muted);">Công tác Sinh viên & Lưu trú</span>
-            <span>/</span>
             <span style="color: var(--text-primary); font-weight: 500;">Xét duyệt Đăng ký 72h</span>
         </div>
 

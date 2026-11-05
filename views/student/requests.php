@@ -55,8 +55,6 @@ $services = [
     <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
         <a href="<?= url('/') ?>" style="color: var(--text-muted); text-decoration: none;">Trang chủ</a>
         <span>/</span>
-        <a href="<?= url('student/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">Cổng sinh viên</a>
-        <span>/</span>
         <span style="color: var(--text-primary); font-weight: 600;">Dịch vụ một cửa</span>
     </div>
 
@@ -377,175 +375,179 @@ $services = [
 </div>
 
 <script>
-const REQUESTS_PER_PAGE = 5;
-let requestCurrentPage = 1;
+    const REQUESTS_PER_PAGE = 5;
+    let requestCurrentPage = 1;
 
-const REPAIRS_PER_PAGE = 5;
-let repairCurrentPage = 1;
+    const REPAIRS_PER_PAGE = 5;
+    let repairCurrentPage = 1;
 
-function renderRequestPagination() {
-    const rows = Array.from(document.querySelectorAll('#requestTableBody tr.request-row'));
-    const total = rows.length;
-    const infoEl = document.getElementById('requestPaginationInfo');
-    const controlsEl = document.getElementById('requestPaginationControls');
-    const barEl = document.getElementById('requestPaginationBar');
+    function renderRequestPagination() {
+        const rows = Array.from(document.querySelectorAll('#requestTableBody tr.request-row'));
+        const total = rows.length;
+        const infoEl = document.getElementById('requestPaginationInfo');
+        const controlsEl = document.getElementById('requestPaginationControls');
+        const barEl = document.getElementById('requestPaginationBar');
 
-    // Nếu số lượng đơn từ <= 5, hiển thị trọn vẹn và ẩn thanh nút phân trang
-    if (total <= REQUESTS_PER_PAGE) {
-        rows.forEach(row => { row.style.display = ''; });
-        if (barEl) barEl.style.display = 'none';
-        return;
+        // Nếu số lượng đơn từ <= 5, hiển thị trọn vẹn và ẩn thanh nút phân trang
+        if (total <= REQUESTS_PER_PAGE) {
+            rows.forEach(row => {
+                row.style.display = '';
+            });
+            if (barEl) barEl.style.display = 'none';
+            return;
+        }
+        if (barEl) barEl.style.display = 'flex';
+
+        const totalPages = Math.ceil(total / REQUESTS_PER_PAGE);
+        if (requestCurrentPage > totalPages) requestCurrentPage = totalPages;
+        if (requestCurrentPage < 1) requestCurrentPage = 1;
+
+        const startIdx = (requestCurrentPage - 1) * REQUESTS_PER_PAGE;
+        const endIdx = startIdx + REQUESTS_PER_PAGE;
+
+        rows.forEach((row, idx) => {
+            row.style.display = (idx >= startIdx && idx < endIdx) ? '' : 'none';
+        });
+
+        if (infoEl) {
+            const displayStart = startIdx + 1;
+            const displayEnd = Math.min(endIdx, total);
+            infoEl.innerHTML = `Hiển thị <b>${displayStart} - ${displayEnd}</b> trên tổng số <b>${total}</b> đơn (Trang <b>${requestCurrentPage}</b> / <b>${totalPages}</b>)`;
+        }
+
+        if (!controlsEl) return;
+        if (totalPages <= 1) {
+            controlsEl.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+        const disabledPrev = requestCurrentPage === 1 ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 10px; border-radius: 6px;"' : 'style="padding: 5px 10px; border-radius: 6px;"';
+        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRequestPage(${requestCurrentPage - 1})" ${disabledPrev}>&larr; Trước</button>`;
+
+        for (let p = 1; p <= totalPages; p++) {
+            if (p === requestCurrentPage) {
+                html += `<button type="button" class="btn btn-primary btn-sm" style="padding: 5px 10px; border-radius: 6px; font-weight: 700;">${p}</button>`;
+            } else {
+                html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRequestPage(${p})" style="padding: 5px 10px; border-radius: 6px;">${p}</button>`;
+            }
+        }
+
+        const disabledNext = requestCurrentPage === totalPages ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 10px; border-radius: 6px;"' : 'style="padding: 5px 10px; border-radius: 6px;"';
+        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRequestPage(${requestCurrentPage + 1})" ${disabledNext}>Sau &rarr;</button>`;
+
+        controlsEl.innerHTML = html;
     }
-    if (barEl) barEl.style.display = 'flex';
 
-    const totalPages = Math.ceil(total / REQUESTS_PER_PAGE);
-    if (requestCurrentPage > totalPages) requestCurrentPage = totalPages;
-    if (requestCurrentPage < 1) requestCurrentPage = 1;
-
-    const startIdx = (requestCurrentPage - 1) * REQUESTS_PER_PAGE;
-    const endIdx = startIdx + REQUESTS_PER_PAGE;
-
-    rows.forEach((row, idx) => {
-        row.style.display = (idx >= startIdx && idx < endIdx) ? '' : 'none';
-    });
-
-    if (infoEl) {
-        const displayStart = startIdx + 1;
-        const displayEnd = Math.min(endIdx, total);
-        infoEl.innerHTML = `Hiển thị <b>${displayStart} - ${displayEnd}</b> trên tổng số <b>${total}</b> đơn (Trang <b>${requestCurrentPage}</b> / <b>${totalPages}</b>)`;
+    function goToRequestPage(page) {
+        requestCurrentPage = page;
+        renderRequestPagination();
     }
 
-    if (!controlsEl) return;
-    if (totalPages <= 1) {
-        controlsEl.innerHTML = '';
-        return;
+    function renderRepairPagination() {
+        const rows = Array.from(document.querySelectorAll('#repairTableBody tr.repair-row'));
+        const total = rows.length;
+        const infoEl = document.getElementById('repairPaginationInfo');
+        const controlsEl = document.getElementById('repairPaginationControls');
+        const barEl = document.getElementById('repairPaginationBar');
+
+        // Nếu số lượng phiếu sự cố <= 5, hiển thị trọn vẹn và ẩn thanh nút phân trang
+        if (total <= REPAIRS_PER_PAGE) {
+            rows.forEach(row => {
+                row.style.display = '';
+            });
+            if (barEl) barEl.style.display = 'none';
+            return;
+        }
+        if (barEl) barEl.style.display = 'flex';
+
+        const totalPages = Math.ceil(total / REPAIRS_PER_PAGE);
+        if (repairCurrentPage > totalPages) repairCurrentPage = totalPages;
+        if (repairCurrentPage < 1) repairCurrentPage = 1;
+
+        const startIdx = (repairCurrentPage - 1) * REPAIRS_PER_PAGE;
+        const endIdx = startIdx + REPAIRS_PER_PAGE;
+
+        rows.forEach((row, idx) => {
+            row.style.display = (idx >= startIdx && idx < endIdx) ? '' : 'none';
+        });
+
+        if (infoEl) {
+            const displayStart = startIdx + 1;
+            const displayEnd = Math.min(endIdx, total);
+            infoEl.innerHTML = `Hiển thị <b>${displayStart} - ${displayEnd}</b> trên tổng số <b>${total}</b> phiếu (Trang <b>${repairCurrentPage}</b> / <b>${totalPages}</b>)`;
+        }
+
+        if (!controlsEl) return;
+        if (totalPages <= 1) {
+            controlsEl.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+        const disabledPrev = repairCurrentPage === 1 ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 10px; border-radius: 6px;"' : 'style="padding: 5px 10px; border-radius: 6px;"';
+        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRepairPage(${repairCurrentPage - 1})" ${disabledPrev}>&larr; Trước</button>`;
+
+        for (let p = 1; p <= totalPages; p++) {
+            if (p === repairCurrentPage) {
+                html += `<button type="button" class="btn btn-primary btn-sm" style="padding: 5px 10px; border-radius: 6px; font-weight: 700;">${p}</button>`;
+            } else {
+                html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRepairPage(${p})" style="padding: 5px 10px; border-radius: 6px;">${p}</button>`;
+            }
+        }
+
+        const disabledNext = repairCurrentPage === totalPages ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 10px; border-radius: 6px;"' : 'style="padding: 5px 10px; border-radius: 6px;"';
+        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRepairPage(${repairCurrentPage + 1})" ${disabledNext}>Sau &rarr;</button>`;
+
+        controlsEl.innerHTML = html;
     }
 
-    let html = '';
-    const disabledPrev = requestCurrentPage === 1 ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 10px; border-radius: 6px;"' : 'style="padding: 5px 10px; border-radius: 6px;"';
-    html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRequestPage(${requestCurrentPage - 1})" ${disabledPrev}>&larr; Trước</button>`;
+    function goToRepairPage(page) {
+        repairCurrentPage = page;
+        renderRepairPagination();
+    }
 
-    for (let p = 1; p <= totalPages; p++) {
-        if (p === requestCurrentPage) {
-            html += `<button type="button" class="btn btn-primary btn-sm" style="padding: 5px 10px; border-radius: 6px; font-weight: 700;">${p}</button>`;
-        } else {
-            html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRequestPage(${p})" style="padding: 5px 10px; border-radius: 6px;">${p}</button>`;
+    function showTab(type) {
+        const reqContent = document.getElementById('tab-requests-content');
+        const repContent = document.getElementById('tab-repairs-content');
+        const allBtn = document.getElementById('tab-all-btn');
+        const reqBtn = document.getElementById('tab-requests-btn');
+        const repBtn = document.getElementById('tab-repairs-btn');
+
+        [allBtn, reqBtn, repBtn].forEach(btn => {
+            btn.className = 'btn btn-outline btn-sm';
+        });
+
+        if (type === 'all') {
+            reqContent.style.display = 'block';
+            repContent.style.display = 'block';
+            allBtn.className = 'btn btn-primary btn-sm';
+        } else if (type === 'requests') {
+            reqContent.style.display = 'block';
+            repContent.style.display = 'none';
+            reqBtn.className = 'btn btn-primary btn-sm';
+        } else if (type === 'repairs') {
+            reqContent.style.display = 'none';
+            repContent.style.display = 'block';
+            repBtn.className = 'btn btn-primary btn-sm';
         }
     }
 
-    const disabledNext = requestCurrentPage === totalPages ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 10px; border-radius: 6px;"' : 'style="padding: 5px 10px; border-radius: 6px;"';
-    html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRequestPage(${requestCurrentPage + 1})" ${disabledNext}>Sau &rarr;</button>`;
+    function viewRequestDetails(item) {
+        document.getElementById('modalTitle').textContent = 'Chi tiết Đơn Một cửa: ' + item.MaDon;
 
-    controlsEl.innerHTML = html;
-}
-
-function goToRequestPage(page) {
-    requestCurrentPage = page;
-    renderRequestPagination();
-}
-
-function renderRepairPagination() {
-    const rows = Array.from(document.querySelectorAll('#repairTableBody tr.repair-row'));
-    const total = rows.length;
-    const infoEl = document.getElementById('repairPaginationInfo');
-    const controlsEl = document.getElementById('repairPaginationControls');
-    const barEl = document.getElementById('repairPaginationBar');
-
-    // Nếu số lượng phiếu sự cố <= 5, hiển thị trọn vẹn và ẩn thanh nút phân trang
-    if (total <= REPAIRS_PER_PAGE) {
-        rows.forEach(row => { row.style.display = ''; });
-        if (barEl) barEl.style.display = 'none';
-        return;
-    }
-    if (barEl) barEl.style.display = 'flex';
-
-    const totalPages = Math.ceil(total / REPAIRS_PER_PAGE);
-    if (repairCurrentPage > totalPages) repairCurrentPage = totalPages;
-    if (repairCurrentPage < 1) repairCurrentPage = 1;
-
-    const startIdx = (repairCurrentPage - 1) * REPAIRS_PER_PAGE;
-    const endIdx = startIdx + REPAIRS_PER_PAGE;
-
-    rows.forEach((row, idx) => {
-        row.style.display = (idx >= startIdx && idx < endIdx) ? '' : 'none';
-    });
-
-    if (infoEl) {
-        const displayStart = startIdx + 1;
-        const displayEnd = Math.min(endIdx, total);
-        infoEl.innerHTML = `Hiển thị <b>${displayStart} - ${displayEnd}</b> trên tổng số <b>${total}</b> phiếu (Trang <b>${repairCurrentPage}</b> / <b>${totalPages}</b>)`;
-    }
-
-    if (!controlsEl) return;
-    if (totalPages <= 1) {
-        controlsEl.innerHTML = '';
-        return;
-    }
-
-    let html = '';
-    const disabledPrev = repairCurrentPage === 1 ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 10px; border-radius: 6px;"' : 'style="padding: 5px 10px; border-radius: 6px;"';
-    html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRepairPage(${repairCurrentPage - 1})" ${disabledPrev}>&larr; Trước</button>`;
-
-    for (let p = 1; p <= totalPages; p++) {
-        if (p === repairCurrentPage) {
-            html += `<button type="button" class="btn btn-primary btn-sm" style="padding: 5px 10px; border-radius: 6px; font-weight: 700;">${p}</button>`;
-        } else {
-            html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRepairPage(${p})" style="padding: 5px 10px; border-radius: 6px;">${p}</button>`;
+        let extraHtml = '';
+        if (item.GiuongMoi) {
+            extraHtml += `<tr><td class="info-label">Giường chuyển đến:</td><td class="info-value"><b>Phòng ${escapeHtml(item.PhongMoi || '')} - Giường ${escapeHtml(item.GiuongMoi)}</b></td></tr>`;
         }
-    }
+        if (item.TuNgay) {
+            extraHtml += `<tr><td class="info-label">Thời gian áp dụng:</td><td class="info-value">Từ ngày ${escapeHtml(item.TuNgay)} ${item.DenNgay ? 'đến ' + escapeHtml(item.DenNgay) : ''}</td></tr>`;
+        }
+        if (item.TepMinhChung) {
+            extraHtml += `<tr><td class="info-label">Tệp minh chứng:</td><td class="info-value"><a href="<?= asset('') ?>${escapeHtml(item.TepMinhChung)}" target="_blank" style="color: #0284c7; text-decoration: underline;">Tải / Xem tệp đính kèm</a></td></tr>`;
+        }
 
-    const disabledNext = repairCurrentPage === totalPages ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 10px; border-radius: 6px;"' : 'style="padding: 5px 10px; border-radius: 6px;"';
-    html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRepairPage(${repairCurrentPage + 1})" ${disabledNext}>Sau &rarr;</button>`;
-
-    controlsEl.innerHTML = html;
-}
-
-function goToRepairPage(page) {
-    repairCurrentPage = page;
-    renderRepairPagination();
-}
-
-function showTab(type) {
-    const reqContent = document.getElementById('tab-requests-content');
-    const repContent = document.getElementById('tab-repairs-content');
-    const allBtn = document.getElementById('tab-all-btn');
-    const reqBtn = document.getElementById('tab-requests-btn');
-    const repBtn = document.getElementById('tab-repairs-btn');
-
-    [allBtn, reqBtn, repBtn].forEach(btn => {
-        btn.className = 'btn btn-outline btn-sm';
-    });
-
-    if (type === 'all') {
-        reqContent.style.display = 'block';
-        repContent.style.display = 'block';
-        allBtn.className = 'btn btn-primary btn-sm';
-    } else if (type === 'requests') {
-        reqContent.style.display = 'block';
-        repContent.style.display = 'none';
-        reqBtn.className = 'btn btn-primary btn-sm';
-    } else if (type === 'repairs') {
-        reqContent.style.display = 'none';
-        repContent.style.display = 'block';
-        repBtn.className = 'btn btn-primary btn-sm';
-    }
-}
-
-function viewRequestDetails(item) {
-    document.getElementById('modalTitle').textContent = 'Chi tiết Đơn Một cửa: ' + item.MaDon;
-
-    let extraHtml = '';
-    if (item.GiuongMoi) {
-        extraHtml += `<tr><td class="info-label">Giường chuyển đến:</td><td class="info-value"><b>Phòng ${escapeHtml(item.PhongMoi || '')} - Giường ${escapeHtml(item.GiuongMoi)}</b></td></tr>`;
-    }
-    if (item.TuNgay) {
-        extraHtml += `<tr><td class="info-label">Thời gian áp dụng:</td><td class="info-value">Từ ngày ${escapeHtml(item.TuNgay)} ${item.DenNgay ? 'đến ' + escapeHtml(item.DenNgay) : ''}</td></tr>`;
-    }
-    if (item.TepMinhChung) {
-        extraHtml += `<tr><td class="info-label">Tệp minh chứng:</td><td class="info-value"><a href="<?= asset('') ?>${escapeHtml(item.TepMinhChung)}" target="_blank" style="color: #0284c7; text-decoration: underline;">Tải / Xem tệp đính kèm</a></td></tr>`;
-    }
-
-    document.getElementById('modalBody').innerHTML = `
+        document.getElementById('modalBody').innerHTML = `
         <table class="info-table" style="margin-bottom: 16px;">
             <tr><td class="info-label">Mã đơn:</td><td class="info-value"><code><b>${escapeHtml(item.MaDon)}</b></code></td></tr>
             <tr><td class="info-label">Loại dịch vụ:</td><td class="info-value"><b>${escapeHtml(item.LoaiDon)}</b></td></tr>
@@ -562,14 +564,14 @@ function viewRequestDetails(item) {
         </div>
     `;
 
-    const modal = document.getElementById('detailModal');
-    modal.style.display = 'flex';
-}
+        const modal = document.getElementById('detailModal');
+        modal.style.display = 'flex';
+    }
 
-function viewRepairDetails(item) {
-    document.getElementById('modalTitle').textContent = 'Chi tiết Phiếu báo hỏng: ' + item.MaPhieu;
+    function viewRepairDetails(item) {
+        document.getElementById('modalTitle').textContent = 'Chi tiết Phiếu báo hỏng: ' + item.MaPhieu;
 
-    document.getElementById('modalBody').innerHTML = `
+        document.getElementById('modalBody').innerHTML = `
         <table class="info-table" style="margin-bottom: 16px;">
             <tr><td class="info-label">Mã phiếu sự cố:</td><td class="info-value"><code><b>${escapeHtml(item.MaPhieu)}</b></code></td></tr>
             <tr><td class="info-label">Thiết bị hỏng:</td><td class="info-value"><b>${escapeHtml(item.TenThietBi || 'Chung trong phòng')}</b> ${item.MaSoThietBi ? '(' + escapeHtml(item.MaSoThietBi) + ')' : ''}</td></tr>
@@ -583,35 +585,35 @@ function viewRepairDetails(item) {
         </div>
     `;
 
-    const modal = document.getElementById('detailModal');
-    modal.style.display = 'flex';
-}
-
-function closeDetailModal() {
-    document.getElementById('detailModal').style.display = 'none';
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    return String(text)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
-window.addEventListener('click', function(e) {
-    const modal = document.getElementById('detailModal');
-    if (e.target === modal) {
-        closeDetailModal();
+        const modal = document.getElementById('detailModal');
+        modal.style.display = 'flex';
     }
-});
 
-document.addEventListener('DOMContentLoaded', function() {
-    renderRequestPagination();
-    renderRepairPagination();
-});
+    function closeDetailModal() {
+        document.getElementById('detailModal').style.display = 'none';
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    window.addEventListener('click', function(e) {
+        const modal = document.getElementById('detailModal');
+        if (e.target === modal) {
+            closeDetailModal();
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        renderRequestPagination();
+        renderRepairPagination();
+    });
 </script>
 
 <?php
