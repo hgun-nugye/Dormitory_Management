@@ -137,6 +137,7 @@ Router::post('/staff/utilities/publish-invoice', 'Staff\\UtilityController@publi
 Router::post('/staff/utilities/publish-cluster', 'Staff\\UtilityController@publishClusterInvoices', [AuthMiddleware::class]);
 Router::post('/staff/utilities/confirm-payment', 'Staff\\UtilityController@confirmPayment', [AuthMiddleware::class]);
 Router::get('/staff/requests', 'Staff\\RequestController@requests', [AuthMiddleware::class]);
+Router::get('/staff/requests/export', 'Staff\\RequestController@exportRequests', [AuthMiddleware::class]);
 Router::post('/staff/requests/approve', 'Staff\\RequestController@approveRequest', [AuthMiddleware::class]);
 Router::post('/staff/requests/reject', 'Staff\\RequestController@rejectRequest', [AuthMiddleware::class]);
 Router::get('/staff/maintenance', 'Staff\\MaintenanceController@maintenance', [AuthMiddleware::class]);
