@@ -199,7 +199,14 @@ class MaintenanceService {
 
         // RÀNG BUỘC THEO KHU: Nhân viên kỹ thuật của Khu nào chỉ phụ trách sửa chữa phiếu thuộc Khu đó
         $ticketKhu = $ticket['MaKhu'] ?? '';
-        $techKhu = $tech['MaKhu'] ?? '';
+        $techKhuRaw = $tech['MaKhu'] ?? '';
+        $techKhu = $techKhuRaw;
+        if (!in_array($techKhuRaw, ['A', 'B']) && !empty($techKhuRaw)) {
+            $cumInfo = Database::fetch("SELECT MaKhu FROM CumNha WHERE MaCum = :c", ['c' => $techKhuRaw]);
+            if ($cumInfo && !empty($cumInfo['MaKhu'])) {
+                $techKhu = $cumInfo['MaKhu'];
+            }
+        }
         if (!empty($ticketKhu) && !empty($techKhu) && in_array($techKhu, ['A', 'B']) && $techKhu !== $ticketKhu) {
             return [
                 'success' => false,
