@@ -59,6 +59,12 @@
                     <li><a href="<?= url('staff/requests') ?>" class="<?= nav_active_class('staff/requests') ?>">Đơn 1 cửa</a></li>
                     <li><a href="<?= url('staff/maintenance') ?>" class="<?= nav_active_class('staff/maintenance') ?>">Bảo trì</a></li>
                     <li><a href="<?= url('staff/discipline') ?>" class="<?= nav_active_class('staff/discipline') ?>">An ninh</a></li>
+                 <?php elseif (\App\Core\Auth::isKeToan()): ?>
+                        <li><a href="<?= url('staff/utilities') ?>" class="<?= nav_active_class('staff/utilities') ?>">Điện nước & Công nợ</a></li>
+                        <li><a href="<?= url('staff/requests') ?>" class="<?= nav_active_class('staff/requests') ?>">Đơn 1 cửa</a></li>
+                    <?php else: /* Thợ kỹ thuật điện nước / Nhân viên bảo trì */ ?>
+                        <li><a href="<?= url('staff/maintenance') ?>" class="<?= nav_active_class('staff/maintenance') ?>">Bảo trì</a></li>
+                    <?php endif; ?>
                 <?php elseif (\App\Core\Auth::isQuanTriVien()): ?>
                     <li><a href="<?= url('admin/dashboard') ?>" class="<?= nav_active_class('admin/dashboard') ?>">Dashboard</a></li>
                     <li><a href="<?= url('admin/users') ?>" class="<?= nav_active_class('admin/users') ?>">Cán bộ</a></li>
