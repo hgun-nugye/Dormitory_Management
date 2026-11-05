@@ -46,7 +46,7 @@ class Auth
             || str_contains(mb_strtolower($ten), 'trưởng phòng');
     }
 
-    // Kiểm tra có phải nhân viên không
+    // Kiểm tra có phải nhân viên không (Bao gồm Cán bộ quản lý, Kế toán và Kỹ thuật)
     public static function isNhanVien(): bool
     {
         $user = self::user();
@@ -55,11 +55,77 @@ class Auth
         }
         $ma = $user['MaVaiTro'] ?? '';
         $ten = $user['VaiTro'] ?? '';
-        return in_array($ma, ['NhanVien', 'NV_THUONG', 'TRUONG_TOA', 'TRUONG_CUM', 'TRUONG_KHU', 'NV_QUAN_LY_KTX'], true)
+        return in_array($ma, ['NhanVien', 'NV_THUONG', 'TRUONG_TOA', 'TRUONG_CUM', 'TRUONG_KHU', 'NV_QUAN_LY_KTX', 'KE_TOAN'], true)
             || str_contains(mb_strtolower($ten), 'nhân viên')
             || str_contains(mb_strtolower($ten), 'trưởng tòa')
             || str_contains(mb_strtolower($ten), 'trưởng cụm')
-            || str_contains(mb_strtolower($ten), 'trưởng khu');
+            || str_contains(mb_strtolower($ten), 'trưởng khu')
+            || str_contains(mb_strtolower($ten), 'kế toán');
+    }
+
+    // Kiểm tra có phải cán bộ quản lý KTX không (Admin, Quản lý KTX, Trưởng Khu, Trưởng Cụm, Trưởng Tòa)
+    public static function isQuanLy(): bool
+    {
+        $user = self::user();
+        if (!$user) {
+            return false;
+        }
+        $ma = $user['MaVaiTro'] ?? '';
+        $ten = mb_strtolower($user['VaiTro'] ?? '');
+        $username = strtoupper($user['TenDangNhap'] ?? '');
+        $chucVu = mb_strtolower($user['profile']['ChucVu'] ?? '');
+
+        // Chặn tuyệt đối nếu là kế toán, kỹ thuật điện nước, hoặc sinh viên
+        if (in_array($ma, ['KE_TOAN', 'NV_THUONG', 'SINH_VIEN', 'TRUONG_PHONG'], true)) {
+            return false;
+        }
+        if (str_starts_with($username, 'NV_KT') || str_starts_with($username, 'KT')) {
+            return false;
+        }
+        if (str_contains($chucVu, 'kế toán') || str_contains($chucVu, 'kỹ thuật') || str_contains($chucVu, 'điện nước')) {
+            return false;
+        }
+
+        return in_array($ma, ['ADMIN', 'QuanTriVien', 'NV_QUAN_LY_KTX', 'TRUONG_KHU', 'TRUONG_CUM', 'TRUONG_TOA'], true)
+            || str_contains($ten, 'quản trị')
+            || str_contains($ten, 'quản lý')
+            || str_contains($ten, 'trưởng khu')
+            || str_contains($ten, 'trưởng cụm')
+            || str_contains($ten, 'trưởng tòa')
+            || str_contains($chucVu, 'trưởng tòa')
+            || str_contains($chucVu, 'trưởng ban')
+            || str_contains($chucVu, 'trưởng khu');
+    }
+
+    // Kiểm tra có phải nhân viên kế toán không
+    public static function isKeToan(): bool
+    {
+        $user = self::user();
+        if (!$user) {
+            return false;
+        }
+        $ma = $user['MaVaiTro'] ?? '';
+        $ten = $user['VaiTro'] ?? '';
+        $username = strtoupper($user['TenDangNhap'] ?? '');
+        $chucVu = mb_strtolower($user['profile']['ChucVu'] ?? '');
+        return $ma === 'KE_TOAN'
+            || str_starts_with($username, 'KT')
+            || str_contains(mb_strtolower($ten), 'kế toán')
+            || str_contains($chucVu, 'kế toán');
+    }
+
+    // Kiểm tra có phải nhân viên kỹ thuật (thợ điện nước, bảo trì) không
+    public static function isKyThuat(): bool
+    {
+        $user = self::user();
+        if (!$user) {
+            return false;
+        }
+        $ma = $user['MaVaiTro'] ?? '';
+        $username = strtoupper($user['TenDangNhap'] ?? '');
+        $chucVu = mb_strtolower($user['profile']['ChucVu'] ?? '');
+        return ($ma === 'NV_THUONG' || str_starts_with($username, 'NV_KT'))
+            && (str_contains($chucVu, 'kỹ thuật') || str_contains($chucVu, 'điện nước') || str_contains($chucVu, 'bảo trì') || str_starts_with($username, 'NV_KT'));
     }
 
     // Kiểm tra có phải quản trị viên không
@@ -199,7 +265,7 @@ HTML;
                 $user['profile'] = $sv;
                 $user['HoVaTen'] = $sv['HoVaTen'];
             }
-        } elseif (in_array($maVT, ['NhanVien', 'NV_THUONG', 'TRUONG_TOA', 'TRUONG_CUM', 'TRUONG_KHU', 'NV_QUAN_LY_KTX'], true) || str_contains($tenVT, 'nhân viên') || str_contains($tenVT, 'trưởng')) {
+        } elseif (in_array($maVT, ['NhanVien', 'NV_THUONG', 'TRUONG_TOA', 'TRUONG_CUM', 'TRUONG_KHU', 'NV_QUAN_LY_KTX', 'KE_TOAN'], true) || str_contains($tenVT, 'nhân viên') || str_contains($tenVT, 'trưởng') || str_contains($tenVT, 'kế toán')) {
             $nv = Database::fetch(
                 "SELECT *
                  FROM NhanVien
