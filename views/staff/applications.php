@@ -21,8 +21,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('staff/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">BQL KTX</a>
             <span>/</span>
-            <span style="color: var(--text-muted);">Công tác Sinh viên & Lưu trú</span>
-            <span>/</span>
             <span style="color: var(--text-primary); font-weight: 500;">Xét duyệt Đăng ký 72h</span>
         </div>
 
@@ -68,6 +66,12 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
     </div>
 
     <!-- FLASH MESSAGES -->
+    <?php if (!empty($autoReleasedMessage)): ?>
+        <div class="alert alert-warning" style="background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
+            <i class="fa-solid fa-clock-rotate-left" style="margin-right: 6px; color: #d97706;"></i> <b>Tự động xử lý:</b> <?= htmlspecialchars($autoReleasedMessage) ?>
+        </div>
+    <?php endif; ?>
+
     <?php if (!empty($flashSuccess)): ?>
         <div class="alert alert-success" style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
             <i class="fa-solid fa-circle-check" style="margin-right: 6px;"></i> <b>Thành công:</b> <?= $flashSuccess ?>
@@ -388,8 +392,13 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
             <div class="card" style="margin-bottom: 24px; border-radius: 10px; border: 1px solid var(--border);">
                 <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 16px;">
                     <div>
-                        <span style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">Theo dõi Hồ sơ Đang trong hạn Giữ chỗ 72h</span>
-                        <span style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-top: 2px;">Tiến trình ngầm (Auto-Release) sẽ tự động thu hồi và mở lại giường Trống nếu sinh viên quá hạn thanh toán</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">Theo dõi Hồ sơ Đang trong hạn Giữ chỗ 72h</span>
+                            <span class="badge" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 6px;">
+                                <i class="fa-solid fa-bolt" style="margin-right: 4px;"></i> Tự động hủy khi quá hạn
+                            </span>
+                        </div>
+                        <span style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-top: 2px;">Tiến trình tự động hủy giữ chỗ (Auto-Release) sẽ thu hồi giường và hủy hóa đơn ngay khi sinh viên quá hạn 72 giờ</span>
                     </div>
                     <span class="badge" style="background: #dbeafe; color: #1e40af; border: none; font-size: 0.85rem; padding: 5px 12px; font-weight: 600;">
                         <?= count($active72hApplications ?? []) ?> hồ sơ đang giữ chỗ
@@ -420,7 +429,7 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                                     // Tổng 72h = 4320 phút
                                     $percentElapsed = max(0, min(100, round((4320 - max(0, $phutConLai)) / 4320 * 100)));
                                     ?>
-                                    <tr class="active72h-row">
+                                    <tr class="active72h-row" id="row-active-<?= htmlspecialchars($act['MaHoSo']) ?>" data-mahoso="<?= htmlspecialchars($act['MaHoSo']) ?>" data-hanchot="<?= htmlspecialchars($act['HanChotThanhToan'] ?? '') ?>">
                                         <td>
                                             <span style="font-weight: 700; color: var(--primary); font-family: monospace; font-size: 0.95rem;">
                                                 <?= htmlspecialchars($act['MaHoSo']) ?>
@@ -460,22 +469,22 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                                         </td>
                                         <td>
                                             <?php if ($phutConLai > 24 * 60): ?>
-                                                <span class="badge" style="background: #dbeafe; color: #1e40af; border: none; white-space: nowrap; font-weight: 600; padding: 4px 10px; border-radius: 6px;">
+                                                <span class="badge countdown-badge" style="background: #dbeafe; color: #1e40af; border: none; white-space: nowrap; font-weight: 600; padding: 4px 10px; border-radius: 6px;">
                                                     <i class="fa-solid fa-hourglass-start" style="margin-right: 4px;"></i> Còn <?= $gio ?>h <?= $phut ?>p
                                                 </span>
                                             <?php elseif ($phutConLai > 0): ?>
-                                                <span class="badge" style="background: #ffedd5; color: #c2410c; border: none; white-space: nowrap; font-weight: 700; padding: 4px 10px; border-radius: 6px;">
+                                                <span class="badge countdown-badge" style="background: #ffedd5; color: #c2410c; border: none; white-space: nowrap; font-weight: 700; padding: 4px 10px; border-radius: 6px;">
                                                     <i class="fa-solid fa-triangle-exclamation" style="margin-right: 4px;"></i> Còn <?= $gio ?>h <?= $phut ?>p
                                                 </span>
                                             <?php else: ?>
-                                                <span class="badge" style="background: #fee2e2; color: #991b1b; border: none; white-space: nowrap; font-weight: 700; padding: 4px 10px; border-radius: 6px;">
-                                                    <i class="fa-solid fa-clock" style="margin-right: 4px;"></i> Đã quá hạn 72h
+                                                <span class="badge countdown-badge" style="background: #fee2e2; color: #991b1b; border: none; white-space: nowrap; font-weight: 700; padding: 4px 10px; border-radius: 6px;">
+                                                    <i class="fa-solid fa-clock" style="margin-right: 4px;"></i> Đã quá hạn - Đang hủy...
                                                 </span>
                                             <?php endif; ?>
 
                                             <!-- Thanh tiến trình 72h trực quan -->
                                             <div style="width: 100%; height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: 6px;" title="Đã trôi qua <?= $percentElapsed ?>% thời hạn 72h">
-                                                <div style="height: 100%; width: <?= $percentElapsed ?>%; background: <?= ($percentElapsed > 75) ? '#ef4444' : (($percentElapsed > 50) ? '#f59e0b' : '#3b82f6') ?>; border-radius: 3px;"></div>
+                                                <div class="countdown-progress-bar" style="height: 100%; width: <?= $percentElapsed ?>%; background: <?= ($percentElapsed > 75) ? '#ef4444' : (($percentElapsed > 50) ? '#f59e0b' : '#3b82f6') ?>; border-radius: 3px;"></div>
                                             </div>
                                         </td>
                                         <td style="text-align: right; white-space: nowrap;">
@@ -1462,7 +1471,156 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
         const input = document.getElementById('currentActiveTab');
         const initialTab = input ? input.value : 'cho_duyet';
         updateExportButtonCount(initialTab);
+
+        // Khởi động tiến trình giám sát và tự động hủy giữ chỗ 72h thời gian thực
+        update72hCountdowns();
+        setInterval(update72hCountdowns, 10000);
     });
+
+    // =========================================================================
+    // TIẾN TRÌNH TỰ ĐỘNG HỦY GIỮ CHỖ KHI QUÁ HẠN 72H (REALTIME AUTO-RELEASE)
+    // =========================================================================
+    let isAutoReleasing = false;
+
+    function update72hCountdowns() {
+        const rows = document.querySelectorAll('.active72h-row');
+        if (!rows.length) return;
+
+        const now = Date.now();
+        let hasExpired = false;
+
+        rows.forEach(function(row) {
+            const hanChotStr = row.dataset.hanchot;
+            if (!hanChotStr) return;
+
+            // Chuyển định dạng 'YYYY-MM-DD HH:mm:ss' sang Date hợp lệ
+            const targetTime = new Date(hanChotStr.replace(' ', 'T')).getTime();
+            const diffMs = targetTime - now;
+
+            const badge = row.querySelector('.countdown-badge');
+            const progress = row.querySelector('.countdown-progress-bar');
+
+            if (diffMs <= 0) {
+                hasExpired = true;
+                if (badge) {
+                    badge.style.background = '#fee2e2';
+                    badge.style.color = '#991b1b';
+                    badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right: 4px;"></i> Quá hạn - Đang tự động hủy...';
+                }
+                if (progress) {
+                    progress.style.width = '100%';
+                    progress.style.background = '#ef4444';
+                }
+            } else {
+                const totalMinutes = Math.floor(diffMs / (1000 * 60));
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
+                const percent = Math.max(0, Math.min(100, Math.round((4320 - totalMinutes) / 4320 * 100)));
+
+                if (badge) {
+                    if (hours >= 24) {
+                        badge.style.background = '#dbeafe';
+                        badge.style.color = '#1e40af';
+                        badge.innerHTML = `<i class="fa-solid fa-hourglass-start" style="margin-right: 4px;"></i> Còn ${hours}h ${minutes}p`;
+                    } else {
+                        badge.style.background = '#ffedd5';
+                        badge.style.color = '#c2410c';
+                        badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="margin-right: 4px;"></i> Còn ${hours}h ${minutes}p`;
+                    }
+                }
+                if (progress) {
+                    progress.style.width = percent + '%';
+                    progress.style.background = (percent > 75) ? '#ef4444' : ((percent > 50) ? '#f59e0b' : '#3b82f6');
+                }
+            }
+        });
+
+        if (hasExpired && !isAutoReleasing) {
+            triggerRealtimeAutoRelease();
+        }
+    }
+
+    function triggerRealtimeAutoRelease() {
+        if (isAutoReleasing) return;
+        isAutoReleasing = true;
+
+        const csrfInput = document.querySelector('input[name="csrf_token"]');
+        const token = csrfInput ? csrfInput.value : '';
+
+        fetch('<?= url('staff/applications/scan-release') ?>', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: 'ajax=1&csrf_token=' + encodeURIComponent(token)
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            isAutoReleasing = false;
+            if (data.success && data.total_released > 0) {
+                // Tạo thông báo hiển thị cho cán bộ
+                const notiContainer = document.querySelector('.page-header') || document.querySelector('.content') || document.body;
+                const notiEl = document.createElement('div');
+                notiEl.className = 'alert alert-warning';
+                notiEl.style.cssText = 'background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;';
+                notiEl.innerHTML = `<i class="fa-solid fa-bolt" style="margin-right: 6px; color: #d97706;"></i> <b>Tự động xử lý:</b> Hệ thống vừa tự động hủy giữ chỗ và giải phóng <b>${data.total_released}</b> vị trí giường quá hạn 72h về lại quỹ phòng trống!`;
+                if (notiContainer && notiContainer.parentNode) {
+                    notiContainer.parentNode.insertBefore(notiEl, notiContainer.nextSibling);
+                }
+
+                // Xóa các dòng đã hết hạn khỏi DOM với hiệu ứng mượt
+                if (data.released_records && data.released_records.length > 0) {
+                    data.released_records.forEach(function(rec) {
+                        const row = document.getElementById('row-active-' + rec.MaHoSo);
+                        if (row) {
+                            row.style.transition = 'all 0.4s ease';
+                            row.style.opacity = '0';
+                            row.style.transform = 'translateX(20px)';
+                            setTimeout(function() {
+                                if (row.parentNode) row.parentNode.removeChild(row);
+                                renderAppPagination('active72h');
+                                updateActiveCountBadge();
+                            }, 400);
+                        }
+                    });
+                } else {
+                    setTimeout(function() { window.location.reload(); }, 1500);
+                }
+            }
+        })
+        .catch(function(err) {
+            isAutoReleasing = false;
+            console.error('Lỗi khi kích hoạt tự động hủy 72h:', err);
+        });
+    }
+
+    function updateActiveCountBadge() {
+        const remaining = document.querySelectorAll('.active72h-row').length;
+        const tabBtn = document.getElementById('tabBtnActive72h');
+        if (tabBtn) {
+            const badge = tabBtn.querySelector('.badge');
+            if (badge) badge.innerText = remaining;
+        }
+        const cardTitleBadge = document.querySelector('#tabContentActive72h .card-title .badge');
+        if (cardTitleBadge) {
+            cardTitleBadge.innerText = remaining + ' hồ sơ đang giữ chỗ';
+        }
+        if (remaining === 0) {
+            const tbody = document.getElementById('active72hTableBody');
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 36px 16px; color: var(--text-muted);">
+                            <div style="font-size: 2rem; margin-bottom: 8px; color: #cbd5e1;"><i class="fa-solid fa-check-double"></i></div>
+                            <div style="font-weight: 600; color: var(--text-secondary);">Chưa có hồ sơ nào đang trong trạng thái chờ thanh toán 72h.</div>
+                            <span style="font-size: 0.85rem;">Các vị trí giường giữ chỗ đều được đối soát và xử lý theo đúng tiến độ.</span>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+    }
 
     // Đóng modal khi bấm Escape hoặc click ra backdrop
     window.addEventListener('keydown', function(e) {

@@ -176,3 +176,144 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
+/**
+ * ==========================================================================
+ * Alert & Notification Auto-Dismiss (3s) & Close Button Handler
+ * Tự động biến mất sau 3 giây, có nút x để tắt nhanh và pause khi hover
+ * ==========================================================================
+ */
+function initAutoDismissAlerts(container) {
+    const root = container || document;
+    const alertSelector = '.alert, .alert-success, .alert-danger, .alert-warning, .alert-info, .auth-alert';
+
+    let alerts = [];
+    if (root.matches && root.matches(alertSelector)) {
+        alerts = [root];
+    } else if (root.querySelectorAll) {
+        alerts = Array.from(root.querySelectorAll(alertSelector));
+    }
+
+    alerts.forEach(function(alertEl) {
+        // Tránh khởi tạo nhiều lần
+        if (alertEl.dataset.alertInited === 'true') return;
+        alertEl.dataset.alertInited = 'true';
+
+        // Đảm bảo position relative để định vị tuyệt đối nút x và thanh progress
+        if (window.getComputedStyle(alertEl).position === 'static') {
+            alertEl.style.position = 'relative';
+        }
+
+        // 1. Tạo nút Close "x"
+        let closeBtn = alertEl.querySelector('.alert-close-btn');
+        if (!closeBtn) {
+            closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'alert-close-btn';
+            closeBtn.setAttribute('aria-label', 'Đóng thông báo');
+            closeBtn.setAttribute('title', 'Đóng');
+            closeBtn.innerHTML = '&times;';
+            alertEl.appendChild(closeBtn);
+        }
+
+        // 2. Tạo thanh tiến trình đếm ngược 3s (Progress Bar)
+        let progressBar = alertEl.querySelector('.alert-progress');
+        if (!progressBar) {
+            progressBar = document.createElement('div');
+            progressBar.className = 'alert-progress';
+            alertEl.appendChild(progressBar);
+        }
+
+        // 3. Hàm đóng thông báo kèm hiệu ứng mượt mà
+        function dismiss() {
+            if (alertEl.dataset.dismissing === 'true') return;
+            alertEl.dataset.dismissing = 'true';
+            alertEl.classList.add('alert-dismissing');
+            setTimeout(function() {
+                if (alertEl && alertEl.parentNode) {
+                    alertEl.parentNode.removeChild(alertEl);
+                }
+            }, 360);
+        }
+
+        // 4. Quản lý thời gian tự động đóng 3000ms có hỗ trợ tạm dừng khi hover
+        const duration = 3000;
+        let remainingTime = duration;
+        let startTime = Date.now();
+        let timerId = null;
+
+        function startTimer() {
+            startTime = Date.now();
+            timerId = setTimeout(function() {
+                dismiss();
+            }, remainingTime);
+        }
+
+        function pauseTimer() {
+            if (timerId) {
+                clearTimeout(timerId);
+                timerId = null;
+                remainingTime -= (Date.now() - startTime);
+                if (remainingTime < 200) remainingTime = 200;
+            }
+        }
+
+        startTimer();
+
+        // Tạm dừng khi rê chuột vào để người dùng kịp đọc
+        alertEl.addEventListener('mouseenter', function() {
+            pauseTimer();
+            if (progressBar) {
+                progressBar.style.animationPlayState = 'paused';
+            }
+        });
+
+        // Tiếp tục đếm ngược khi di chuột ra
+        alertEl.addEventListener('mouseleave', function() {
+            startTimer();
+            if (progressBar) {
+                progressBar.style.animationPlayState = 'running';
+            }
+        });
+
+        // Bấm nút "x" để đóng ngay lập tức
+        closeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            pauseTimer();
+            dismiss();
+        });
+    });
+}
+
+// Tự động kích hoạt khi DOM tải xong
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        initAutoDismissAlerts();
+    });
+} else {
+    initAutoDismissAlerts();
+}
+
+// Lắng nghe MutationObserver hỗ trợ các thông báo tạo động bằng AJAX / JS
+if (window.MutationObserver) {
+    const alertObserver = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes && mutation.addedNodes.length > 0) {
+                mutation.addedNodes.forEach(function(node) {
+                    if (node.nodeType === 1) { // ELEMENT_NODE
+                        if (node.matches && node.matches('.alert, .alert-success, .alert-danger, .alert-warning, .alert-info, .auth-alert')) {
+                            initAutoDismissAlerts(node);
+                        } else if (node.querySelectorAll) {
+                            const subAlerts = node.querySelectorAll('.alert, .alert-success, .alert-danger, .alert-warning, .alert-info, .auth-alert');
+                            if (subAlerts.length > 0) {
+                                initAutoDismissAlerts(node);
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    });
+    alertObserver.observe(document.body || document.documentElement, { childList: true, subtree: true });
+}
+
+

@@ -1394,25 +1394,25 @@ function viewStudentHistory(maSv) {
                 </div>
             `;
 
-            if (!data.events || data.events.length === 0) {
-                container.innerHTML = `
+                if (!data.events || data.events.length === 0) {
+                    container.innerHTML = `
                     <div style="text-align: center; padding: 30px; background: #f8fafc; border-radius: 8px; color: #64748b;">
                         <div style="font-size: 2rem; margin-bottom: 6px;">✨</div>
                         <strong>Sinh viên chưa có sự kiện cộng hoặc trừ điểm nào trong học kỳ này.</strong>
                         <div style="font-size: 0.78rem; margin-top: 4px;">Điểm rèn luyện khởi điểm mặc định: 100/100 (Xuất sắc)</div>
                     </div>
                 `;
-                return;
-            }
+                    return;
+                }
 
-            let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
-            data.events.forEach((ev, idx) => {
-                const isPositive = (parseInt(ev.DiemThayDoi) > 0);
-                const isZero = (parseInt(ev.DiemThayDoi) === 0);
-                const color = isPositive ? '#16a34a' : (isZero ? '#64748b' : '#dc2626');
-                const sign = isPositive ? '+' : '';
+                let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+                data.events.forEach((ev, idx) => {
+                    const isPositive = (parseInt(ev.DiemThayDoi) > 0);
+                    const isZero = (parseInt(ev.DiemThayDoi) === 0);
+                    const color = isPositive ? '#16a34a' : (isZero ? '#64748b' : '#dc2626');
+                    const sign = isPositive ? '+' : '';
 
-                html += `
+                    html += `
                     <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; background: #fff; border-left: 4px solid ${color};">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                             <span class="badge" style="background: ${isPositive ? '#dcfce7' : '#fee2e2'}; color: ${color}; font-size: 0.74rem; font-weight: 700; border: none;">
@@ -1427,6 +1427,13 @@ function viewStudentHistory(maSv) {
                         </div>
                     </div>
                 `;
+                });
+                html += '</div>';
+
+                container.innerHTML = html;
+            })
+            .catch(err => {
+                container.innerHTML = '<div style="color: #dc2626; padding: 10px;">Lỗi kết nối khi tải lịch sử: ' + err + '</div>';
             });
             html += '</div>';
 

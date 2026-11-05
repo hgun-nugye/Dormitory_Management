@@ -26,14 +26,12 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('staff/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">BQL KTX</a>
             <span>/</span>
-            <span style="color: var(--text-muted);">Điện nước & Tiện ích</span>
-            <span>/</span>
-            <span style="color: var(--text-primary); font-weight: 500;">Ghi nhận Điện Nước & Công nợ</span>
+            <span style="color: var(--text-primary); font-weight: 500;">Ghi nhận Điện Nước</span>
         </div>
 
         <div class="page-header" style="align-items: center; flex-wrap: wrap; gap: 12px; display: flex; justify-content: space-between;">
             <div>
-                <h1 class="page-title">Quản lý Điện Nước & Đối soát Công nợ</h1>
+                <h1 class="page-title">Quản lý Điện Nước</h1>
                 <p class="page-subtitle" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
                     <span>Phạm vi cán bộ:</span>
                     <span class="badge <?= htmlspecialchars($scope['badgeClass'] ?? 'badge-primary') ?>" style="font-size: 0.8rem; padding: 4px 10px;">

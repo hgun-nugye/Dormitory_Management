@@ -214,12 +214,6 @@ ob_start();
                     <a href="<?= url('student/dashboard') ?>" class="btn hero-btn-primary" style="padding: 12px 28px; border-radius: 10px;">
                         Vào Cổng sinh viên &rarr;
                     </a>
-                    <a href="<?= url('student/profile') ?>" class="btn btn-outline" style="padding: 12px 20px; border-radius: 10px; border-color: #cbd5e1; color: #334155;">
-                        👤 Hồ sơ sinh viên
-                    </a>
-                    <a href="<?= url('student/payments') ?>" class="btn btn-outline" style="padding: 12px 20px; border-radius: 10px; border-color: #cbd5e1; color: #334155;">
-                        💳 Xem thanh toán
-                    </a>
                 <?php elseif (\App\Core\Auth::isNhanVien()): ?>
                     <a href="<?= url('staff/dashboard') ?>" class="btn hero-btn-primary" style="padding: 12px 28px; border-radius: 10px;">
                         Vào BQL cụm nhà &rarr;
@@ -236,26 +230,20 @@ ob_start();
                 <a href="<?= url('login') ?>" class="btn hero-btn-primary" style="padding: 12px 28px; border-radius: 10px;">
                     Dành cho sinh viên đang ở KTX - Đăng nhập
                 </a>
-                <a href="<?= url('student/profile') ?>" class="btn btn-outline" style="padding: 12px 20px; border-radius: 10px; border-color: #cbd5e1; color: #334155;">
-                    👤 Xem mẫu Hồ sơ SV
-                </a>
-                <a href="<?= url('student/payments') ?>" class="btn btn-outline" style="padding: 12px 20px; border-radius: 10px; border-color: #cbd5e1; color: #334155;">
-                    💳 Xem mẫu Thanh toán
-                </a>
             <?php endif; ?>
         </div>
     </div>
 
     <!-- Stats Section -->
     <?php
-        $statsDefaults = [
-            'total_students' => 0,
-            'total_rooms' => 0,
-            'total_beds' => 0,
-            'available_beds' => 0,
-        ];
-        $stats = isset($stats) && is_array($stats) ? $stats : [];
-        $homeStats = array_merge($statsDefaults, $stats);
+    $statsDefaults = [
+        'total_students' => 0,
+        'total_rooms' => 0,
+        'total_beds' => 0,
+        'available_beds' => 0,
+    ];
+    $stats = isset($stats) && is_array($stats) ? $stats : [];
+    $homeStats = array_merge($statsDefaults, $stats);
     ?>
     <div class="grid grid-cols-4" style="gap: 20px; margin-bottom: 56px;">
         <div class="stat-card-custom stat-blue">

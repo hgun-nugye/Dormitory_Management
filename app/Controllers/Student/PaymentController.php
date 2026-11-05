@@ -5,6 +5,7 @@ namespace App\Controllers\Student;
 use App\Core\Auth;
 use App\Core\Controller;
 use App\Core\Database;
+use App\Services\AutoReleaseService;
 
 class PaymentController extends Controller {
     public function index(): void {
@@ -15,6 +16,9 @@ class PaymentController extends Controller {
         $giaoDichs = [];
 
         try {
+            // Tự động thu hồi và hủy hóa đơn nếu quá hạn 72h
+            AutoReleaseService::scanAndReleaseExpiredBeds();
+
             $hoaDons = Database::fetchAll(
                 "SELECT * FROM HoaDon WHERE MaSinhVien = :mssv ORDER BY NgayTao DESC LIMIT 20",
                 ['mssv' => $mssv]

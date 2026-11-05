@@ -8,6 +8,7 @@ use App\Core\Request;
 use App\Core\Session;
 use App\Core\Auth;
 use App\Services\MailService;
+use App\Services\AutoReleaseService;
 use PDOException;
 
 class RegistrationController extends Controller
@@ -29,6 +30,9 @@ class RegistrationController extends Controller
 
     public function show(): void
     {
+        // Tự động giải phóng các giường quá hạn 72h để sinh viên mới có thể thấy phòng trống
+        AutoReleaseService::scanAndReleaseExpiredBeds();
+
         $user = Auth::user();
         if ($user) {
             $mssv = $user['profile']['MaSinhVien'] ?? $user['TenDangNhap'] ?? '';
@@ -266,8 +270,8 @@ class RegistrationController extends Controller
 
         try {
             $existingStudent = Database::fetch(
-                "SELECT MaSinhVien FROM SinhVien WHERE MaSinhVien = :mssv OR MSSVTaiTruong = :mssv LIMIT 1",
-                ['mssv' => $mssv]
+                "SELECT MaSinhVien FROM SinhVien WHERE MaSinhVien = :mssv1 OR MSSVTaiTruong = :mssv2 LIMIT 1",
+                ['mssv1' => $mssv, 'mssv2' => $mssv]
             );
             if ($existingStudent) {
                 $existingApplication = Database::fetch(
@@ -297,6 +301,7 @@ class RegistrationController extends Controller
                 return;
             }
         } catch (\Throwable $e) {
+            error_log("Lỗi kiểm tra MSSV khi đăng ký: " . $e->getMessage());
             Session::flash('error', 'Không thể kiểm tra MSSV. Vui lòng thử lại.');
             $this->redirect('register');
             return;
@@ -439,7 +444,7 @@ class RegistrationController extends Controller
             Database::commit();
             $loginUrl = function_exists('url') ? url('login') : '';
             $subject = '[KTX ĐHQG-HCM] Tài khoản đăng ký nội trú mới - Yêu cầu đổi mật khẩu';
-            
+
             $plain = "Xin chào {$hoTen},\n\n"
                 . "Hồ sơ đăng ký nội trú của bạn đã được tiếp nhận thành công vào hệ thống!\n"
                 . "--------------------------------------------------------\n"
@@ -499,11 +504,11 @@ HTML;
 
             Session::flash(
                 'success',
-                "Đăng ký nội trú thành công! Mã hồ sơ: <b>{$applicationId}</b>.<br>"
-                . "Hệ thống đã tự động tạo tài khoản với Tên đăng nhập (MSSV): <b>{$username}</b> và Mật khẩu tạm thời gồm 8 ký tự.<br>"
-                . ($emailDelivered
-                    ? "Thông tin đăng nhập cùng <b>yêu cầu đổi mật khẩu</b> đã được gửi đến email <b>{$email}</b>. Vui lòng kiểm tra hộp thư để đăng nhập và đổi mật khẩu."
-                    : "Tài khoản của bạn đã được tạo thành công. Bạn có thể sử dụng mật khẩu ngẫu nhiên 8 ký tự: <code>{$password}</code> để đăng nhập và tiến hành đổi mật khẩu mới.")
+                "Đăng ký nội trú thành công! Mã hồ sơ: <b>" . htmlspecialchars($applicationId, ENT_QUOTES, 'UTF-8') . "</b>.<br>"
+                    . "Hệ thống đã tự động tạo tài khoản với Tên đăng nhập (MSSV): <b>" . htmlspecialchars($username, ENT_QUOTES, 'UTF-8') . "</b> và Mật khẩu tạm thời gồm 8 ký tự.<br>"
+                    . ($emailDelivered
+                        ? "Thông tin đăng nhập cùng <b>yêu cầu đổi mật khẩu</b> đã được gửi đến email <b>" . htmlspecialchars($email, ENT_QUOTES, 'UTF-8') . "</b>. Vui lòng kiểm tra hộp thư để đăng nhập và đổi mật khẩu."
+                        : "Tài khoản của bạn đã được tạo thành công. Bạn có thể sử dụng mật khẩu ngẫu nhiên 8 ký tự: <code>" . htmlspecialchars($password, ENT_QUOTES, 'UTF-8') . "</code> để đăng nhập và tiến hành đổi mật khẩu mới.")
             );
             $this->redirect('login');
         } catch (\Throwable $e) {
