@@ -12,13 +12,19 @@ class RequestController extends Controller {
     public function index(): void {
         $mssv = $this->studentId();
         $requests = $mssv ? Database::fetchAll(
-            "SELECT d.*, hd.MaHopDong FROM DonTuMotCua d
+            "SELECT d.*, hd.MaHopDong, g.KyHieuGiuong AS GiuongMoi, p.SoPhong AS PhongMoi
+             FROM DonTuMotCua d
              LEFT JOIN HopDongNoiTru hd ON hd.MaHopDong = d.MaHopDong
+             LEFT JOIN Giuong g ON d.MaGiuongChuyenDen = g.MaGiuong
+             LEFT JOIN Phong p ON g.MaPhong = p.MaPhong
              WHERE d.MaSinhVien = :mssv ORDER BY d.MaDon DESC",
             ['mssv' => $mssv]
         ) : [];
         $repairs = $mssv ? Database::fetchAll(
-            "SELECT * FROM PhieuBaoHong WHERE MaSinhVienBao = :mssv ORDER BY NgayBao DESC",
+            "SELECT pb.*, tb.TenThietBi, tb.MaSoThietBi
+             FROM PhieuBaoHong pb
+             LEFT JOIN ThietBiPhong tb ON pb.MaThietBi = tb.MaThietBi
+             WHERE pb.MaSinhVienBao = :mssv ORDER BY pb.NgayBao DESC",
             ['mssv' => $mssv]
         ) : [];
         $beds = Database::fetchAll(

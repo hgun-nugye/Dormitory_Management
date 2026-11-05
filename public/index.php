@@ -53,11 +53,25 @@ Router::get('/', 'HomeController@index');
 Router::get('/login', 'AuthController@showLogin');
 Router::post('/login', 'AuthController@login');
 Router::get('/logout', 'AuthController@logout');
+Router::get('/register', 'RegistrationController@show');
+Router::post('/register', 'RegistrationController@submit');
+Router::get('/register/options', 'RegistrationController@options');
 
-// Student Routes
-Router::get('/student/dashboard', 'Student\DashboardController@index', [AuthMiddleware::class]);
-Router::get('/student/profile', 'Student\ProfileController@index');
-Router::get('/student/payments', 'Student\PaymentController@index');
+// Student Routes - Cổng thông tin Sinh viên
+Router::get('/student/dashboard', 'Student\\DashboardController@index', [AuthMiddleware::class]);
+Router::get('/student/profile', 'Student\\ProfileController@index', [AuthMiddleware::class]);
+Router::post('/student/profile/update', 'Student\\ProfileController@update', [AuthMiddleware::class]);
+Router::get('/student/payments', 'Student\\PaymentController@index', [AuthMiddleware::class]);
+
+// Student - Dịch vụ một cửa (Yêu cầu & Đơn từ trực tuyến)
+Router::get('/student/requests', 'Student\\RequestController@index', [AuthMiddleware::class]);
+Router::get('/student/requests/transfer', 'Student\\RequestController@transfer', [AuthMiddleware::class]);
+Router::get('/student/requests/repair', 'Student\\RequestController@repair', [AuthMiddleware::class]);
+Router::get('/student/requests/leave', 'Student\\RequestController@leave', [AuthMiddleware::class]);
+Router::get('/student/requests/return', 'Student\\RequestController@returnRoom', [AuthMiddleware::class]);
+Router::get('/student/requests/extension', 'Student\\RequestController@extension', [AuthMiddleware::class]);
+Router::post('/student/requests', 'Student\\RequestController@create', [AuthMiddleware::class]);
+Router::post('/student/requests/create', 'Student\\RequestController@create', [AuthMiddleware::class]);
 
 // Staff Routes - Tách theo từng nghiệp vụ chuẩn
 Router::get('/staff/dashboard', 'Staff\\DashboardController@index', [AuthMiddleware::class]);
