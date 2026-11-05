@@ -276,7 +276,7 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                         <option value="Tốt" <?= ($selectedRating === 'Tốt') ? 'selected' : '' ?>>Tốt (80-89đ)</option>
                         <option value="Khá" <?= ($selectedRating === 'Khá') ? 'selected' : '' ?>>Khá (65-79đ)</option>
                         <option value="Trung bình" <?= ($selectedRating === 'Trung bình') ? 'selected' : '' ?>>Trung bình (50-64đ)</option>
-                        <option value="Yếu" <?= ($selectedRating === 'Yếu') ? 'selected' : '' ?>>Yếu (<50đ)</option>
+                        <option value="Yếu" <?= ($selectedRating === 'Yếu') ? 'selected' : '' ?>>Yếu (<50đ)< /option>
                     </select>
 
                     <!-- 9. Dropdown Trạng thái gửi trường -->
@@ -801,7 +801,7 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                 <div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Điểm thay đổi: *</label>
                     <input type="number" name="diemThayDoi" id="inputDiemThayDoi" value="10" required
-                           style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.85rem; height: 38px;">
+                        style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.85rem; height: 38px;">
                 </div>
             </div>
 
@@ -1042,341 +1042,369 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
 <!-- JAVASCRIPT: PHÂN TRANG CHUẨN STAFF/ZONES, TABS & MODALS                  -->
 <!-- ========================================================================= -->
 <script>
-// 1. Chuyển đổi Sub-tabs & cập nhật số lượng nút Xuất Excel
-function switchDisciplineTab(tabKey) {
-    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-        btn.style.background = 'transparent';
-        btn.style.color = 'var(--text-secondary)';
-        btn.style.fontWeight = '600';
-    });
-
-    const activeContent = document.getElementById('tabContent_' + tabKey);
-    if (activeContent) activeContent.style.display = 'block';
-
-    const activeBtn = document.getElementById('tabBtn' + (tabKey === 'canh-bao' ? 'CanhBao' : (tabKey === 'barrier' ? 'Barrier' : 'RenLuyen')));
-    if (activeBtn) {
-        activeBtn.classList.add('active');
-        if (tabKey === 'canh-bao') {
-            activeBtn.style.background = '#fee2e2';
-            activeBtn.style.color = '#dc2626';
-        } else if (tabKey === 'barrier') {
-            activeBtn.style.background = '#eff6ff';
-            activeBtn.style.color = 'var(--primary)';
-        } else {
-            activeBtn.style.background = '#f0fdf4';
-            activeBtn.style.color = '#16a34a';
-        }
-        activeBtn.style.fontWeight = '700';
-    }
-
-    const inputTab = document.getElementById('currentActiveTab');
-    if (inputTab) inputTab.value = tabKey;
-
-    // Cập nhật text nút Xuất Excel theo tab
-    const btnExportText = document.getElementById('btnExportText');
-    if (btnExportText) {
-        let count = 0;
-        if (tabKey === 'canh-bao') {
-            count = document.querySelectorAll('.canh-bao-row').length;
-        } else if (tabKey === 'barrier') {
-            count = document.querySelectorAll('.barrier-row').length;
-        } else {
-            count = document.querySelectorAll('.ren-luyen-row').length;
-        }
-        btnExportText.innerText = `Xuất Excel (${count})`;
-    }
-
-    // Render lại phân trang cho tab vừa mở
-    const mapKey = { 'canh-bao': 'canhBao', 'barrier': 'barrier', 'ren-luyen': 'renLuyen' };
-    if (mapKey[tabKey]) {
-        renderDisciplinePagination(mapKey[tabKey]);
-    }
-
-    const url = new URL(window.location);
-    url.searchParams.set('tab', tabKey);
-    window.history.replaceState({}, '', url);
-}
-
-// 2. Xuất Excel dữ liệu của tab hiện tại
-function exportDisciplineCurrentTab() {
-    const inputTab = document.getElementById('currentActiveTab');
-    const tab = inputTab ? inputTab.value : 'canh-bao';
-    const namHoc = '<?= htmlspecialchars($namHoc) ?>';
-    const hocKy = '<?= (int)$hocKy ?>';
-    const search = encodeURIComponent(document.getElementById('inputSearch') ? document.getElementById('inputSearch').value : '');
-
-    let url = '<?= url('staff/discipline/export') ?>?tab=' + encodeURIComponent(tab) + '&namHoc=' + encodeURIComponent(namHoc) + '&hocKy=' + encodeURIComponent(hocKy);
-    if (search) url += '&search=' + search;
-
-    window.location.href = url;
-}
-
-// 3. Cascading dropdowns: Khu -> Cụm -> Tòa
-function onKhuChange(khu) {
-    const cumSelect = document.getElementById('filterCumSelect');
-    const toaSelect = document.getElementById('filterToaSelect');
-    if (cumSelect) {
-        Array.from(cumSelect.options).forEach(opt => {
-            if (!opt.value) return;
-            opt.style.display = (!khu || opt.dataset.khu === khu) ? '' : 'none';
+    // 1. Chuyển đổi Sub-tabs & cập nhật số lượng nút Xuất Excel
+    function switchDisciplineTab(tabKey) {
+        document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+            btn.style.background = 'transparent';
+            btn.style.color = 'var(--text-secondary)';
+            btn.style.fontWeight = '600';
         });
-        cumSelect.value = '';
-    }
-    if (toaSelect) {
-        Array.from(toaSelect.options).forEach(opt => {
-            if (!opt.value) return;
-            opt.style.display = (!khu || opt.dataset.khu === khu) ? '' : 'none';
-        });
-        toaSelect.value = '';
-    }
-    document.getElementById('filterFormDiscipline').submit();
-}
 
-function onCumChange(cum) {
-    const toaSelect = document.getElementById('filterToaSelect');
-    if (toaSelect) {
-        Array.from(toaSelect.options).forEach(opt => {
-            if (!opt.value) return;
-            opt.style.display = (!cum || opt.dataset.cum === cum) ? '' : 'none';
-        });
-        toaSelect.value = '';
-    }
-    document.getElementById('filterFormDiscipline').submit();
-}
+        const activeContent = document.getElementById('tabContent_' + tabKey);
+        if (activeContent) activeContent.style.display = 'block';
 
-// 4. PHÂN TRANG CHUẨN STAFF/ZONES (PAGINATION CONTROLS ĐỒNG BỘ 100%)
-const disciplinePagination = {
-    canhBao: { currentPage: 1, pageSize: 10, rowClass: 'canh-bao-row', barId: 'canhBaoPaginationBar', infoId: 'canhBaoPaginationInfo', controlsId: 'canhBaoPaginationControls', unit: 'sinh viên' },
-    barrier: { currentPage: 1, pageSize: 10, rowClass: 'barrier-row', barId: 'barrierPaginationBar', infoId: 'barrierPaginationInfo', controlsId: 'barrierPaginationControls', unit: 'lượt quét' },
-    renLuyen: { currentPage: 1, pageSize: 10, rowClass: 'ren-luyen-row', barId: 'renLuyenPaginationBar', infoId: 'renLuyenPaginationInfo', controlsId: 'renLuyenPaginationControls', unit: 'sinh viên' }
-};
-
-function renderDisciplinePagination(key) {
-    const config = disciplinePagination[key];
-    if (!config) return;
-
-    const allRows = Array.from(document.querySelectorAll('.' + config.rowClass));
-    const total = allRows.length;
-    const totalPages = config.pageSize > 0 ? Math.ceil(total / config.pageSize) : 1;
-
-    if (config.currentPage > totalPages) config.currentPage = totalPages;
-    if (config.currentPage < 1) config.currentPage = 1;
-
-    const startIdx = config.pageSize > 0 ? (config.currentPage - 1) * config.pageSize : 0;
-    const endIdx = config.pageSize > 0 ? startIdx + config.pageSize : total;
-
-    allRows.forEach((row, idx) => {
-        row.style.display = (idx >= startIdx && idx < endIdx) ? '' : 'none';
-    });
-
-    // Cập nhật thông tin phân trang góc trái
-    const infoEl = document.getElementById(config.infoId);
-    if (infoEl) {
-        if (total === 0) {
-            infoEl.innerHTML = `Không có ${config.unit} nào phù hợp`;
-        } else {
-            const displayStart = startIdx + 1;
-            const displayEnd = Math.min(endIdx, total);
-            infoEl.innerHTML = `Hiển thị <b>${displayStart} - ${displayEnd}</b> trên tổng số <b>${total}</b> ${config.unit} (Trang <b>${config.currentPage}</b> / <b>${totalPages}</b>)`;
-        }
-    }
-
-    // Tạo các nút phân trang góc phải (chuẩn staff/zones)
-    const controlsEl = document.getElementById(config.controlsId);
-    if (!controlsEl) return;
-    controlsEl.innerHTML = '';
-
-    if (totalPages <= 1) return;
-
-    // Nút Đầu (First Page)
-    const btnFirst = document.createElement('button');
-    btnFirst.type = 'button';
-    btnFirst.className = 'btn btn-outline btn-sm';
-    btnFirst.innerHTML = '<i class="fa-solid fa-angles-left"></i>';
-    btnFirst.disabled = (config.currentPage === 1);
-    btnFirst.onclick = () => goToDisciplinePage(key, 1);
-    btnFirst.style.cssText = 'border-radius: 6px; padding: 4px 10px; font-size: 0.8rem;';
-    btnFirst.title = 'Trang đầu tiên';
-    controlsEl.appendChild(btnFirst);
-
-    // Nút Trước (Prev Page)
-    const btnPrev = document.createElement('button');
-    btnPrev.type = 'button';
-    btnPrev.className = 'btn btn-outline btn-sm';
-    btnPrev.innerHTML = '<i class="fa-solid fa-angle-left"></i>';
-    btnPrev.disabled = (config.currentPage === 1);
-    btnPrev.onclick = () => goToDisciplinePage(key, config.currentPage - 1);
-    btnPrev.style.cssText = 'border-radius: 6px; padding: 4px 10px; font-size: 0.8rem;';
-    btnPrev.title = 'Trang trước';
-    controlsEl.appendChild(btnPrev);
-
-    // Các nút số trang có dấu ...
-    let startPage = Math.max(1, config.currentPage - 2);
-    let endPage = Math.min(totalPages, config.currentPage + 2);
-
-    if (startPage > 1) {
-        const dot = document.createElement('span');
-        dot.innerText = '...';
-        dot.style.cssText = 'padding: 0 4px; color: var(--text-muted);';
-        controlsEl.appendChild(dot);
-    }
-
-    for (let p = startPage; p <= endPage; p++) {
-        const btnP = document.createElement('button');
-        btnP.type = 'button';
-        btnP.className = (p === config.currentPage) ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
-        btnP.innerText = p;
-        btnP.style.cssText = 'border-radius: 6px; padding: 4px 10px; font-size: 0.8rem;' + (p === config.currentPage ? ' font-weight: 700;' : '');
-        btnP.onclick = () => goToDisciplinePage(key, p);
-        controlsEl.appendChild(btnP);
-    }
-
-    if (endPage < totalPages) {
-        const dot = document.createElement('span');
-        dot.innerText = '...';
-        dot.style.cssText = 'padding: 0 4px; color: var(--text-muted);';
-        controlsEl.appendChild(dot);
-    }
-
-    // Nút Tiếp (Next Page)
-    const btnNext = document.createElement('button');
-    btnNext.type = 'button';
-    btnNext.className = 'btn btn-outline btn-sm';
-    btnNext.innerHTML = '<i class="fa-solid fa-angle-right"></i>';
-    btnNext.disabled = (config.currentPage === totalPages);
-    btnNext.onclick = () => goToDisciplinePage(key, config.currentPage + 1);
-    btnNext.style.cssText = 'border-radius: 6px; padding: 4px 10px; font-size: 0.8rem;';
-    btnNext.title = 'Trang kế tiếp';
-    controlsEl.appendChild(btnNext);
-
-    // Nút Cuối (Last Page)
-    const btnLast = document.createElement('button');
-    btnLast.type = 'button';
-    btnLast.className = 'btn btn-outline btn-sm';
-    btnLast.innerHTML = '<i class="fa-solid fa-angles-right"></i>';
-    btnLast.disabled = (config.currentPage === totalPages);
-    btnLast.onclick = () => goToDisciplinePage(key, totalPages);
-    btnLast.style.cssText = 'border-radius: 6px; padding: 4px 10px; font-size: 0.8rem;';
-    btnLast.title = 'Trang cuối cùng';
-    controlsEl.appendChild(btnLast);
-}
-
-function goToDisciplinePage(key, page) {
-    if (disciplinePagination[key]) {
-        disciplinePagination[key].currentPage = page;
-        renderDisciplinePagination(key);
-    }
-}
-
-function changeDisciplinePageSize(key, size) {
-    if (disciplinePagination[key]) {
-        disciplinePagination[key].pageSize = parseInt(size, 10);
-        disciplinePagination[key].currentPage = 1;
-        renderDisciplinePagination(key);
-    }
-}
-
-// Khởi chạy phân trang khi tải trang xong
-document.addEventListener('DOMContentLoaded', function() {
-    renderDisciplinePagination('canhBao');
-    renderDisciplinePagination('barrier');
-    renderDisciplinePagination('renLuyen');
-});
-
-// 5. Các hàm đóng mở Modal
-function openRecordModal() {
-    document.getElementById('recordSelectSinhVien').value = '';
-    document.getElementById('selectLoaiGhiNhan').value = 'Khen thưởng';
-    document.getElementById('inputDiemThayDoi').value = '10';
-    document.getElementById('inputNoiDung').value = '';
-    document.getElementById('recordModal').style.display = 'flex';
-}
-
-function openRecordModalForStudent(maSv, hoTen) {
-    document.getElementById('recordSelectSinhVien').value = maSv;
-    document.getElementById('selectLoaiGhiNhan').value = 'Vi phạm';
-    document.getElementById('inputDiemThayDoi').value = '-10';
-    document.getElementById('inputNoiDung').value = '';
-    document.getElementById('recordModal').style.display = 'flex';
-}
-
-function closeRecordModal() {
-    document.getElementById('recordModal').style.display = 'none';
-}
-
-function onLoaiGhiNhanChange() {
-    const loai = document.getElementById('selectLoaiGhiNhan').value;
-    const diem = document.getElementById('inputDiemThayDoi');
-    if (loai === 'Vi phạm' || loai === 'Giới nghiêm') {
-        if (parseInt(diem.value) > 0) diem.value = '-10';
-    } else {
-        if (parseInt(diem.value) < 0) diem.value = '10';
-    }
-}
-
-function openAbsenceActionModal(maSv, hoTen, sdtPhuHuynh, hanhDong) {
-    document.getElementById('absenceMaSinhVien').value = maSv;
-    document.getElementById('absenceStudentName').textContent = hoTen;
-    document.getElementById('absenceStudentCode').textContent = maSv;
-    document.getElementById('absenceParentPhone').textContent = sdtPhuHuynh || 'Chưa cập nhật';
-    document.getElementById('absenceHanhDong').value = hanhDong || 'lien_he';
-    document.getElementById('absenceActionModal').style.display = 'flex';
-}
-
-function closeAbsenceActionModal() {
-    document.getElementById('absenceActionModal').style.display = 'none';
-}
-
-function openSimulateScanModal() {
-    document.getElementById('simulateScanModal').style.display = 'flex';
-}
-
-function closeSimulateScanModal() {
-    document.getElementById('simulateScanModal').style.display = 'none';
-}
-
-function openLockSubmitModal() {
-    document.getElementById('lockSubmitModal').style.display = 'flex';
-}
-
-function closeLockSubmitModal() {
-    document.getElementById('lockSubmitModal').style.display = 'none';
-}
-
-function openImportModal() {
-    document.getElementById('importDisciplineModal').style.display = 'flex';
-}
-
-function closeImportModal() {
-    document.getElementById('importDisciplineModal').style.display = 'none';
-}
-
-// 6. AJAX Xem chi tiết lịch sử rèn luyện
-function viewStudentHistory(maSv) {
-    const infoBox = document.getElementById('historyStudentInfo');
-    const container = document.getElementById('historyTimelineContainer');
-    infoBox.innerHTML = '<em>Đang tải thông tin sinh viên...</em>';
-    container.innerHTML = '<div style="text-align: center; padding: 20px; color: #64748b;"><i class="fa-solid fa-spinner fa-spin"></i> Đang truy vấn lịch sử rèn luyện...</div>';
-
-    document.getElementById('historyModal').style.display = 'flex';
-
-    const url = '<?= url('staff/discipline/history') ?>?sv=' + encodeURIComponent(maSv) +
-                '&nam=' + encodeURIComponent('<?= $namHoc ?>') + '&hk=<?= $hocKy ?>';
-
-    fetch(url)
-        .then(response => response.json())
-        .then(res => {
-            if (!res.success) {
-                container.innerHTML = '<div style="color: #dc2626; padding: 10px;">' + res.message + '</div>';
-                return;
+        const activeBtn = document.getElementById('tabBtn' + (tabKey === 'canh-bao' ? 'CanhBao' : (tabKey === 'barrier' ? 'Barrier' : 'RenLuyen')));
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+            if (tabKey === 'canh-bao') {
+                activeBtn.style.background = '#fee2e2';
+                activeBtn.style.color = '#dc2626';
+            } else if (tabKey === 'barrier') {
+                activeBtn.style.background = '#eff6ff';
+                activeBtn.style.color = 'var(--primary)';
+            } else {
+                activeBtn.style.background = '#f0fdf4';
+                activeBtn.style.color = '#16a34a';
             }
+            activeBtn.style.fontWeight = '700';
+        }
 
-            const data = res.data;
-            const stu = data.student || {};
+        const inputTab = document.getElementById('currentActiveTab');
+        if (inputTab) inputTab.value = tabKey;
 
-            infoBox.innerHTML = `
+        // Cập nhật text nút Xuất Excel theo tab
+        const btnExportText = document.getElementById('btnExportText');
+        if (btnExportText) {
+            let count = 0;
+            if (tabKey === 'canh-bao') {
+                count = document.querySelectorAll('.canh-bao-row').length;
+            } else if (tabKey === 'barrier') {
+                count = document.querySelectorAll('.barrier-row').length;
+            } else {
+                count = document.querySelectorAll('.ren-luyen-row').length;
+            }
+            btnExportText.innerText = `Xuất Excel (${count})`;
+        }
+
+        // Render lại phân trang cho tab vừa mở
+        const mapKey = {
+            'canh-bao': 'canhBao',
+            'barrier': 'barrier',
+            'ren-luyen': 'renLuyen'
+        };
+        if (mapKey[tabKey]) {
+            renderDisciplinePagination(mapKey[tabKey]);
+        }
+
+        const url = new URL(window.location);
+        url.searchParams.set('tab', tabKey);
+        window.history.replaceState({}, '', url);
+    }
+
+    // 2. Xuất Excel dữ liệu của tab hiện tại
+    function exportDisciplineCurrentTab() {
+        const inputTab = document.getElementById('currentActiveTab');
+        const tab = inputTab ? inputTab.value : 'canh-bao';
+        const namHoc = '<?= htmlspecialchars($namHoc) ?>';
+        const hocKy = '<?= (int)$hocKy ?>';
+        const search = encodeURIComponent(document.getElementById('inputSearch') ? document.getElementById('inputSearch').value : '');
+
+        let url = '<?= url('staff/discipline/export') ?>?tab=' + encodeURIComponent(tab) + '&namHoc=' + encodeURIComponent(namHoc) + '&hocKy=' + encodeURIComponent(hocKy);
+        if (search) url += '&search=' + search;
+
+        window.location.href = url;
+    }
+
+    // 3. Cascading dropdowns: Khu -> Cụm -> Tòa
+    function onKhuChange(khu) {
+        const cumSelect = document.getElementById('filterCumSelect');
+        const toaSelect = document.getElementById('filterToaSelect');
+        if (cumSelect) {
+            Array.from(cumSelect.options).forEach(opt => {
+                if (!opt.value) return;
+                opt.style.display = (!khu || opt.dataset.khu === khu) ? '' : 'none';
+            });
+            cumSelect.value = '';
+        }
+        if (toaSelect) {
+            Array.from(toaSelect.options).forEach(opt => {
+                if (!opt.value) return;
+                opt.style.display = (!khu || opt.dataset.khu === khu) ? '' : 'none';
+            });
+            toaSelect.value = '';
+        }
+        document.getElementById('filterFormDiscipline').submit();
+    }
+
+    function onCumChange(cum) {
+        const toaSelect = document.getElementById('filterToaSelect');
+        if (toaSelect) {
+            Array.from(toaSelect.options).forEach(opt => {
+                if (!opt.value) return;
+                opt.style.display = (!cum || opt.dataset.cum === cum) ? '' : 'none';
+            });
+            toaSelect.value = '';
+        }
+        document.getElementById('filterFormDiscipline').submit();
+    }
+
+    // 4. PHÂN TRANG CHUẨN STAFF/ZONES (PAGINATION CONTROLS ĐỒNG BỘ 100%)
+    const disciplinePagination = {
+        canhBao: {
+            currentPage: 1,
+            pageSize: 10,
+            rowClass: 'canh-bao-row',
+            barId: 'canhBaoPaginationBar',
+            infoId: 'canhBaoPaginationInfo',
+            controlsId: 'canhBaoPaginationControls',
+            unit: 'sinh viên'
+        },
+        barrier: {
+            currentPage: 1,
+            pageSize: 10,
+            rowClass: 'barrier-row',
+            barId: 'barrierPaginationBar',
+            infoId: 'barrierPaginationInfo',
+            controlsId: 'barrierPaginationControls',
+            unit: 'lượt quét'
+        },
+        renLuyen: {
+            currentPage: 1,
+            pageSize: 10,
+            rowClass: 'ren-luyen-row',
+            barId: 'renLuyenPaginationBar',
+            infoId: 'renLuyenPaginationInfo',
+            controlsId: 'renLuyenPaginationControls',
+            unit: 'sinh viên'
+        }
+    };
+
+    function renderDisciplinePagination(key) {
+        const config = disciplinePagination[key];
+        if (!config) return;
+
+        const allRows = Array.from(document.querySelectorAll('.' + config.rowClass));
+        const total = allRows.length;
+        const totalPages = config.pageSize > 0 ? Math.ceil(total / config.pageSize) : 1;
+
+        if (config.currentPage > totalPages) config.currentPage = totalPages;
+        if (config.currentPage < 1) config.currentPage = 1;
+
+        const startIdx = config.pageSize > 0 ? (config.currentPage - 1) * config.pageSize : 0;
+        const endIdx = config.pageSize > 0 ? startIdx + config.pageSize : total;
+
+        allRows.forEach((row, idx) => {
+            row.style.display = (idx >= startIdx && idx < endIdx) ? '' : 'none';
+        });
+
+        // Cập nhật thông tin phân trang góc trái
+        const infoEl = document.getElementById(config.infoId);
+        if (infoEl) {
+            if (total === 0) {
+                infoEl.innerHTML = `Không có ${config.unit} nào phù hợp`;
+            } else {
+                const displayStart = startIdx + 1;
+                const displayEnd = Math.min(endIdx, total);
+                infoEl.innerHTML = `Hiển thị <b>${displayStart} - ${displayEnd}</b> trên tổng số <b>${total}</b> ${config.unit} (Trang <b>${config.currentPage}</b> / <b>${totalPages}</b>)`;
+            }
+        }
+
+        // Tạo các nút phân trang góc phải (chuẩn staff/zones)
+        const controlsEl = document.getElementById(config.controlsId);
+        if (!controlsEl) return;
+        controlsEl.innerHTML = '';
+
+        if (totalPages <= 1) return;
+
+        // Nút Đầu (First Page)
+        const btnFirst = document.createElement('button');
+        btnFirst.type = 'button';
+        btnFirst.className = 'btn btn-outline btn-sm';
+        btnFirst.innerHTML = '<i class="fa-solid fa-angles-left"></i>';
+        btnFirst.disabled = (config.currentPage === 1);
+        btnFirst.onclick = () => goToDisciplinePage(key, 1);
+        btnFirst.style.cssText = 'border-radius: 6px; padding: 4px 10px; font-size: 0.8rem;';
+        btnFirst.title = 'Trang đầu tiên';
+        controlsEl.appendChild(btnFirst);
+
+        // Nút Trước (Prev Page)
+        const btnPrev = document.createElement('button');
+        btnPrev.type = 'button';
+        btnPrev.className = 'btn btn-outline btn-sm';
+        btnPrev.innerHTML = '<i class="fa-solid fa-angle-left"></i>';
+        btnPrev.disabled = (config.currentPage === 1);
+        btnPrev.onclick = () => goToDisciplinePage(key, config.currentPage - 1);
+        btnPrev.style.cssText = 'border-radius: 6px; padding: 4px 10px; font-size: 0.8rem;';
+        btnPrev.title = 'Trang trước';
+        controlsEl.appendChild(btnPrev);
+
+        // Các nút số trang có dấu ...
+        let startPage = Math.max(1, config.currentPage - 2);
+        let endPage = Math.min(totalPages, config.currentPage + 2);
+
+        if (startPage > 1) {
+            const dot = document.createElement('span');
+            dot.innerText = '...';
+            dot.style.cssText = 'padding: 0 4px; color: var(--text-muted);';
+            controlsEl.appendChild(dot);
+        }
+
+        for (let p = startPage; p <= endPage; p++) {
+            const btnP = document.createElement('button');
+            btnP.type = 'button';
+            btnP.className = (p === config.currentPage) ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+            btnP.innerText = p;
+            btnP.style.cssText = 'border-radius: 6px; padding: 4px 10px; font-size: 0.8rem;' + (p === config.currentPage ? ' font-weight: 700;' : '');
+            btnP.onclick = () => goToDisciplinePage(key, p);
+            controlsEl.appendChild(btnP);
+        }
+
+        if (endPage < totalPages) {
+            const dot = document.createElement('span');
+            dot.innerText = '...';
+            dot.style.cssText = 'padding: 0 4px; color: var(--text-muted);';
+            controlsEl.appendChild(dot);
+        }
+
+        // Nút Tiếp (Next Page)
+        const btnNext = document.createElement('button');
+        btnNext.type = 'button';
+        btnNext.className = 'btn btn-outline btn-sm';
+        btnNext.innerHTML = '<i class="fa-solid fa-angle-right"></i>';
+        btnNext.disabled = (config.currentPage === totalPages);
+        btnNext.onclick = () => goToDisciplinePage(key, config.currentPage + 1);
+        btnNext.style.cssText = 'border-radius: 6px; padding: 4px 10px; font-size: 0.8rem;';
+        btnNext.title = 'Trang kế tiếp';
+        controlsEl.appendChild(btnNext);
+
+        // Nút Cuối (Last Page)
+        const btnLast = document.createElement('button');
+        btnLast.type = 'button';
+        btnLast.className = 'btn btn-outline btn-sm';
+        btnLast.innerHTML = '<i class="fa-solid fa-angles-right"></i>';
+        btnLast.disabled = (config.currentPage === totalPages);
+        btnLast.onclick = () => goToDisciplinePage(key, totalPages);
+        btnLast.style.cssText = 'border-radius: 6px; padding: 4px 10px; font-size: 0.8rem;';
+        btnLast.title = 'Trang cuối cùng';
+        controlsEl.appendChild(btnLast);
+    }
+
+    function goToDisciplinePage(key, page) {
+        if (disciplinePagination[key]) {
+            disciplinePagination[key].currentPage = page;
+            renderDisciplinePagination(key);
+        }
+    }
+
+    function changeDisciplinePageSize(key, size) {
+        if (disciplinePagination[key]) {
+            disciplinePagination[key].pageSize = parseInt(size, 10);
+            disciplinePagination[key].currentPage = 1;
+            renderDisciplinePagination(key);
+        }
+    }
+
+    // Khởi chạy phân trang khi tải trang xong
+    document.addEventListener('DOMContentLoaded', function() {
+        renderDisciplinePagination('canhBao');
+        renderDisciplinePagination('barrier');
+        renderDisciplinePagination('renLuyen');
+    });
+
+    // 5. Các hàm đóng mở Modal
+    function openRecordModal() {
+        document.getElementById('recordSelectSinhVien').value = '';
+        document.getElementById('selectLoaiGhiNhan').value = 'Khen thưởng';
+        document.getElementById('inputDiemThayDoi').value = '10';
+        document.getElementById('inputNoiDung').value = '';
+        document.getElementById('recordModal').style.display = 'flex';
+    }
+
+    function openRecordModalForStudent(maSv, hoTen) {
+        document.getElementById('recordSelectSinhVien').value = maSv;
+        document.getElementById('selectLoaiGhiNhan').value = 'Vi phạm';
+        document.getElementById('inputDiemThayDoi').value = '-10';
+        document.getElementById('inputNoiDung').value = '';
+        document.getElementById('recordModal').style.display = 'flex';
+    }
+
+    function closeRecordModal() {
+        document.getElementById('recordModal').style.display = 'none';
+    }
+
+    function onLoaiGhiNhanChange() {
+        const loai = document.getElementById('selectLoaiGhiNhan').value;
+        const diem = document.getElementById('inputDiemThayDoi');
+        if (loai === 'Vi phạm' || loai === 'Giới nghiêm') {
+            if (parseInt(diem.value) > 0) diem.value = '-10';
+        } else {
+            if (parseInt(diem.value) < 0) diem.value = '10';
+        }
+    }
+
+    function openAbsenceActionModal(maSv, hoTen, sdtPhuHuynh, hanhDong) {
+        document.getElementById('absenceMaSinhVien').value = maSv;
+        document.getElementById('absenceStudentName').textContent = hoTen;
+        document.getElementById('absenceStudentCode').textContent = maSv;
+        document.getElementById('absenceParentPhone').textContent = sdtPhuHuynh || 'Chưa cập nhật';
+        document.getElementById('absenceHanhDong').value = hanhDong || 'lien_he';
+        document.getElementById('absenceActionModal').style.display = 'flex';
+    }
+
+    function closeAbsenceActionModal() {
+        document.getElementById('absenceActionModal').style.display = 'none';
+    }
+
+    function openSimulateScanModal() {
+        document.getElementById('simulateScanModal').style.display = 'flex';
+    }
+
+    function closeSimulateScanModal() {
+        document.getElementById('simulateScanModal').style.display = 'none';
+    }
+
+    function openLockSubmitModal() {
+        document.getElementById('lockSubmitModal').style.display = 'flex';
+    }
+
+    function closeLockSubmitModal() {
+        document.getElementById('lockSubmitModal').style.display = 'none';
+    }
+
+    function openImportModal() {
+        document.getElementById('importDisciplineModal').style.display = 'flex';
+    }
+
+    function closeImportModal() {
+        document.getElementById('importDisciplineModal').style.display = 'none';
+    }
+
+    // 6. AJAX Xem chi tiết lịch sử rèn luyện
+    function viewStudentHistory(maSv) {
+        const infoBox = document.getElementById('historyStudentInfo');
+        const container = document.getElementById('historyTimelineContainer');
+        infoBox.innerHTML = '<em>Đang tải thông tin sinh viên...</em>';
+        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #64748b;"><i class="fa-solid fa-spinner fa-spin"></i> Đang truy vấn lịch sử rèn luyện...</div>';
+
+        document.getElementById('historyModal').style.display = 'flex';
+
+        const url = '<?= url('staff/discipline/history') ?>?sv=' + encodeURIComponent(maSv) +
+            '&nam=' + encodeURIComponent('<?= $namHoc ?>') + '&hk=<?= $hocKy ?>';
+
+        fetch(url)
+            .then(response => response.json())
+            .then(res => {
+                if (!res.success) {
+                    container.innerHTML = '<div style="color: #dc2626; padding: 10px;">' + res.message + '</div>';
+                    return;
+                }
+
+                const data = res.data;
+                const stu = data.student || {};
+
+                infoBox.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                     <div>
                         <div style="font-weight: 700; font-size: 0.95rem; color: #1e293b;">${stu.HoVaTen || maSv} (${stu.MaSinhVien})</div>
@@ -1435,29 +1463,22 @@ function viewStudentHistory(maSv) {
             .catch(err => {
                 container.innerHTML = '<div style="color: #dc2626; padding: 10px;">Lỗi kết nối khi tải lịch sử: ' + err + '</div>';
             });
-            html += '</div>';
-
-            container.innerHTML = html;
-        })
-        .catch(err => {
-            container.innerHTML = '<div style="color: #dc2626; padding: 10px;">Lỗi kết nối khi tải lịch sử: ' + err + '</div>';
-        });
-}
-
-function closeHistoryModal() {
-    document.getElementById('historyModal').style.display = 'none';
-}
-
-// ESC & Backdrop close cho tất cả modals
-window.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeImportModal();
     }
-});
-window.addEventListener('click', function(e) {
-    const importModal = document.getElementById('importDisciplineModal');
-    if (e.target === importModal) closeImportModal();
-});
+
+    function closeHistoryModal() {
+        document.getElementById('historyModal').style.display = 'none';
+    }
+
+    // ESC & Backdrop close cho tất cả modals
+    window.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImportModal();
+        }
+    });
+    window.addEventListener('click', function(e) {
+        const importModal = document.getElementById('importDisciplineModal');
+        if (e.target === importModal) closeImportModal();
+    });
 </script>
 
 <?php
