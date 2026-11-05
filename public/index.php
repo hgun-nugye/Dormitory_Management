@@ -115,6 +115,9 @@ Router::post('/staff/applications/reject-miengiam', 'Staff\\ApplicationControlle
 
 // Staff - Tiện ích, Yêu cầu, Bảo trì, Kỷ luật
 Router::get('/staff/utilities', 'Staff\\UtilityController@utilities', [AuthMiddleware::class]);
+Router::get('/staff/utilities/export', 'Staff\\UtilityController@exportUtilities', [AuthMiddleware::class]);
+Router::get('/staff/utilities/template', 'Staff\\UtilityController@downloadTemplate', [AuthMiddleware::class]);
+Router::post('/staff/utilities/import', 'Staff\\UtilityController@importReadings', [AuthMiddleware::class]);
 Router::post('/staff/utilities/save-reading', 'Staff\\UtilityController@saveReading', [AuthMiddleware::class]);
 Router::post('/staff/utilities/publish-invoice', 'Staff\\UtilityController@publishInvoice', [AuthMiddleware::class]);
 Router::post('/staff/utilities/publish-cluster', 'Staff\\UtilityController@publishClusterInvoices', [AuthMiddleware::class]);
