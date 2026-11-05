@@ -25,18 +25,250 @@ use App\Core\Session;
  */
 class RoomController extends Controller
 {
+    /**
+     * Xác định phân quyền cán bộ quản lý Sơ đồ phòng & Giường
+     */
+    public function getStaffScope(?array $user = null): array
+    {
+        if (!$user) {
+            $user = Auth::user() ?? [];
+        }
+
+        $role = $user['MaVaiTro'] ?? $user['VaiTro'] ?? '';
+        $cumQuanLy = trim((string)($user['MaCumQuanLy'] ?? ''));
+        $username = strtoupper($user['TenDangNhap'] ?? '');
+        $chucVu = mb_strtolower($user['ChucVu'] ?? $user['profile']['ChucVu'] ?? '');
+
+        // 1. CHẶN TUYỆT ĐỐI NHÂN VIÊN KHÔNG PHẢI CÁN BỘ QUẢN LÝ (Kế toán, Kỹ thuật điện nước, Nhân viên thường, Sinh viên)
+        $isNonManager = in_array($role, ['KE_TOAN', 'NV_THUONG', 'SINH_VIEN', 'TRUONG_PHONG'], true)
+            || str_starts_with($username, 'NV_KT')
+            || str_starts_with($username, 'KT')
+            || str_contains($chucVu, 'kế toán')
+            || str_contains($chucVu, 'kỹ thuật')
+            || str_contains($chucVu, 'điện nước');
+
+        $isManager = in_array($role, ['ADMIN', 'QuanTriVien', 'NV_QUAN_LY_KTX', 'TRUONG_KHU', 'TRUONG_CUM', 'TRUONG_TOA'], true);
+
+        if ($isNonManager || !$isManager) {
+            return [
+                'isAllowed' => false,
+                'level' => 'DENIED',
+                'levelNumber' => -1,
+                'role' => $role,
+                'title' => 'Không có quyền truy cập',
+                'badgeClass' => 'badge-danger',
+                'maKhu' => null,
+                'maCum' => null,
+                'maToa' => null,
+                'canCrudPhong' => false,
+                'canUpdateToa' => false,
+                'canCrudToa' => false,
+                'canCrudCum' => false,
+                'canCrudKhu' => false,
+                'availableToas' => [],
+                'availableCums' => [],
+                'availableKhus' => [],
+                'message' => 'Từ chối quyền truy cập: Phân hệ Sơ đồ phòng và Hạ tầng KTX chỉ dành riêng cho Cán bộ Quản lý (Trưởng Tòa, Trưởng Cụm, Trưởng Khu, Ban Giám đốc KTX). Nhân viên Kế toán và Kỹ thuật không có quyền thao tác!'
+            ];
+        }
+
+        // 2. CẤP 4: Quản lý toàn KTX (Giám đốc / Admin)
+        if ($role === 'ADMIN' || $role === 'QuanTriVien' || $role === 'NV_QUAN_LY_KTX') {
+            $khus = Database::fetchAll("SELECT MaKhu, TenKhu FROM KhuKTX ORDER BY MaKhu ASC");
+            $cums = Database::fetchAll("SELECT MaCum, TenCum, MaKhu FROM CumNha ORDER BY MaKhu ASC, MaCum ASC");
+            $toas = Database::fetchAll("
+                SELECT t.MaToaNha, t.TenToaNha, t.TongSoTang, t.GioiTinhQuyDinh, t.TrangThaiToaNha, c.MaCum, c.TenCum, c.MaKhu, k.TenKhu
+                FROM ToaNha t
+                JOIN CumNha c ON t.MaCum = c.MaCum
+                JOIN KhuKTX k ON c.MaKhu = k.MaKhu
+                ORDER BY c.MaKhu ASC, c.MaCum ASC, t.MaToaNha ASC
+            ");
+
+            return [
+                'isAllowed' => true,
+                'level' => 'ALL',
+                'levelNumber' => 4,
+                'role' => $role,
+                'title' => 'Quản lý toàn KTX (Giám đốc / Admin)',
+                'badgeClass' => 'badge-primary',
+                'maKhu' => null,
+                'maCum' => null,
+                'maToa' => null,
+                'canCrudPhong' => true,
+                'canUpdateToa' => true,
+                'canCrudToa' => true,
+                'canCrudCum' => true,
+                'canCrudKhu' => true,
+                'availableToas' => $toas,
+                'availableCums' => $cums,
+                'availableKhus' => $khus
+            ];
+        }
+
+        // 3. CẤP 3: Trưởng Khu (TK001 -> Khu A, TK002 -> Khu B)
+        if ($role === 'TRUONG_KHU' || $cumQuanLy === 'A' || $cumQuanLy === 'B') {
+            $maKhu = in_array($cumQuanLy, ['A', 'B']) ? $cumQuanLy : 'A';
+            $khus = Database::fetchAll("SELECT MaKhu, TenKhu FROM KhuKTX WHERE MaKhu = :k", ['k' => $maKhu]);
+            $cums = Database::fetchAll("SELECT MaCum, TenCum, MaKhu FROM CumNha WHERE MaKhu = :k ORDER BY MaCum ASC", ['k' => $maKhu]);
+            $toas = Database::fetchAll("
+                SELECT t.MaToaNha, t.TenToaNha, t.TongSoTang, t.GioiTinhQuyDinh, t.TrangThaiToaNha, c.MaCum, c.TenCum, c.MaKhu, k.TenKhu
+                FROM ToaNha t
+                JOIN CumNha c ON t.MaCum = c.MaCum
+                JOIN KhuKTX k ON c.MaKhu = k.MaKhu
+                WHERE c.MaKhu = :k
+                ORDER BY c.MaCum ASC, t.MaToaNha ASC
+            ", ['k' => $maKhu]);
+
+            return [
+                'isAllowed' => true,
+                'level' => 'KHU',
+                'levelNumber' => 3,
+                'role' => $role,
+                'title' => "Trưởng BQL Khu {$maKhu}",
+                'badgeClass' => 'badge-info',
+                'maKhu' => $maKhu,
+                'maCum' => null,
+                'maToa' => null,
+                'canCrudPhong' => true,
+                'canUpdateToa' => true,
+                'canCrudToa' => true,
+                'canCrudCum' => true,
+                'canCrudKhu' => false,
+                'availableToas' => $toas,
+                'availableCums' => $cums,
+                'availableKhus' => $khus
+            ];
+        }
+
+        // 4. CẤP 2: Trưởng Cụm (CUMAG -> AG...)
+        if ($role === 'TRUONG_CUM') {
+            $maCum = !empty($cumQuanLy) ? $cumQuanLy : 'AG';
+            $cumRow = Database::fetch("SELECT c.MaCum, c.TenCum, c.MaKhu, k.TenKhu FROM CumNha c JOIN KhuKTX k ON c.MaKhu = k.MaKhu WHERE c.MaCum = :c", ['c' => $maCum]);
+            $maKhu = $cumRow['MaKhu'] ?? 'A';
+            $tenCum = $cumRow['TenCum'] ?? $maCum;
+
+            // Làm sạch nhãn cụm: tránh lặp từ "Trưởng BQL Cụm nhà Ban Quản lý Cụm nhà A.G"
+            $cleanCum = preg_replace('/^(Ban Quản lý\s*|Cụm\s*nhà\s*)+/ui', '', $tenCum);
+            $cumTitle = "Trưởng BQL Cụm " . (!empty($cleanCum) ? $cleanCum : $tenCum);
+
+            $toas = Database::fetchAll("
+                SELECT t.MaToaNha, t.TenToaNha, t.TongSoTang, t.GioiTinhQuyDinh, t.TrangThaiToaNha, c.MaCum, c.TenCum, c.MaKhu, k.TenKhu
+                FROM ToaNha t
+                JOIN CumNha c ON t.MaCum = c.MaCum
+                JOIN KhuKTX k ON c.MaKhu = k.MaKhu
+                WHERE t.MaCum = :c
+                ORDER BY t.MaToaNha ASC
+            ", ['c' => $maCum]);
+
+            return [
+                'isAllowed' => true,
+                'level' => 'CUM',
+                'levelNumber' => 2,
+                'role' => $role,
+                'title' => $cumTitle,
+                'badgeClass' => 'badge-warning',
+                'maKhu' => $maKhu,
+                'maCum' => $maCum,
+                'maToa' => null,
+                'canCrudPhong' => true,
+                'canUpdateToa' => true,
+                'canCrudToa' => true,
+                'canCrudCum' => false,
+                'canCrudKhu' => false,
+                'availableToas' => $toas,
+                'availableCums' => [$cumRow],
+                'availableKhus' => [['MaKhu' => $maKhu, 'TenKhu' => $cumRow['TenKhu'] ?? $maKhu]]
+            ];
+        }
+
+        // 5. CẤP 1: Trưởng Tòa (TT001 -> A01...)
+        $maToa = !empty($cumQuanLy) ? $cumQuanLy : 'A01';
+        $toaRow = Database::fetch("
+            SELECT t.MaToaNha, t.TenToaNha, t.TongSoTang, t.GioiTinhQuyDinh, t.TrangThaiToaNha, c.MaCum, c.TenCum, c.MaKhu, k.TenKhu
+            FROM ToaNha t
+            JOIN CumNha c ON t.MaCum = c.MaCum
+            JOIN KhuKTX k ON c.MaKhu = k.MaKhu
+            WHERE t.MaToaNha = :t
+        ", ['t' => $maToa]);
+
+        if (!$toaRow) {
+            $toaRow = Database::fetch("
+                SELECT t.MaToaNha, t.TenToaNha, t.TongSoTang, t.GioiTinhQuyDinh, t.TrangThaiToaNha, c.MaCum, c.TenCum, c.MaKhu, k.TenKhu
+                FROM ToaNha t
+                JOIN CumNha c ON t.MaCum = c.MaCum
+                JOIN KhuKTX k ON c.MaKhu = k.MaKhu
+                ORDER BY t.MaToaNha ASC LIMIT 1
+            ");
+            $maToa = $toaRow['MaToaNha'] ?? 'A01';
+        }
+
+        return [
+            'isAllowed' => true,
+            'level' => 'TOA',
+            'levelNumber' => 1,
+            'role' => $role,
+            'title' => "Trưởng tòa nhà " . ($toaRow['TenToaNha'] ?? $maToa),
+            'badgeClass' => 'badge-success',
+            'maKhu' => $toaRow['MaKhu'] ?? 'A',
+            'maCum' => $toaRow['MaCum'] ?? 'AG',
+            'maToa' => $maToa,
+            'canCrudPhong' => true,
+            'canUpdateToa' => true,
+            'canCrudToa' => false,
+            'canCrudCum' => false,
+            'canCrudKhu' => false,
+            'availableToas' => [$toaRow],
+            'availableCums' => [['MaCum' => $toaRow['MaCum'], 'TenCum' => $toaRow['TenCum']]],
+            'availableKhus' => [['MaKhu' => $toaRow['MaKhu'], 'TenKhu' => $toaRow['TenKhu']]]
+        ];
+    }
+
+    /**
+     * Xác thực quyền quản trị phòng ở và đối soát Tòa nhà hợp lệ
+     */
+    private function authorizeRoomAction(string $targetToaOrRoom = ''): array
+    {
+        $scope = $this->getStaffScope();
+        if (!$scope['isAllowed'] || empty($scope['canCrudPhong'])) {
+            Session::flash('error', 'Từ chối quyền truy cập: Phân hệ Sơ đồ phòng và Hạ tầng KTX chỉ dành riêng cho Cán bộ Quản lý (Trưởng Tòa, Trưởng Cụm, Trưởng Khu, Ban Giám đốc KTX). Nhân viên Kế toán và Kỹ thuật không có quyền thao tác!');
+            $this->redirect('staff/rooms');
+            exit;
+        }
+
+        $validToas = array_column($scope['availableToas'], 'MaToaNha');
+
+        if (!empty($targetToaOrRoom)) {
+            $maToa = $targetToaOrRoom;
+            if (str_contains($targetToaOrRoom, '.')) {
+                $p = Database::fetch("SELECT MaToaNha FROM Phong WHERE MaPhong = :mp", ['mp' => $targetToaOrRoom]);
+                $maToa = $p['MaToaNha'] ?? '';
+            }
+
+            if (!empty($maToa) && !in_array($maToa, $validToas, true)) {
+                Session::flash('error', 'Từ chối quyền: Bạn không có quyền thao tác trên Tòa nhà ngoài phạm vi phân công!');
+                $this->redirect('staff/rooms');
+                exit;
+            }
+        }
+
+        return $scope;
+    }
+
+    /**
+     * Màn hình Sơ đồ Phòng & Giường nội trú KTX
+     */
     public function rooms(): void
     {
         $user = Auth::user();
-        $role = $user['MaVaiTro'] ?? $user['VaiTro'] ?? '';
-        $isTruongToa = ($role === 'TRUONG_TOA');
+        $scope = $this->getStaffScope($user);
 
-        // Phân quyền nghiêm ngặt: Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có chức năng quản lý phòng giường
-        if (!$isTruongToa) {
+        // Chặn tuyệt đối nhân viên không phải cán bộ quản lý (Kế toán, Thợ kỹ thuật, Sinh viên)
+        if (!$scope['isAllowed']) {
             $this->view('staff.rooms', [
                 'user' => $user,
-                'isTruongToa' => false,
-                'roleName' => $user['VaiTro'] ?? $role,
+                'scope' => $scope,
+                'isAllowed' => false,
+                'roleName' => $user['VaiTro'] ?? $scope['role'],
                 'flashSuccess' => Session::flash('success'),
                 'flashError' => Session::flash('error'),
                 'flashWarning' => Session::flash('warning')
@@ -44,41 +276,102 @@ class RoomController extends Controller
             return;
         }
 
-        // Với TRUONG_TOA: Xác định tòa nhà được phân công
-        $maToa = trim((string)($user['MaCumQuanLy'] ?? ''));
-        if (empty($maToa)) {
-            $firstToa = Database::fetch("SELECT MaToaNha FROM ToaNha ORDER BY MaToaNha ASC LIMIT 1");
-            $maToa = $firstToa['MaToaNha'] ?? 'A01';
-        }
-
-        $toaInfo = Database::fetch("
-            SELECT t.*, c.TenCum, c.MaKhu, k.TenKhu
-            FROM ToaNha t
-            JOIN CumNha c ON t.MaCum = c.MaCum
-            JOIN KhuKTX k ON c.MaKhu = k.MaKhu
-            WHERE t.MaToaNha = :toa
-        ", ['toa' => $maToa]);
-
-        if (!$toaInfo) {
-            $toaInfo = Database::fetch("
-                SELECT t.*, c.TenCum, c.MaKhu, k.TenKhu
-                FROM ToaNha t
-                JOIN CumNha c ON t.MaCum = c.MaCum
-                JOIN KhuKTX k ON c.MaKhu = k.MaKhu
-                ORDER BY t.MaToaNha ASC LIMIT 1
-            ");
-            $maToa = $toaInfo['MaToaNha'] ?? 'A01';
-        }
-
         $request = new Request();
+        $filterKhu = trim((string)$request->input('khu', ''));
+        $filterCum = trim((string)$request->input('cum', ''));
+        $filterToa = trim((string)$request->input('toa', ''));
         $filterTang = max(0, (int)$request->input('tang', 0));
         $filterLoaiPhong = trim((string)$request->input('loaiPhong', ''));
         $filterTrangThai = trim((string)$request->input('trangThai', ''));
         $searchKeyword = trim((string)$request->input('search', ''));
 
+        // Cascading filter options theo quyền hạn
+        $availableKhus = $scope['availableKhus'] ?? [];
+        $availableCums = $scope['availableCums'] ?? [];
+        $availableToas = $scope['availableToas'] ?? [];
+
+        // Lọc danh sách Cụm theo Khu đã chọn (nếu có)
+        if (!empty($filterKhu)) {
+            $filteredCums = array_filter($availableCums, fn($c) => ($c['MaKhu'] ?? '') === $filterKhu);
+            if (!empty($filteredCums)) {
+                $availableCums = array_values($filteredCums);
+            }
+        }
+
+        // Lọc danh sách Tòa theo Cụm đã chọn (nếu có)
+        if (!empty($filterCum)) {
+            $filteredToas = array_filter($availableToas, fn($t) => ($t['MaCum'] ?? '') === $filterCum);
+            if (!empty($filteredToas)) {
+                $availableToas = array_values($filteredToas);
+            }
+        }
+
+        // Xác định Tòa nhà mục tiêu hiển thị
+        $validToaCodes = array_values(array_unique(array_filter(array_column($availableToas, 'MaToaNha'))));
+        $isAllToas = empty($filterToa) && ($scope['level'] !== 'TOA');
+
+        $baseParams = [];
+        if ($isAllToas) {
+            $maToa = '';
+            $inList = !empty($validToaCodes) ? $validToaCodes : ['__NONE__'];
+            $inPlaceholders = [];
+            foreach ($inList as $idx => $code) {
+                $phKey = 'tcode_' . $idx;
+                $inPlaceholders[] = ':' . $phKey;
+                $baseParams[$phKey] = $code;
+            }
+            $toaCondition = "p.MaToaNha IN (" . implode(',', $inPlaceholders) . ")";
+
+            $maxTang = 1;
+            foreach ($availableToas as $toaItem) {
+                if ((int)($toaItem['TongSoTang'] ?? 0) > $maxTang) {
+                    $maxTang = (int)$toaItem['TongSoTang'];
+                }
+            }
+            $toaInfo = [
+                'MaToaNha' => '',
+                'TenToaNha' => 'Tất cả Tòa nhà (' . count($validToaCodes) . ' tòa)',
+                'TongSoTang' => $maxTang,
+                'GioiTinhQuyDinh' => 'Nam / Nữ',
+                'TrangThaiToaNha' => 'Đang hoạt động',
+                'TenCum' => !empty($filterCum) ? ($availableCums[0]['TenCum'] ?? $filterCum) : 'Tất cả Cụm',
+                'TenKhu' => !empty($filterKhu) ? ($availableKhus[0]['TenKhu'] ?? $filterKhu) : 'Tất cả Khu'
+            ];
+        } else {
+            if (!empty($filterToa) && in_array($filterToa, $validToaCodes, true)) {
+                $maToa = $filterToa;
+            } else {
+                $maToa = $validToaCodes[0] ?? ($scope['maToa'] ?? 'A01');
+            }
+
+            $toaCondition = "p.MaToaNha = :targetToa";
+            $baseParams['targetToa'] = $maToa;
+
+            $toaInfo = Database::fetch("
+                SELECT t.*, c.TenCum, c.MaKhu, k.TenKhu
+                FROM ToaNha t
+                JOIN CumNha c ON t.MaCum = c.MaCum
+                JOIN KhuKTX k ON c.MaKhu = k.MaKhu
+                WHERE t.MaToaNha = :toa
+            ", ['toa' => $maToa]);
+
+            if (!$toaInfo) {
+                $toaInfo = Database::fetch("
+                    SELECT t.*, c.TenCum, c.MaKhu, k.TenKhu
+                    FROM ToaNha t
+                    JOIN CumNha c ON t.MaCum = c.MaCum
+                    JOIN KhuKTX k ON c.MaKhu = k.MaKhu
+                    ORDER BY t.MaToaNha ASC LIMIT 1
+                ");
+                $maToa = $toaInfo['MaToaNha'] ?? 'A01';
+                $baseParams['targetToa'] = $maToa;
+            }
+        }
+
         // Danh sách phòng thuộc tòa
         $phongSql = "
             SELECT p.*,
+                   t.TenToaNha,
                    lp.TenLoaiPhong, lp.SoGiuongToiDa, lp.DonGiaLuuTruChuan, lp.DonGiaDichVuTangThem,
                    (SELECT COUNT(*) FROM Giuong g WHERE g.MaPhong = p.MaPhong) AS TongGiuong,
                    (SELECT COUNT(*) FROM Giuong g WHERE g.MaPhong = p.MaPhong AND g.TrangThaiGiuong = 'Trống') AS SoGiuongTrong,
@@ -86,11 +379,12 @@ class RoomController extends Controller
                    (SELECT COUNT(*) FROM Giuong g WHERE g.MaPhong = p.MaPhong AND g.TrangThaiGiuong = 'Đã có người ở') AS SoGiuongCoNguoi,
                    sv.HoVaTen AS TenTruongPhong
             FROM Phong p
+            JOIN ToaNha t ON p.MaToaNha = t.MaToaNha
             LEFT JOIN LoaiPhong lp ON p.MaLoaiPhong = lp.MaLoaiPhong
             LEFT JOIN SinhVien sv ON p.TruongPhong = sv.MaSinhVien
-            WHERE p.MaToaNha = :toa
+            WHERE {$toaCondition}
         ";
-        $phongParams = ['toa' => $maToa];
+        $phongParams = $baseParams;
 
         if ($filterTang > 0) {
             $phongSql .= " AND p.Tang = :tang";
@@ -109,7 +403,7 @@ class RoomController extends Controller
                 SELECT g2.MaPhong FROM Giuong g2
                 JOIN HopDongNoiTru hd2 ON g2.MaGiuong = hd2.MaGiuong AND hd2.TrangThaiHopDong IN ('Đang hiệu lực', 'Chờ hiệu lực')
                 JOIN SinhVien sv2 ON hd2.MaSinhVien = sv2.MaSinhVien
-                WHERE sv2.HoVaTen LIKE :kw3 OR sv2.MSSVTaiTruong LIKE :kw4 OR sv2.SoCCCD LIKE :kw5
+                WHERE sv2.HoVaTen LIKE :kw3 OR sv2.MSSVTaiTruong LIKE :kw4 OR sv2.SoCCCD LIKE :kw5 OR sv2.SoDienThoai LIKE :kw6
             ))";
             $kwVal = "%{$searchKeyword}%";
             $phongParams['kw1'] = $kwVal;
@@ -117,13 +411,14 @@ class RoomController extends Controller
             $phongParams['kw3'] = $kwVal;
             $phongParams['kw4'] = $kwVal;
             $phongParams['kw5'] = $kwVal;
+            $phongParams['kw6'] = $kwVal;
         }
 
-        $phongSql .= " ORDER BY p.Tang ASC, p.SoPhong ASC";
+        $phongSql .= " ORDER BY p.MaToaNha ASC, p.Tang ASC, p.SoPhong ASC";
         $phongList = Database::fetchAll($phongSql, $phongParams);
 
         // Danh sách giường và thông tin cư trú
-        $giuongList = Database::fetchAll("
+        $giuongSql = "
             SELECT g.*,
                    hd.MaHopDong, hd.MaSinhVien, hd.NgayNhanPhong, hd.DaNopMauCT01, hd.TrangThaiHopDong,
                    sv.MSSVTaiTruong, sv.HoVaTen, sv.GioiTinh, sv.SoCCCD, sv.SoDienThoai, sv.Email,
@@ -137,9 +432,10 @@ class RoomController extends Controller
             )
             LEFT JOIN SinhVien sv ON hd.MaSinhVien = sv.MaSinhVien
             LEFT JOIN TruongDaiHoc tdh ON sv.MaTruong = tdh.MaTruong
-            WHERE p.MaToaNha = :toa
+            WHERE {$toaCondition}
             ORDER BY g.MaPhong ASC, g.KyHieuGiuong ASC
-        ", ['toa' => $maToa]);
+        ";
+        $giuongList = Database::fetchAll($giuongSql, $baseParams);
 
         $giuongByPhong = [];
         foreach ($giuongList as $g) {
@@ -147,7 +443,7 @@ class RoomController extends Controller
         }
 
         // Thống kê nhanh toàn tòa
-        $stats = Database::fetch("
+        $statsSql = "
             SELECT 
                 COUNT(DISTINCT p.MaPhong) AS TongPhong,
                 SUM(CASE WHEN p.TrangThaiPhong != 'Khóa bảo trì' THEN 1 ELSE 0 END) AS PhongHoatDong,
@@ -158,16 +454,24 @@ class RoomController extends Controller
                 SUM(CASE WHEN g.TrangThaiGiuong = 'Khóa bảo trì' THEN 1 ELSE 0 END) AS GiuongBaoTri
             FROM Phong p
             LEFT JOIN Giuong g ON p.MaPhong = g.MaPhong
-            WHERE p.MaToaNha = :toa
-        ", ['toa' => $maToa]);
+            WHERE {$toaCondition}
+        ";
+        $stats = Database::fetch($statsSql, $baseParams);
 
         $loaiPhongList = Database::fetchAll("SELECT * FROM LoaiPhong ORDER BY SoGiuongToiDa ASC");
 
         $this->view('staff.rooms', [
             'user' => $user,
-            'isTruongToa' => true,
+            'scope' => $scope,
+            'isAllowed' => true,
+            'isTruongToa' => ($scope['level'] === 'TOA'),
+            'isAllToas' => $isAllToas,
+            'canCrudPhong' => $scope['canCrudPhong'] ?? true,
+            'canUpdateToa' => $scope['canUpdateToa'] ?? true,
+            'canCrudToa' => $scope['canCrudToa'] ?? false,
             'toaInfo' => $toaInfo,
             'maToa' => $maToa,
+            'filterToa' => $filterToa,
             'phongList' => $phongList,
             'giuongByPhong' => $giuongByPhong,
             'stats' => $stats ?: [
@@ -180,7 +484,13 @@ class RoomController extends Controller
                 'GiuongBaoTri' => 0
             ],
             'loaiPhongList' => $loaiPhongList,
+            'availableKhus' => $availableKhus,
+            'availableCums' => $availableCums,
+            'availableToas' => $availableToas,
             'filters' => [
+                'khu' => $filterKhu,
+                'cum' => $filterCum,
+                'toa' => $filterToa,
                 'tang' => $filterTang,
                 'loaiPhong' => $filterLoaiPhong,
                 'trangThai' => $filterTrangThai,
@@ -190,6 +500,50 @@ class RoomController extends Controller
             'flashError' => Session::flash('error'),
             'flashWarning' => Session::flash('warning')
         ]);
+    }
+
+    /**
+     * Cập nhật thông tin Tòa nhà (RU Tòa nhà cho Trưởng Tòa, CRUD cho Cấp trên)
+     */
+    public function updateToaInfo(): void
+    {
+        $scope = $this->getStaffScope();
+        if (!$scope['isAllowed'] || empty($scope['canUpdateToa'])) {
+            Session::flash('error', 'Từ chối quyền: Bạn không có quyền chỉnh sửa thông tin Tòa nhà!');
+            $this->redirect('staff/rooms');
+            return;
+        }
+
+        $request = new Request();
+        $maToa = trim((string)$request->input('maToa', ''));
+        $tenToa = trim((string)$request->input('tenToaNha', ''));
+        $gioiTinh = trim((string)$request->input('gioiTinhQuyDinh', 'Nam'));
+        $trangThai = trim((string)$request->input('trangThaiToaNha', 'Đang hoạt động'));
+
+        $validToas = array_column($scope['availableToas'], 'MaToaNha');
+        if (!in_array($maToa, $validToas, true)) {
+            Session::flash('error', 'Từ chối quyền: Tòa nhà không thuộc phạm vi quản lý của bạn!');
+            $this->redirect('staff/rooms');
+            return;
+        }
+
+        try {
+            Database::execute("
+                UPDATE ToaNha 
+                SET TenToaNha = :ten, GioiTinhQuyDinh = :gt, TrangThaiToaNha = :tt 
+                WHERE MaToaNha = :t
+            ", [
+                'ten' => $tenToa,
+                'gt' => $gioiTinh,
+                'tt' => $trangThai,
+                't' => $maToa
+            ]);
+            Session::flash('success', "Cập nhật thông tin Tòa nhà {$maToa} thành công!");
+        } catch (\Throwable $e) {
+            Session::flash('error', "Lỗi cập nhật Tòa nhà: " . $e->getMessage());
+        }
+
+        $this->redirect("staff/rooms?toa=" . urlencode($maToa));
     }
 
 
@@ -205,12 +559,21 @@ class RoomController extends Controller
             return;
         }
 
+        $g = Database::fetch("SELECT g.TrangThaiGiuong, p.MaToaNha FROM Giuong g JOIN Phong p ON g.MaPhong = p.MaPhong WHERE g.MaGiuong = :g", ['g' => $maGiuong]);
+        if (!$g) {
+            Session::flash('error', 'Không tìm thấy giường.');
+            $this->redirect('staff/rooms');
+            return;
+        }
+
+        $this->authorizeRoomAction($g['MaToaNha']);
+        $maToa = $g['MaToaNha'];
+
         try {
             if ($action === 'lock') {
-                $g = Database::fetch("SELECT TrangThaiGiuong FROM Giuong WHERE MaGiuong = :g", ['g' => $maGiuong]);
-                if ($g && $g['TrangThaiGiuong'] !== 'Trống') {
+                if ($g['TrangThaiGiuong'] !== 'Trống') {
                     Session::flash('error', 'Chỉ có thể khóa bảo trì giường đang ở trạng thái Trống.');
-                    $this->redirect('staff/rooms');
+                    $this->redirect('staff/rooms?toa=' . urlencode($maToa));
                     return;
                 }
                 Database::execute("UPDATE Giuong SET TrangThaiGiuong = 'Khóa bảo trì' WHERE MaGiuong = :g", ['g' => $maGiuong]);
@@ -223,7 +586,7 @@ class RoomController extends Controller
             Session::flash('error', 'Lỗi khi cập nhật trạng thái giường: ' . $e->getMessage());
         }
 
-        $this->redirect('staff/rooms');
+        $this->redirect('staff/rooms?toa=' . urlencode($maToa));
     }
 
     public function toggleRoomMaintenance(): void
@@ -237,6 +600,16 @@ class RoomController extends Controller
             $this->redirect('staff/rooms');
             return;
         }
+
+        $this->authorizeRoomAction($maPhong);
+
+        $room = Database::fetch("SELECT MaToaNha, SoSVDangO, MaLoaiPhong FROM Phong WHERE MaPhong = :p", ['p' => $maPhong]);
+        if (!$room) {
+            Session::flash('error', 'Phòng không tồn tại.');
+            $this->redirect('staff/rooms');
+            return;
+        }
+        $maToa = $room['MaToaNha'];
 
         try {
             if ($action === 'lock') {
@@ -264,7 +637,7 @@ class RoomController extends Controller
             Session::flash('error', 'Lỗi khi cập nhật trạng thái phòng: ' . $e->getMessage());
         }
 
-        $this->redirect('staff/rooms');
+        $this->redirect('staff/rooms?toa=' . urlencode($maToa));
     }
 
 
@@ -319,26 +692,32 @@ class RoomController extends Controller
 
     /**
      * Thêm / Sửa Phòng ở từ giao diện Sơ đồ phòng
-     * Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền thực hiện
      */
     public function saveRoomFromRooms(): void
     {
-        $user = Auth::user();
-        if (($user['MaVaiTro'] ?? '') !== 'TRUONG_TOA') {
-            Session::flash('error', 'Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền quản lý phòng và giường!');
-            $this->redirect('staff/rooms');
-            return;
-        }
-
-        $maToa = trim((string)($user['MaCumQuanLy'] ?? ''));
-        if (empty($maToa)) {
-            $firstToa = Database::fetch("SELECT MaToaNha FROM ToaNha ORDER BY MaToaNha ASC LIMIT 1");
-            $maToa = $firstToa['MaToaNha'] ?? 'A01';
-        }
-
         $request = new Request();
         $isEdit = (int)$request->input('isEdit', 0) === 1;
         $maPhong = trim((string)$request->input('maPhong', ''));
+        $reqToa = trim((string)$request->input('maToa', ''));
+
+        $target = $isEdit ? $maPhong : $reqToa;
+        $scope = $this->authorizeRoomAction($target);
+
+        $validToas = array_column($scope['availableToas'], 'MaToaNha');
+        if ($isEdit) {
+            $room = Database::fetch("SELECT * FROM Phong WHERE MaPhong = :mp", ['mp' => $maPhong]);
+            if (!$room) {
+                Session::flash('error', "Không tìm thấy phòng {$maPhong}!");
+                $this->redirect('staff/rooms');
+                return;
+            }
+            $maToa = $room['MaToaNha'];
+        } else {
+            $maToa = (!empty($reqToa) && in_array($reqToa, $validToas, true))
+                ? $reqToa
+                : ($scope['maToa'] ?? ($validToas[0] ?? 'A01'));
+        }
+
         $soPhong = trim((string)$request->input('soPhong', ''));
         $tang = max(1, (int)$request->input('tang', 1));
         $maLoaiPhong = trim((string)$request->input('maLoaiPhong', ''));
@@ -346,27 +725,20 @@ class RoomController extends Controller
 
         if (empty($maLoaiPhong)) {
             Session::flash('error', 'Vui lòng chọn loại phòng!');
-            $this->redirect('staff/rooms');
+            $this->redirect('staff/rooms?toa=' . urlencode($maToa));
             return;
         }
 
         $loaiPhong = Database::fetch("SELECT * FROM LoaiPhong WHERE MaLoaiPhong = :lp", ['lp' => $maLoaiPhong]);
         if (!$loaiPhong) {
             Session::flash('error', 'Loại phòng không hợp lệ!');
-            $this->redirect('staff/rooms');
+            $this->redirect('staff/rooms?toa=' . urlencode($maToa));
             return;
         }
         $soGiuongToiDa = (int)($loaiPhong['SoGiuongToiDa'] ?? 4);
 
         try {
             if ($isEdit) {
-                $room = Database::fetch("SELECT * FROM Phong WHERE MaPhong = :mp", ['mp' => $maPhong]);
-                if (!$room || $room['MaToaNha'] !== $maToa) {
-                    Session::flash('error', "Không tìm thấy phòng hoặc phòng không thuộc Tòa nhà {$maToa}!");
-                    $this->redirect('staff/rooms');
-                    return;
-                }
-
                 // Nếu thay đổi loại phòng, kiểm tra số giường
                 $oldLoaiPhong = Database::fetch("SELECT * FROM LoaiPhong WHERE MaLoaiPhong = :lp", ['lp' => $room['MaLoaiPhong']]);
                 $oldGiuongToiDa = (int)($oldLoaiPhong['SoGiuongToiDa'] ?? 4);
@@ -410,7 +782,7 @@ class RoomController extends Controller
 
                         if (!$canShrink) {
                             Session::flash('error', "Không thể hạ số giường xuống {$soGiuongToiDa} vì các giường dư thừa hiện đang có sinh viên cư trú!");
-                            $this->redirect('staff/rooms');
+                            $this->redirect('staff/rooms?toa=' . urlencode($maToa));
                             return;
                         }
 
@@ -441,7 +813,7 @@ class RoomController extends Controller
                 // Thêm mới phòng
                 if (empty($soPhong)) {
                     Session::flash('error', 'Vui lòng nhập số phòng!');
-                    $this->redirect('staff/rooms');
+                    $this->redirect('staff/rooms?toa=' . urlencode($maToa));
                     return;
                 }
 
@@ -454,7 +826,7 @@ class RoomController extends Controller
                 ]);
                 if ($dup) {
                     Session::flash('error', "Phòng '{$maPhong}' hoặc số phòng '{$soPhong}' tại tòa '{$maToa}' đã tồn tại!");
-                    $this->redirect('staff/rooms');
+                    $this->redirect('staff/rooms?toa=' . urlencode($maToa));
                     return;
                 }
 
@@ -490,23 +862,14 @@ class RoomController extends Controller
             Session::flash('error', 'Lỗi lưu thông tin phòng: ' . $e->getMessage());
         }
 
-        $this->redirect('staff/rooms');
+        $this->redirect('staff/rooms?toa=' . urlencode($maToa));
     }
 
     /**
      * Xóa Phòng ở trực tiếp từ sơ đồ phòng
-     * Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền thực hiện
      */
     public function deleteRoomFromRooms(): void
     {
-        $user = Auth::user();
-        if (($user['MaVaiTro'] ?? '') !== 'TRUONG_TOA') {
-            Session::flash('error', 'Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền quản lý phòng và giường!');
-            $this->redirect('staff/rooms');
-            return;
-        }
-
-        $maToa = trim((string)($user['MaCumQuanLy'] ?? ''));
         $request = new Request();
         $maPhong = trim((string)$request->input('maPhong', ''));
 
@@ -516,12 +879,15 @@ class RoomController extends Controller
             return;
         }
 
+        $scope = $this->authorizeRoomAction($maPhong);
+
         $room = Database::fetch("SELECT * FROM Phong WHERE MaPhong = :mp", ['mp' => $maPhong]);
-        if (!$room || (!empty($maToa) && $room['MaToaNha'] !== $maToa)) {
-            Session::flash('error', "Không tìm thấy phòng hoặc phòng không thuộc tòa nhà phụ trách!");
+        if (!$room) {
+            Session::flash('error', "Không tìm thấy phòng {$maPhong}!");
             $this->redirect('staff/rooms');
             return;
         }
+        $maToa = $room['MaToaNha'];
 
         // Kiểm tra nguyên tắc bảo toàn dữ liệu
         $activeResidents = Database::fetch("
@@ -533,7 +899,7 @@ class RoomController extends Controller
 
         if (($activeResidents['total'] ?? 0) > 0 || (int)$room['SoSVDangO'] > 0) {
             Session::flash('error', "Không thể xóa phòng {$maPhong} vì đang có {$activeResidents['total']} sinh viên có hợp đồng cư trú (Nguyên tắc bảo toàn dữ liệu)!");
-            $this->redirect('staff/rooms');
+            $this->redirect('staff/rooms?toa=' . urlencode($maToa));
             return;
         }
 
@@ -545,7 +911,7 @@ class RoomController extends Controller
             Session::flash('error', 'Lỗi khi xóa phòng: ' . $e->getMessage());
         }
 
-        $this->redirect('staff/rooms');
+        $this->redirect('staff/rooms?toa=' . urlencode($maToa));
     }
 
     /**
@@ -553,15 +919,16 @@ class RoomController extends Controller
      */
     public function toggleRoomStatus(): void
     {
-        $user = Auth::user();
-        if (($user['MaVaiTro'] ?? '') !== 'TRUONG_TOA') {
-            Session::flash('error', 'Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền quản lý phòng và giường!');
+        $request = new Request();
+        $maPhong = trim((string)$request->input('maPhong', ''));
+
+        if (empty($maPhong)) {
+            Session::flash('error', 'Mã phòng không hợp lệ!');
             $this->redirect('staff/rooms');
             return;
         }
 
-        $request = new Request();
-        $maPhong = trim((string)$request->input('maPhong', ''));
+        $scope = $this->authorizeRoomAction($maPhong);
 
         $room = Database::fetch("SELECT * FROM Phong WHERE MaPhong = :mp", ['mp' => $maPhong]);
         if (!$room) {
@@ -570,12 +937,7 @@ class RoomController extends Controller
             return;
         }
 
-        $maToa = trim((string)($user['MaCumQuanLy'] ?? ''));
-        if (!empty($maToa) && $room['MaToaNha'] !== $maToa) {
-            Session::flash('error', "Bạn chỉ có quyền thao tác trên Tòa nhà {$maToa}!");
-            $this->redirect('staff/rooms');
-            return;
-        }
+        $maToa = $room['MaToaNha'];
 
         if ($room['TrangThaiPhong'] === 'Khóa bảo trì') {
             $this->syncRoomOccupancy($maPhong, true);
@@ -587,7 +949,7 @@ class RoomController extends Controller
             Session::flash('success', "Đã chuyển phòng {$maPhong} sang trạng thái Khóa bảo trì!");
         }
 
-        $this->redirect('staff/rooms');
+        $this->redirect('staff/rooms?toa=' . urlencode($maToa));
     }
 
     /**
@@ -595,18 +957,18 @@ class RoomController extends Controller
      */
     public function addBed(): void
     {
-        $user = Auth::user();
-        if (($user['MaVaiTro'] ?? '') !== 'TRUONG_TOA') {
-            Session::flash('error', 'Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền quản lý phòng và giường!');
-            $this->redirect('staff/rooms');
-            return;
-        }
-
-        $maToa = trim((string)($user['MaCumQuanLy'] ?? ''));
         $request = new Request();
         $maPhong = trim((string)$request->input('maPhong', ''));
         $kyHieu = trim((string)$request->input('kyHieuGiuong', ''));
         $tangGiuong = max(1, (int)$request->input('viTriTangGiuong', 1));
+
+        if (empty($maPhong)) {
+            Session::flash('error', 'Mã phòng không hợp lệ!');
+            $this->redirect('staff/rooms');
+            return;
+        }
+
+        $scope = $this->authorizeRoomAction($maPhong);
 
         $room = Database::fetch("
             SELECT p.*, lp.TenLoaiPhong, lp.SoGiuongToiDa 
@@ -615,11 +977,13 @@ class RoomController extends Controller
             WHERE p.MaPhong = :mp
         ", ['mp' => $maPhong]);
 
-        if (!$room || (!empty($maToa) && $room['MaToaNha'] !== $maToa)) {
-            Session::flash('error', 'Phòng không tồn tại hoặc không thuộc quyền quản lý!');
+        if (!$room) {
+            Session::flash('error', 'Phòng không tồn tại!');
             $this->redirect('staff/rooms');
             return;
         }
+
+        $maToa = $room['MaToaNha'];
 
         // RÀNG BUỘC: Không cho tạo thêm giường vượt quá số giường tối đa theo Loại phòng
         $soGiuongToiDa = (int)($room['SoGiuongToiDa'] ?? 4);
@@ -629,7 +993,7 @@ class RoomController extends Controller
         if ($currentBedCount >= $soGiuongToiDa) {
             $tenLoai = $room['TenLoaiPhong'] ?? $room['MaLoaiPhong'];
             Session::flash('error', "Không thể tạo thêm giường! Phòng {$maPhong} thuộc Loại phòng '{$tenLoai}' chỉ cho phép tối đa {$soGiuongToiDa} giường (hiện tại phòng đã có đủ {$currentBedCount} giường)!");
-            $this->redirect('staff/rooms');
+            $this->redirect('staff/rooms?toa=' . urlencode($maToa));
             return;
         }
 
@@ -641,7 +1005,7 @@ class RoomController extends Controller
         $dup = Database::fetch("SELECT MaGiuong FROM Giuong WHERE MaGiuong = :mg", ['mg' => $maGiuong]);
         if ($dup) {
             Session::flash('error', "Giường '{$kyHieu}' tại phòng {$maPhong} đã tồn tại!");
-            $this->redirect('staff/rooms');
+            $this->redirect('staff/rooms?toa=' . urlencode($maToa));
             return;
         }
 
@@ -661,7 +1025,7 @@ class RoomController extends Controller
             Session::flash('error', 'Lỗi khi thêm giường: ' . $e->getMessage());
         }
 
-        $this->redirect('staff/rooms');
+        $this->redirect('staff/rooms?toa=' . urlencode($maToa));
     }
 
     /**
@@ -669,17 +1033,15 @@ class RoomController extends Controller
      */
     public function updateBedStatus(): void
     {
-        $user = Auth::user();
-        if (($user['MaVaiTro'] ?? '') !== 'TRUONG_TOA') {
-            Session::flash('error', 'Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền quản lý phòng và giường!');
-            $this->redirect('staff/rooms');
-            return;
-        }
-
-        $maToa = trim((string)($user['MaCumQuanLy'] ?? ''));
         $request = new Request();
         $maGiuong = trim((string)$request->input('maGiuong', ''));
         $trangThai = trim((string)$request->input('trangThaiGiuong', 'Trống'));
+
+        if (empty($maGiuong)) {
+            Session::flash('error', 'Mã giường không hợp lệ!');
+            $this->redirect('staff/rooms');
+            return;
+        }
 
         $bed = Database::fetch("
             SELECT g.*, p.MaToaNha, p.MaPhong
@@ -688,11 +1050,14 @@ class RoomController extends Controller
             WHERE g.MaGiuong = :mg
         ", ['mg' => $maGiuong]);
 
-        if (!$bed || (!empty($maToa) && $bed['MaToaNha'] !== $maToa)) {
-            Session::flash('error', 'Giường không tồn tại hoặc không thuộc quyền quản lý!');
+        if (!$bed) {
+            Session::flash('error', 'Giường không tồn tại!');
             $this->redirect('staff/rooms');
             return;
         }
+
+        $scope = $this->authorizeRoomAction($bed['MaToaNha']);
+        $maToa = $bed['MaToaNha'];
 
         // Kiểm tra hợp đồng hiệu lực
         $hasActiveContract = Database::fetch("
@@ -702,7 +1067,7 @@ class RoomController extends Controller
 
         if ($hasActiveContract && in_array($trangThai, ['Trống', 'Khóa bảo trì', 'Hỏng'], true)) {
             Session::flash('error', "Không thể đổi trạng thái giường sang '{$trangThai}' vì sinh viên đang cư trú theo hợp đồng {$hasActiveContract['MaHopDong']}!");
-            $this->redirect('staff/rooms');
+            $this->redirect('staff/rooms?toa=' . urlencode($maToa));
             return;
         }
 
@@ -717,7 +1082,7 @@ class RoomController extends Controller
             Session::flash('error', 'Lỗi cập nhật giường: ' . $e->getMessage());
         }
 
-        $this->redirect('staff/rooms');
+        $this->redirect('staff/rooms?toa=' . urlencode($maToa));
     }
 
     /**
@@ -725,16 +1090,14 @@ class RoomController extends Controller
      */
     public function deleteBed(): void
     {
-        $user = Auth::user();
-        if (($user['MaVaiTro'] ?? '') !== 'TRUONG_TOA') {
-            Session::flash('error', 'Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền quản lý phòng và giường!');
+        $request = new Request();
+        $maGiuong = trim((string)$request->input('maGiuong', ''));
+
+        if (empty($maGiuong)) {
+            Session::flash('error', 'Mã giường không hợp lệ!');
             $this->redirect('staff/rooms');
             return;
         }
-
-        $maToa = trim((string)($user['MaCumQuanLy'] ?? ''));
-        $request = new Request();
-        $maGiuong = trim((string)$request->input('maGiuong', ''));
 
         $bed = Database::fetch("
             SELECT g.*, p.MaToaNha, p.MaPhong
@@ -743,11 +1106,14 @@ class RoomController extends Controller
             WHERE g.MaGiuong = :mg
         ", ['mg' => $maGiuong]);
 
-        if (!$bed || (!empty($maToa) && $bed['MaToaNha'] !== $maToa)) {
-            Session::flash('error', 'Giường không tồn tại hoặc không thuộc quyền quản lý!');
+        if (!$bed) {
+            Session::flash('error', 'Giường không tồn tại!');
             $this->redirect('staff/rooms');
             return;
         }
+
+        $scope = $this->authorizeRoomAction($bed['MaToaNha']);
+        $maToa = $bed['MaToaNha'];
 
         // Kiểm tra nguyên tắc bảo toàn dữ liệu
         $contract = Database::fetch("
@@ -756,7 +1122,7 @@ class RoomController extends Controller
 
         if (($contract['total'] ?? 0) > 0 || $bed['TrangThaiGiuong'] === 'Đã có người ở') {
             Session::flash('error', "Không thể xóa giường {$maGiuong} vì đã có lịch sử hợp đồng nội trú gắn liền (Nguyên tắc bảo toàn dữ liệu)!");
-            $this->redirect('staff/rooms');
+            $this->redirect('staff/rooms?toa=' . urlencode($maToa));
             return;
         }
 
@@ -768,7 +1134,7 @@ class RoomController extends Controller
             Session::flash('error', 'Lỗi khi xóa giường: ' . $e->getMessage());
         }
 
-        $this->redirect('staff/rooms');
+        $this->redirect('staff/rooms?toa=' . urlencode($maToa));
     }
 
     /**
@@ -776,17 +1142,18 @@ class RoomController extends Controller
      */
     public function assignRoomLeader(): void
     {
-        $user = Auth::user();
-        if (($user['MaVaiTro'] ?? '') !== 'TRUONG_TOA') {
-            Session::flash('error', 'Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền quản lý phòng và giường!');
-            $this->redirect('staff/rooms');
-            return;
-        }
-
         $request = new Request();
         $maPhong = trim((string)$request->input('maPhong', ''));
         $maSinhVien = trim((string)$request->input('maSinhVien', ''));
         $action = trim((string)$request->input('action', 'assign'));
+
+        if (empty($maPhong)) {
+            Session::flash('error', 'Mã phòng không hợp lệ!');
+            $this->redirect('staff/rooms');
+            return;
+        }
+
+        $scope = $this->authorizeRoomAction($maPhong);
 
         $room = Database::fetch("SELECT * FROM Phong WHERE MaPhong = :mp", ['mp' => $maPhong]);
         if (!$room) {
@@ -795,12 +1162,7 @@ class RoomController extends Controller
             return;
         }
 
-        $maToa = trim((string)($user['MaCumQuanLy'] ?? ''));
-        if (!empty($maToa) && $room['MaToaNha'] !== $maToa) {
-            Session::flash('error', "Bạn chỉ có quyền thao tác trên Tòa nhà {$maToa}!");
-            $this->redirect('staff/rooms');
-            return;
-        }
+        $maToa = $room['MaToaNha'];
 
         if ($action === 'remove' || empty($maSinhVien)) {
             Database::execute("UPDATE Phong SET TruongPhong = NULL WHERE MaPhong = :mp", ['mp' => $maPhong]);
@@ -810,7 +1172,7 @@ class RoomController extends Controller
             Session::flash('success', "Đã chỉ định sinh viên {$maSinhVien} làm Trưởng phòng {$maPhong}!");
         }
 
-        $this->redirect('staff/rooms');
+        $this->redirect('staff/rooms?toa=' . urlencode($maToa));
     }
 
     /**
@@ -818,13 +1180,6 @@ class RoomController extends Controller
      */
     public function confirmCheckIn(): void
     {
-        $user = Auth::user();
-        if (($user['MaVaiTro'] ?? '') !== 'TRUONG_TOA') {
-            Session::flash('error', 'Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền quản lý phòng và giường!');
-            $this->redirect('staff/rooms');
-            return;
-        }
-
         $request = new Request();
         $maHopDong = trim((string)$request->input('maHopDong', ''));
         if (empty($maHopDong)) {
@@ -847,12 +1202,8 @@ class RoomController extends Controller
             return;
         }
 
-        $maToa = trim((string)($user['MaCumQuanLy'] ?? ''));
-        if (!empty($maToa) && $hd['MaToaNha'] !== $maToa) {
-            Session::flash('error', "Bạn chỉ có quyền thao tác trên Tòa nhà {$maToa} được phân công!");
-            $this->redirect('staff/rooms');
-            return;
-        }
+        $scope = $this->authorizeRoomAction($hd['MaToaNha']);
+        $maToa = $hd['MaToaNha'];
 
         Database::execute("
             UPDATE HopDongNoiTru
@@ -869,7 +1220,7 @@ class RoomController extends Controller
         $this->syncRoomOccupancy($hd['MaPhong']);
 
         Session::flash('success', "Đã xác nhận sinh viên nhận phòng thực tế cho hợp đồng {$maHopDong} thành công! Giờ nhận phòng đã được ghi nhận.");
-        $this->redirect('staff/rooms');
+        $this->redirect('staff/rooms?toa=' . urlencode($maToa));
     }
 
     /**
@@ -877,16 +1228,15 @@ class RoomController extends Controller
      */
     public function toggleCT01(): void
     {
-        $user = Auth::user();
-        if (($user['MaVaiTro'] ?? '') !== 'TRUONG_TOA') {
-            Session::flash('error', 'Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền quản lý phòng và giường!');
-            $this->redirect('staff/rooms');
-            return;
-        }
-
         $request = new Request();
         $maHopDong = trim((string)$request->input('maHopDong', ''));
         $status = (int)$request->input('status', 1);
+
+        if (empty($maHopDong)) {
+            Session::flash('error', 'Mã hợp đồng không hợp lệ!');
+            $this->redirect('staff/rooms');
+            return;
+        }
 
         $hd = Database::fetch("
             SELECT hd.*, p.MaToaNha
@@ -902,12 +1252,8 @@ class RoomController extends Controller
             return;
         }
 
-        $maToa = trim((string)($user['MaCumQuanLy'] ?? ''));
-        if (!empty($maToa) && $hd['MaToaNha'] !== $maToa) {
-            Session::flash('error', "Bạn chỉ có quyền thao tác trên Tòa nhà {$maToa}!");
-            $this->redirect('staff/rooms');
-            return;
-        }
+        $scope = $this->authorizeRoomAction($hd['MaToaNha']);
+        $maToa = $hd['MaToaNha'];
 
         Database::execute("
             UPDATE HopDongNoiTru
@@ -917,23 +1263,14 @@ class RoomController extends Controller
 
         $msg = $status ? "Đã ghi nhận sinh viên nộp mẫu CT01 thành công!" : "Đã chuyển tình trạng Mẫu CT01 về Chưa nộp!";
         Session::flash('success', $msg);
-        $this->redirect('staff/rooms');
+        $this->redirect('staff/rooms?toa=' . urlencode($maToa));
     }
 
     /**
      * Xóa sinh viên khỏi giường (Hủy lưu trú / Thanh lý hợp đồng / Trả giường)
-     * Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền thực hiện
      */
     public function removeStudentFromBed(): void
     {
-        $user = Auth::user();
-        if (($user['MaVaiTro'] ?? '') !== 'TRUONG_TOA') {
-            Session::flash('error', 'Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền quản lý phòng và giường!');
-            $this->redirect('staff/rooms');
-            return;
-        }
-
-        $maToa = trim((string)($user['MaCumQuanLy'] ?? ''));
         $request = new Request();
         $maGiuong = trim((string)$request->input('maGiuong', ''));
         $maPhong = trim((string)$request->input('maPhong', ''));
@@ -945,13 +1282,16 @@ class RoomController extends Controller
             return;
         }
 
-        // Kiểm tra phòng và tòa nhà
+        $scope = $this->authorizeRoomAction($maPhong);
+
         $room = Database::fetch("SELECT * FROM Phong WHERE MaPhong = :mp", ['mp' => $maPhong]);
-        if (!$room || (!empty($maToa) && $room['MaToaNha'] !== $maToa)) {
-            Session::flash('error', 'Phòng không tồn tại hoặc không thuộc quyền quản lý!');
+        if (!$room) {
+            Session::flash('error', 'Phòng không tồn tại!');
             $this->redirect('staff/rooms');
             return;
         }
+
+        $maToa = $room['MaToaNha'];
 
         // Kiểm tra giường
         $bed = Database::fetch("SELECT * FROM Giuong WHERE MaGiuong = :mg AND MaPhong = :mp", [
@@ -960,7 +1300,7 @@ class RoomController extends Controller
         ]);
         if (!$bed) {
             Session::flash('error', 'Không tìm thấy giường trong phòng!');
-            $this->redirect('staff/rooms');
+            $this->redirect('staff/rooms?toa=' . urlencode($maToa));
             return;
         }
 
@@ -976,7 +1316,7 @@ class RoomController extends Controller
             Database::execute("UPDATE Giuong SET TrangThaiGiuong = 'Trống' WHERE MaGiuong = :mg", ['mg' => $maGiuong]);
             $this->syncRoomOccupancy($maPhong, true);
             Session::flash('success', "Giường {$bed['KyHieuGiuong']} không có hợp đồng đang hiệu lực, đã đưa về trạng thái Trống!");
-            $this->redirect('staff/rooms');
+            $this->redirect('staff/rooms?toa=' . urlencode($maToa));
             return;
         }
 
@@ -1030,29 +1370,24 @@ class RoomController extends Controller
             Session::flash('error', 'Lỗi khi xóa sinh viên khỏi giường: ' . $e->getMessage());
         }
 
-        $this->redirect('staff/rooms');
+        $this->redirect('staff/rooms?toa=' . urlencode($maToa));
     }
 
     /**
      * Xuất danh sách Phòng ở ra file CSV theo kết quả đang lọc hoặc toàn bộ
-     * Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền thực hiện
      */
     public function exportRooms(): void
     {
-        $user = Auth::user();
-        if (($user['MaVaiTro'] ?? '') !== 'TRUONG_TOA') {
-            Session::flash('error', 'Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền xuất dữ liệu phòng!');
-            $this->redirect('staff/rooms');
-            return;
-        }
-
-        $maToa = trim((string)($user['MaCumQuanLy'] ?? ''));
-        if (empty($maToa)) {
-            $firstToa = Database::fetch("SELECT MaToaNha FROM ToaNha ORDER BY MaToaNha ASC LIMIT 1");
-            $maToa = $firstToa['MaToaNha'] ?? 'A01';
-        }
-
         $request = new Request();
+        $reqToa = trim((string)$request->input('toa', ''));
+        $scope = $this->authorizeRoomAction($reqToa);
+
+        $validToas = array_column($scope['availableToas'], 'MaToaNha');
+        if (!empty($reqToa) && in_array($reqToa, $validToas, true)) {
+            $maToa = $reqToa;
+        } else {
+            $maToa = $scope['maToa'] ?? ($validToas[0] ?? 'A01');
+        }
         $idsParam = $request->input('ids');
         $tang = $request->input('tang');
         $loaiPhong = trim((string)$request->input('loaiPhong', ''));
@@ -1260,24 +1595,20 @@ class RoomController extends Controller
 
     /**
      * Nhập danh sách phòng ở từ file CSV (hỗ trợ nhập kèm danh sách sinh viên theo giường)
-     * Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền thực hiện
      */
     public function importRooms(): void
     {
-        $user = Auth::user();
-        if (($user['MaVaiTro'] ?? '') !== 'TRUONG_TOA') {
-            Session::flash('error', 'Chỉ Trưởng tòa nhà (TRUONG_TOA) mới có quyền nhập dữ liệu phòng!');
-            $this->redirect('staff/rooms');
-            return;
-        }
-
-        $maToa = trim((string)($user['MaCumQuanLy'] ?? ''));
-        if (empty($maToa)) {
-            $firstToa = Database::fetch("SELECT MaToaNha FROM ToaNha ORDER BY MaToaNha ASC LIMIT 1");
-            $maToa = $firstToa['MaToaNha'] ?? 'A01';
-        }
-
         $request = new Request();
+        $reqToa = trim((string)$request->input('maToa', ''));
+        $scope = $this->authorizeRoomAction($reqToa);
+
+        $validToas = array_column($scope['availableToas'], 'MaToaNha');
+        if (!empty($reqToa) && in_array($reqToa, $validToas, true)) {
+            $maToa = $reqToa;
+        } else {
+            $maToa = $scope['maToa'] ?? ($validToas[0] ?? 'A01');
+        }
+
         $rawOverwrite = $request->input('overwriteExisting', null);
         if ($rawOverwrite === null) {
             $rawOverwrite = $_POST['overwriteExisting'] ?? '0';
@@ -1784,6 +2115,6 @@ class RoomController extends Controller
             Session::flash('error', 'Lỗi xử lý tệp CSV: ' . $e->getMessage());
         }
 
-        $this->redirect('staff/rooms');
+        $this->redirect('staff/rooms?toa=' . urlencode($maToa));
     }
 }

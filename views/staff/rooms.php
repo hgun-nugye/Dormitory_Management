@@ -1,44 +1,61 @@
 <?php
 ob_start();
+
+$formatTenToa = function(?string $name, string $code = '') {
+    $str = trim((string)($name ?: $code));
+    $cleaned = preg_replace('/^(tòa\s*|toà\s*)+/ui', '', $str);
+    return 'Tòa ' . (!empty($cleaned) ? $cleaned : $str);
+};
+
+$filterToa = $filterToa ?? ($filters['toa'] ?? '');
+$maToa = $maToa ?? ($toaInfo['MaToaNha'] ?? '');
+$isAllToas = $isAllToas ?? empty($filterToa);
 ?>
 
-<div class="container" style="max-width: 1400px; margin: 0 auto; padding: 20px;">
+<div class="container">
     <!-- Breadcrumb & Header -->
     <div style="margin-bottom: 20px;">
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('staff/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">BQL KTX</a>
             <span>/</span>
-            <span style="color: var(--text-primary); font-weight: 500;">Quản lý Tòa nhà</span>
+            <span style="color: var(--text-muted);">Quản lý Tòa nhà</span>
             <span>/</span>
-            <span style="color: var(--text-primary); font-weight: 600;">Sơ đồ Phòng & Giường</span>
+            <span style="color: var(--text-primary); font-weight: 500;">Sơ đồ Phòng & Giường</span>
         </div>
 
-        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+        <div class="page-header" style="align-items: center; flex-wrap: wrap; gap: 12px; display: flex; justify-content: space-between;">
             <div>
-                <h1 class="page-title" style="margin: 0; font-size: 1.6rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
-                    <span>Sơ đồ Phòng & Giường</span>
-                    <?php if (!empty($isTruongToa)): ?>
-                        <span class="badge badge-success" style="font-size: 0.85rem; font-weight: 600; padding: 4px 10px;">
-                            <i class="fa-solid fa-building" style="margin-right: 4px;"></i> <?= htmlspecialchars($toaInfo['TenToaNha'] ?? $maToa) ?>
-                        </span>
-                    <?php endif; ?>
-                </h1>
+                <h1 class="page-title">Sơ đồ Phòng & Giường</h1>
+                <p class="page-subtitle" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+                    <span>Phạm vi cán bộ:</span>
+                    <span class="badge <?= htmlspecialchars($scope['badgeClass'] ?? 'badge-primary') ?>" style="font-size: 0.8rem; padding: 4px 10px;">
+                        <i class="fa-solid fa-building-user" style="margin-right: 6px;"></i> <?= htmlspecialchars($scope['title'] ?? 'Cán bộ quản trị') ?>
+                    </span>
+                </p>
             </div>
 
+            <!-- CÁC NÚT THAO TÁC HEADER (ĐỒNG BỘ ADMIN & ZONES: THÊM MỚI, NHẬP FILE, XUẤT EXCEL, CẬP NHẬT TÒA, VỀ DASHBOARD) -->
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                <?php if (!empty($isTruongToa)): ?>
-                    <button type="button" class="btn btn-primary" id="btnToggleAddRoom" onclick="toggleRoomForm()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center;">
-                        <i class="fa-solid fa-plus" style="margin-right: 6px;"></i> Thêm phòng mới
-                    </button>
-                    <button type="button" class="btn btn-outline" onclick="openImportRoomModal()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; color: #2563eb; border-color: #bfdbfe; background: #eff6ff;" title="Nhập danh sách phòng từ file CSV">
-                        <i class="fa-solid fa-file-import" style="margin-right: 6px; color: #2563eb;"></i> Nhập file (Import)
-                    </button>
+                <?php if (!empty($isAllowed)): ?>
+                    <?php if (!empty($canCrudPhong)): ?>
+                        <button type="button" class="btn btn-primary" id="btnToggleAddRoom" onclick="toggleRoomForm()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center;">
+                            <i class="fa-solid fa-plus" style="margin-right: 6px;"></i> Thêm phòng mới
+                        </button>
+                        <button type="button" class="btn btn-outline" onclick="openImportRoomModal()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; color: #2563eb; border-color: #bfdbfe; background: #eff6ff;" title="Nhập danh sách phòng từ file CSV">
+                            <i class="fa-solid fa-file-import" style="margin-right: 6px; color: #2563eb;"></i> Nhập file
+                        </button>
+                    <?php endif; ?>
                     <button type="button" class="btn btn-outline" id="btnExportRooms" onclick="exportFilteredRooms()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; color: #15803d; border-color: #86efac; background: #f0fdf4; cursor: pointer;" title="Xuất danh sách phòng theo kết quả lọc ra Excel/CSV">
-                        <i class="fa-solid fa-file-excel" style="margin-right: 6px; color: #16a34a;"></i> <span id="btnExportText">Xuất Excel (CSV)</span>
+                        <i class="fa-solid fa-file-excel" style="margin-right: 6px; color: #16a34a;"></i> <span id="btnExportText">Xuất Excel (<?= count($phongList ?? []) ?>)</span>
                     </button>
+                    <?php if (!empty($canUpdateToa)): ?>
+                        <button type="button" class="btn btn-outline" onclick="openUpdateToaModal()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; color: #4338ca; border-color: #c7d2fe; background: #eef2ff;" title="Cập nhật thông tin Tòa nhà (Tên, Giới tính, Trạng thái)">
+                            <i class="fa-solid fa-gear" style="margin-right: 6px; color: #4f46e5;"></i> Cập nhật Tòa nhà
+                        </button>
+                    <?php endif; ?>
                 <?php endif; ?>
-                <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline" style="border-radius: 8px; text-decoration: none;">
-                    &larr; Về Dashboard
+                <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 6px 14px;">
+                    <i class="fa-solid fa-arrow-left" style="margin-right: 6px;"></i> Về Dashboard
                 </a>
             </div>
         </div>
@@ -63,57 +80,89 @@ ob_start();
         </div>
     <?php endif; ?>
 
-    <?php if (empty($isTruongToa)): ?>
+    <?php if (empty($isAllowed)): ?>
         <!-- ================================================================= -->
-        <!-- MÀN HÌNH CẢNH BÁO PHÂN QUYỀN (CHỈ TRƯỞNG TÒA CÓ CHỨC NĂNG NÀY) -->
+        <!-- MÀN HÌNH CHẶN 100% TRUY CẬP (DÀNH CHO NHÂN VIÊN KHÔNG PHẢI QUẢN LÝ) -->
         <!-- ================================================================= -->
-        <div class="card" style="border: 2px solid #f87171; background: #fffaf0; border-radius: 12px; padding: 36px 30px; text-align: center; margin-top: 20px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.08);">
-            <div style="width: 72px; height: 72px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; color: #dc2626; font-size: 2rem;">
-                <i class="fa-solid fa-shield-halved"></i>
+        <div class="card" style="border: 2px solid #ef4444; background: #fef2f2; border-radius: 12px; padding: 40px 30px; text-align: center; margin-top: 24px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.12);">
+            <div style="width: 76px; height: 76px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; color: #dc2626; font-size: 2.2rem; border: 2px solid #fca5a5;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
-            <h2 style="font-size: 1.4rem; font-weight: 700; color: #991b1b; margin-bottom: 12px;">
-                TRUY CẬP BỊ GIỚI HẠN: CHỨC NĂNG DÀNH RIÊNG CHO TRƯỞNG TÒA NHÀ
+            <h2 style="font-size: 1.4rem; font-weight: 700; color: #991b1b; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+                Từ chối quyền truy cập
             </h2>
-            <div style="max-width: 720px; margin: 0 auto 24px auto; font-size: 0.95rem; color: #475569; line-height: 1.6;">
-                <p style="margin-bottom: 12px;">
-                    Theo quy định phân cấp nghiệp vụ KTX ĐHQG-HCM, <strong>chức năng quản lý trực tiếp Sơ đồ phòng và Giường chỉ dành riêng cho Cán bộ Trưởng tòa nhà (TRUONG_TOA)</strong>.
-                </p>
-                <div style="background: #ffffff; border: 1px solid #fed7aa; border-radius: 8px; padding: 14px 20px; text-align: left; display: inline-block; width: 100%; box-sizing: border-box;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                        <span style="color: #64748b;">Tài khoản hiện tại:</span>
-                        <strong style="color: #0f172a;"><?= htmlspecialchars($user['HoVaTen'] ?? $user['TenDangNhap'] ?? 'Cán bộ') ?></strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                        <span style="color: #64748b;">Vai trò hệ thống:</span>
-                        <span class="badge badge-warning" style="font-weight: 600;"><?= htmlspecialchars($roleName ?? $user['MaVaiTro'] ?? 'Chưa xác định') ?></span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: #64748b;">Quyền hạn được cấp:</span>
-                        <span style="color: #dc2626; font-weight: 600;">Không có quyền CRUD Phòng / Giường tại phân hệ này</span>
-                    </div>
+            <div style="max-width: 840px; margin: 0 auto 24px auto; font-size: 1.05rem; color: #b91c1c; line-height: 1.6; font-weight: 600;">
+                Từ chối quyền truy cập: Phân hệ Sơ đồ phòng và Hạ tầng KTX chỉ dành riêng cho Cán bộ Quản lý (Trưởng Tòa, Trưởng Cụm, Trưởng Khu, Ban Giám đốc KTX). Nhân viên Kế toán và Kỹ thuật không có quyền thao tác!
+            </div>
+            <div style="max-width: 600px; margin: 0 auto 24px auto; background: #ffffff; border: 1px solid #fecaca; border-radius: 8px; padding: 14px 20px; text-align: left; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="color: #64748b;">Tài khoản hiện tại:</span>
+                    <strong style="color: #0f172a;"><?= htmlspecialchars($user['HoVaTen'] ?? $user['TenDangNhap'] ?? 'Cán bộ') ?></strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="color: #64748b;">Vai trò / Chức danh:</span>
+                    <span class="badge badge-danger" style="font-weight: 600;"><?= htmlspecialchars($roleName ?? $user['MaVaiTro'] ?? 'Nhân viên') ?></span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #64748b;">Trạng thái hệ thống:</span>
+                    <span style="color: #dc2626; font-weight: 700;">ĐÃ CHẶN 100% - KHÔNG CÓ QUYỀN THAO TÁC</span>
                 </div>
             </div>
 
             <div style="display: flex; justify-content: center; gap: 14px;">
-                <a href="<?= url('staff/dashboard') ?>" class="btn btn-primary" style="border-radius: 8px; padding: 10px 20px;">
+                <a href="<?= url('staff/dashboard') ?>" class="btn btn-primary" style="border-radius: 8px; padding: 10px 24px; font-weight: 600;">
                     <i class="fa-solid fa-house" style="margin-right: 6px;"></i> Về Trang chủ BQL
-                </a>
-                <a href="<?= url('staff/zones') ?>" class="btn btn-outline" style="border-radius: 8px; padding: 10px 20px;">
-                    <i class="fa-solid fa-sitemap" style="margin-right: 6px;"></i> Xem Quản lý Khu & Cụm
                 </a>
             </div>
         </div>
 
     <?php else: ?>
         <!-- ================================================================= -->
-        <!-- GIAO DIỆN CHÍNH THỨC DÀNH CHO TRƯỞNG TÒA NHÀ (TRUONG_TOA) -->
+        <!-- GIAO DIỆN CHÍNH THỨC DÀNH CHO CÁN BỘ QUẢN LÝ HỢP LỆ -->
         <!-- ================================================================= -->
+
+        <!-- THẺ THỐNG KÊ NHANH TÒA NHÀ (QUICK STATS CARDS) -->
+        <div class="grid grid-cols-4" style="gap: 16px; margin-bottom: 20px;">
+            <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Tổng số phòng</div>
+                <div style="font-size: 1.6rem; font-weight: 700; color: #0f172a; margin: 4px 0;"><?= (int)($stats['TongPhong'] ?? 0) ?></div>
+                <div style="font-size: 0.775rem; color: #16a34a; font-weight: 500;">
+                    <b><?= (int)($stats['PhongHoatDong'] ?? 0) ?></b> hoạt động &bull; <span style="color:#d97706;"><b><?= (int)($stats['PhongBaoTri'] ?? 0) ?></b> bảo trì</span>
+                </div>
+            </div>
+            <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Tổng số giường</div>
+                <div style="font-size: 1.6rem; font-weight: 700; color: #2563eb; margin: 4px 0;"><?= (int)($stats['TongGiuong'] ?? 0) ?></div>
+                <div style="font-size: 0.775rem; color: var(--text-secondary);">
+                    <b style="color:#15803d;"><?= (int)($stats['GiuongDangO'] ?? 0) ?></b> có người &bull; <b style="color:#0284c7;"><?= (int)($stats['GiuongTrong'] ?? 0) ?></b> trống &bull; <b style="color:#d97706;"><?= (int)($stats['GiuongBaoTri'] ?? 0) ?></b> bảo trì
+                </div>
+            </div>
+            <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Tỷ lệ lấp đầy</div>
+                <?php $tyLe = ($stats['TongGiuong'] ?? 0) > 0 ? round((($stats['GiuongDangO'] ?? 0) / $stats['TongGiuong']) * 100) : 0; ?>
+                <div style="font-size: 1.6rem; font-weight: 700; color: <?= $tyLe >= 90 ? '#dc2626' : ($tyLe >= 60 ? '#2563eb' : '#16a34a') ?>; margin: 4px 0;"><?= $tyLe ?>%</div>
+                <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: 6px;">
+                    <div style="width: <?= min(100, $tyLe) ?>%; height: 100%; background: <?= $tyLe >= 90 ? '#dc2626' : ($tyLe >= 60 ? '#2563eb' : '#16a34a') ?>;"></div>
+                </div>
+            </div>
+            <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">
+                    <?= !empty($isAllToas) ? 'Phạm vi hiển thị' : 'Tòa nhà mục tiêu' ?>
+                </div>
+                <div style="font-size: 1.2rem; font-weight: 700; color: #0f172a; margin: 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="<?= htmlspecialchars($formatTenToa($toaInfo['TenToaNha'] ?? $maToa, $maToa)) ?>">
+                    <?= htmlspecialchars($formatTenToa($toaInfo['TenToaNha'] ?? $maToa, $maToa)) ?>
+                </div>
+                <div style="font-size: 0.775rem; color: #64748b;">
+                    <?= !empty($isAllToas) ? 'Toàn bộ tòa nhà phụ trách' : ('Cụm <b>' . htmlspecialchars($toaInfo['TenCum'] ?? '---') . '</b> &bull; Khu <b>' . htmlspecialchars($toaInfo['TenKhu'] ?? '---') . '</b> &bull; Dành cho <b>' . htmlspecialchars($toaInfo['GioiTinhQuyDinh'] ?? 'Nam') . '</b>') ?>
+                </div>
+            </div>
+        </div>
 
         <!-- BIỂU MẪU CRUD: THÊM / CẬP NHẬT PHÒNG Ở (ẨN MẶC ĐỊNH, HIỆN KHI CLICK HOẶC SỬA) -->
         <div class="card" id="roomFormCard" style="<?= !empty($flashError) ? 'display: block;' : 'display: none;' ?> margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
             <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
                 <h3 id="formTitle" style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
-                    <span id="formTitleText">Thêm mới Phòng ở (Tòa <?= htmlspecialchars($toaInfo['TenToaNha'] ?? $maToa) ?>)</span>
+                    <span id="formTitleText">Thêm mới Phòng ở<?= !empty($isAllToas) ? '' : ' (' . htmlspecialchars($formatTenToa($toaInfo['TenToaNha'] ?? $maToa, $maToa)) . ')' ?></span>
                 </h3>
                 <button type="button" class="btn btn-outline btn-sm" onclick="hideRoomForm()" style="border-radius: 6px; padding: 4px 10px; color: var(--text-muted);" title="Đóng biểu mẫu">
                     <i class="fa-solid fa-xmark"></i>
@@ -127,12 +176,24 @@ ob_start();
 
                 <div style="background: #f1f5f9; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 0.85rem; color: #334155; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
                     <div>
-                        Tòa: <strong><?= htmlspecialchars($toaInfo['TenToaNha'] ?? $maToa) ?></strong> (Mã: <code><?= htmlspecialchars($maToa) ?></code>) &bull;
-                        Cụm: <strong><?= htmlspecialchars($toaInfo['TenCum'] ?? 'Cụm') ?></strong> &bull;
-                        Dành cho: <strong><?= htmlspecialchars($toaInfo['GioiTinhQuyDinh'] ?? 'Nam') ?></strong>
+                        <?php if (!empty($isAllToas) && count($availableToas) > 1): ?>
+                            <span style="font-weight: 600;">Chọn Tòa nhà:</span>
+                            <select id="roomMaToaSelect" name="maToa" class="btn-outline" style="padding: 4px 8px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; margin-left: 6px; background: #fff;" onchange="onRoomFormToaChange(this.value)">
+                                <?php foreach ($availableToas as $at): ?>
+                                    <option value="<?= htmlspecialchars($at['MaToaNha']) ?>" data-tang="<?= (int)($at['TongSoTang'] ?? 5) ?>">
+                                        <?= htmlspecialchars($formatTenToa($at['TenToaNha'] ?? $at['MaToaNha'], $at['MaToaNha'])) ?> (<?= htmlspecialchars($at['MaToaNha']) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        <?php else: ?>
+                            <input type="hidden" id="roomMaToaHidden" name="maToa" value="<?= htmlspecialchars($maToa) ?>">
+                            Tòa: <strong><?= htmlspecialchars($formatTenToa($toaInfo['TenToaNha'] ?? $maToa, $maToa)) ?></strong> (Mã: <code><?= htmlspecialchars($maToa) ?></code>) &bull;
+                            Cụm: <strong><?= htmlspecialchars($toaInfo['TenCum'] ?? 'Cụm') ?></strong> &bull;
+                            Dành cho: <strong><?= htmlspecialchars($toaInfo['GioiTinhQuyDinh'] ?? 'Nam') ?></strong>
+                        <?php endif; ?>
                     </div>
                     <div style="color: #64748b; font-size: 0.8rem;">
-                        Tối đa <strong><?= (int)($toaInfo['TongSoTang'] ?? 5) ?></strong> tầng
+                        Tối đa <strong id="roomFormMaxFloor"><?= (int)($toaInfo['TongSoTang'] ?? 5) ?></strong> tầng
                     </div>
                 </div>
 
@@ -234,23 +295,101 @@ ob_start();
         <div class="card">
             <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span>Danh sách Phòng ở & Sơ đồ Giường (Tòa <?= htmlspecialchars($toaInfo['TenToaNha'] ?? $maToa) ?>)</span>
+                    <span>Danh sách Phòng ở & Sơ đồ Giường (<?= !empty($isAllToas) ? 'Tất cả Tòa nhà' : htmlspecialchars($formatTenToa($toaInfo['TenToaNha'] ?? $maToa, $maToa)) ?>)</span>
                     <span class="badge badge-info" id="roomTotalBadge"><?= count($phongList ?? []) ?> phòng</span>
                 </div>
             </div>
 
-            <!-- THANH TÌM KIẾM VÀ LỌC ĐA TIÊU CHÍ (GIỐNG MẪU USERS) -->
+            <!-- THANH TÌM KIẾM VÀ LỌC PHÂN CẤP CASCADING THEO QUYỀN HẠN (ĐỒNG BỘ GIAO DIỆN ADMIN #f8fafc) -->
             <div style="display: flex; align-items: center; gap: 12px; margin: 0 0 20px; flex-wrap: wrap; background: #f8fafc; padding: 14px 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                <div style="position: relative; flex: 1; min-width: 240px; max-width: 420px;">
+                <!-- 1. TÌM KIẾM THÔNG MINH -->
+                <div style="position: relative; flex: 1; min-width: 240px; max-width: 360px;">
                     <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
                     <input type="text" id="searchRoomInput" class="btn-outline"
-                        placeholder="Tìm theo mã phòng, số phòng, tên SV, MSSV..."
+                        placeholder="Tìm theo mã phòng, số phòng, tên SV, MSSV, CCCD..."
                         style="width: 100%; padding: 8px 12px 8px 36px; border-radius: 6px; font-size: 0.9rem;"
                         oninput="filterRooms()">
                 </div>
 
+                <!-- 2. BỘ LỌC CẤP BẬC HIERARCHICAL CASCADING (CẤP CAO HƠN CÓ NHIỀU BỘ LỌC HƠN) -->
+                <?php if ($scope['level'] === 'ALL'): ?>
+                    <!-- Admin / Giám đốc: Lọc Khu -> Cụm -> Tòa -->
+                    <select id="filterKhuSelect" class="btn-outline" style="min-width: 135px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;" onchange="onKhuChange(this.value)">
+                        <option value="">-- Tất cả Khu --</option>
+                        <?php foreach ($availableKhus as $k): ?>
+                            <option value="<?= htmlspecialchars($k['MaKhu']) ?>" <?= (($filters['khu'] ?? '') === $k['MaKhu']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($k['TenKhu'] ?? $k['MaKhu']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+
+                    <select id="filterCumSelect" class="btn-outline" style="min-width: 145px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;" onchange="onCumChange(this.value)">
+                        <option value="">-- Tất cả Cụm --</option>
+                        <?php foreach ($availableCums as $c): ?>
+                            <option value="<?= htmlspecialchars($c['MaCum']) ?>" data-khu="<?= htmlspecialchars($c['MaKhu'] ?? '') ?>" <?= (($filters['cum'] ?? '') === $c['MaCum']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($c['TenCum'] ?? $c['MaCum']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+
+                    <select id="filterToaSelect" class="btn-outline" style="min-width: 160px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;" onchange="onToaChange(this.value)">
+                        <option value="" <?= empty($filterToa) ? 'selected' : '' ?>>-- Tất cả Tòa nhà --</option>
+                        <?php foreach ($availableToas as $t): ?>
+                            <option value="<?= htmlspecialchars($t['MaToaNha']) ?>" data-cum="<?= htmlspecialchars($t['MaCum'] ?? '') ?>" <?= ($filterToa === $t['MaToaNha']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($formatTenToa($t['TenToaNha'] ?? $t['MaToaNha'], $t['MaToaNha'])) ?> (<?= htmlspecialchars($t['MaToaNha']) ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+
+                <?php elseif ($scope['level'] === 'KHU'): ?>
+                    <!-- Trưởng Khu: Cố định Khu, lọc Cụm -> Tòa -->
+                    <select class="btn-outline" style="min-width: 120px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; background: #e2e8f0; color: #475569;" disabled>
+                        <option><?= htmlspecialchars($scope['availableKhus'][0]['TenKhu'] ?? ('Khu ' . $scope['maKhu'])) ?></option>
+                    </select>
+
+                    <select id="filterCumSelect" class="btn-outline" style="min-width: 145px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;" onchange="onCumChange(this.value)">
+                        <option value="">-- Tất cả Cụm --</option>
+                        <?php foreach ($availableCums as $c): ?>
+                            <option value="<?= htmlspecialchars($c['MaCum']) ?>" <?= (($filters['cum'] ?? '') === $c['MaCum']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($c['TenCum'] ?? $c['MaCum']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+
+                    <select id="filterToaSelect" class="btn-outline" style="min-width: 160px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;" onchange="onToaChange(this.value)">
+                        <option value="" <?= empty($filterToa) ? 'selected' : '' ?>>-- Tất cả Tòa nhà --</option>
+                        <?php foreach ($availableToas as $t): ?>
+                            <option value="<?= htmlspecialchars($t['MaToaNha']) ?>" data-cum="<?= htmlspecialchars($t['MaCum'] ?? '') ?>" <?= ($filterToa === $t['MaToaNha']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($formatTenToa($t['TenToaNha'] ?? $t['MaToaNha'], $t['MaToaNha'])) ?> (<?= htmlspecialchars($t['MaToaNha']) ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+
+                <?php elseif ($scope['level'] === 'CUM'): ?>
+                    <!-- Trưởng Cụm: Cố định Cụm, lọc Tòa -->
+                    <select class="btn-outline" style="min-width: 140px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; background: #e2e8f0; color: #475569;" disabled>
+                        <option><?= htmlspecialchars($scope['availableCums'][0]['TenCum'] ?? ('Cụm ' . $scope['maCum'])) ?></option>
+                    </select>
+
+                    <select id="filterToaSelect" class="btn-outline" style="min-width: 160px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;" onchange="onToaChange(this.value)">
+                        <option value="" <?= empty($filterToa) ? 'selected' : '' ?>>-- Tất cả Tòa nhà --</option>
+                        <?php foreach ($availableToas as $t): ?>
+                            <option value="<?= htmlspecialchars($t['MaToaNha']) ?>" <?= ($filterToa === $t['MaToaNha']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($formatTenToa($t['TenToaNha'] ?? $t['MaToaNha'], $t['MaToaNha'])) ?> (<?= htmlspecialchars($t['MaToaNha']) ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+
+                <?php else: ?>
+                    <!-- Trưởng Tòa: Cố định Tòa -->
+                    <span class="badge badge-success" style="padding: 8px 14px; font-size: 0.85rem; font-weight: 600;">
+                        <?= htmlspecialchars($formatTenToa($toaInfo['TenToaNha'] ?? $maToa, $maToa)) ?>
+                    </span>
+                <?php endif; ?>
+
+                <!-- 3. LỌC TẦNG -->
                 <select id="filterRoomFloor" class="btn-outline"
-                    style="min-width: 170px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
+                    style="min-width: 130px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
                     onchange="filterRooms()">
                     <option value="">-- Tất cả các tầng --</option>
                     <?php for ($t = 1; $t <= $tongTang; $t++): ?>
@@ -258,8 +397,9 @@ ob_start();
                     <?php endfor; ?>
                 </select>
 
+                <!-- 4. LỌC LOẠI PHÒNG -->
                 <select id="filterRoomType" class="btn-outline"
-                    style="min-width: 200px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
+                    style="min-width: 170px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
                     onchange="filterRooms()">
                     <option value="">-- Tất cả loại phòng --</option>
                     <?php foreach ($loaiPhongList as $lp): ?>
@@ -269,8 +409,9 @@ ob_start();
                     <?php endforeach; ?>
                 </select>
 
+                <!-- 5. LỌC TRẠNG THÁI -->
                 <select id="filterRoomStatus" class="btn-outline"
-                    style="min-width: 170px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
+                    style="min-width: 140px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
                     onchange="filterRooms()">
                     <option value="">-- Tất cả trạng thái --</option>
                     <option value="Còn chỗ">Còn chỗ</option>
@@ -279,6 +420,7 @@ ob_start();
                     <option value="Khóa bảo trì">Khóa bảo trì</option>
                 </select>
 
+                <!-- 6. NÚT XÓA BỘ LỌC -->
                 <div>
                     <button type="button" class="btn btn-outline btn-sm" onclick="clearRoomFilters()" style="border-radius: 6px; color: #dc2626; border-color: #fecaca; background: #fff; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; padding: 8px 14px;">
                         <i class="fa-solid fa-filter-circle-xmark" style="margin-right: 4px;"></i> Xóa bộ lọc
@@ -292,13 +434,13 @@ ob_start();
                     <table class="data-table" id="tableStaffRooms">
                         <thead>
                             <tr>
-                                <th style="width: 110px;">Mã phòng</th>
-                                <th style="width: 130px;">Số phòng</th>
-                                <th style="width: 190px;">Loại phòng</th>
-                                <th style="width: 100px;">Sức chứa</th>
-                                <th>Sơ đồ Giường</th>
-                                <th style="width: 150px;">Trưởng phòng</th>
-                                <th style="width: 120px;">Trạng thái</th>
+                                <th style="width: 100px;">Mã phòng</th>
+                                <th style="width: 120px;">Số phòng</th>
+                                <th style="width: 180px;">Loại phòng</th>
+                                <th style="width: 130px;">Sức chứa</th>
+                                <th style="width: 230px;">Sơ đồ Giường</th>
+                                <th style="width: 140px;">Trưởng phòng</th>
+                                <th style="width: 120px; text-align: center;">Trạng thái</th>
                                 <th style="text-align: right; min-width: 220px;">Thao tác</th>
                             </tr>
                         </thead>
@@ -310,16 +452,6 @@ ob_start();
                                 $occupied = (int)($p['SoSVDangO'] ?? 0);
                                 $fillPercent = ($maxCap > 0) ? round(($occupied / $maxCap) * 100) : 0;
                                 $isLocked = ($p['TrangThaiPhong'] === 'Khóa bảo trì');
-
-                                if ($isLocked) {
-                                    $stBadge = 'badge-warning';
-                                } elseif ($p['TrangThaiPhong'] === 'Đầy chỗ') {
-                                    $stBadge = 'badge-danger';
-                                } elseif ($p['TrangThaiPhong'] === 'Đang sử dụng' || $occupied > 0) {
-                                    $stBadge = 'badge-primary';
-                                } else {
-                                    $stBadge = 'badge-success';
-                                }
                                 ?>
                                 <tr class="room-row"
                                     data-id="<?= htmlspecialchars($p['MaPhong'], ENT_QUOTES, 'UTF-8') ?>"
@@ -339,7 +471,7 @@ ob_start();
                                     <td>
                                         <b>Phòng <?= htmlspecialchars($p['SoPhong']) ?></b>
                                         <div style="font-size: 0.75rem; color: var(--text-muted);">
-                                            Tầng <?= (int)$p['Tang'] ?>
+                                            Tầng <?= (int)$p['Tang'] ?><?= !empty($p['TenToaNha']) ? ' &bull; ' . htmlspecialchars($formatTenToa($p['TenToaNha'], $p['MaToaNha'])) : '' ?>
                                         </div>
                                     </td>
 
@@ -354,66 +486,73 @@ ob_start();
                                     </td>
 
                                     <!-- 4. Sĩ số & Tiến độ -->
-                                    <td>
-                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                            <b style="font-size: 0.85rem; color: #0f172a;"><?= $occupied ?> / <?= $maxCap ?> SV</b>
-                                            <span style="font-size: 0.75rem; color: var(--text-muted);"><?= $fillPercent ?>%</span>
-                                        </div>
-                                        <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
-                                            <div style="width: <?= min(100, $fillPercent) ?>%; height: 100%; background: <?= $isLocked ? '#f59e0b' : ($fillPercent >= 100 ? '#ef4444' : ($fillPercent > 0 ? '#3b82f6' : '#10b981')) ?>; border-radius: 3px;"></div>
+                                    <td style="vertical-align: middle;">
+                                        <div style="min-width: 105px; max-width: 125px;">
+                                            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px;">
+                                                <span style="font-weight: 700; color: #0f172a; font-size: 0.875rem;">
+                                                    <?= $occupied ?> <span style="font-weight: 500; font-size: 0.75rem; color: #64748b;">/ <?= $maxCap ?> chỗ</span>
+                                                </span>
+                                                <span style="font-size: 0.75rem; font-weight: 700; color: <?= $isLocked ? '#d97706' : ($fillPercent >= 100 ? '#dc2626' : ($fillPercent > 0 ? '#2563eb' : '#94a3b8')) ?>;">
+                                                    <?= $fillPercent ?>%
+                                                </span>
+                                            </div>
+                                            <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 9999px; overflow: hidden;">
+                                                <div style="width: <?= min(100, $fillPercent) ?>%; height: 100%; background: <?= $isLocked ? '#f59e0b' : ($fillPercent >= 100 ? '#ef4444' : ($fillPercent > 0 ? '#3b82f6' : '#cbd5e1')) ?>; border-radius: 9999px;"></div>
+                                            </div>
                                         </div>
                                     </td>
 
-                                    <!-- 5. Sơ đồ Giường (Pills trực quan) -->
-                                    <td>
-                                        <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
+                                    <!-- 5. Sơ đồ Giường (Pills trực quan, đồng bộ) -->
+                                    <td style="vertical-align: middle;">
+                                        <div style="display: flex; gap: 5px; align-items: center; flex-wrap: wrap; max-width: 230px;">
                                             <?php foreach ($beds as $g): ?>
                                                 <?php
                                                 $bOccupied = !empty($g['MaSinhVien']) || ($g['TrangThaiGiuong'] === 'Đã có người ở');
-                                                $bLocked = ($g['TrangThaiGiuong'] === 'Khóa bảo trì');
+                                                $bLocked = ($g['TrangThaiGiuong'] === 'Khóa bảo trì' || $g['TrangThaiGiuong'] === 'Đang bảo trì');
                                                 $bLeader = (!empty($p['TruongPhong']) && $p['TruongPhong'] === $g['MaSinhVien']);
 
                                                 if ($bOccupied) {
-                                                    $pillBg = '#f0fdf4';
-                                                    $pillBorder = '#bbf7d0';
-                                                    $pillColor = '#166534';
-                                                    $pillIcon = $bLeader ? 'fa-solid fa-star' : 'fa-solid fa-user';
-                                                    $pillTitle = $g['KyHieuGiuong'] . ': ' . ($g['HoVaTen'] ?? 'Sinh viên') . ' (' . ($g['MSSVTaiTruong'] ?? '') . ')';
+                                                    if ($bLeader) {
+                                                        $pillBg = '#fef3c7';
+                                                        $pillColor = '#b45309';
+                                                        $pillBorder = '#fde68a';
+                                                        $pillIcon = 'fa-solid fa-star';
+                                                        $pillTitle = $g['KyHieuGiuong'] . ': ' . ($g['HoVaTen'] ?? 'Sinh viên') . ' (Trưởng phòng)';
+                                                    } else {
+                                                        $pillBg = '#dcfce7';
+                                                        $pillColor = '#15803d';
+                                                        $pillBorder = '#bbf7d0';
+                                                        $pillIcon = 'fa-solid fa-user';
+                                                        $pillTitle = $g['KyHieuGiuong'] . ': ' . ($g['HoVaTen'] ?? 'Sinh viên') . ' (' . ($g['MSSVTaiTruong'] ?? '') . ')';
+                                                    }
                                                 } elseif ($bLocked) {
-                                                    $pillBg = '#fffbeb';
-                                                    $pillBorder = '#fde68a';
-                                                    $pillColor = '#b45309';
+                                                    $pillBg = '#fee2e2';
+                                                    $pillColor = '#991b1b';
+                                                    $pillBorder = '#fecaca';
                                                     $pillIcon = 'fa-solid fa-lock';
-                                                    $pillTitle = $g['KyHieuGiuong'] . ': Khóa bảo trì';
+                                                    $pillTitle = $g['KyHieuGiuong'] . ': Đang bảo trì';
                                                 } else {
                                                     $pillBg = '#f8fafc';
-                                                    $pillBorder = '#e2e8f0';
                                                     $pillColor = '#64748b';
+                                                    $pillBorder = '#e2e8f0';
                                                     $pillIcon = 'fa-solid fa-bed';
                                                     $pillTitle = $g['KyHieuGiuong'] . ': Trống';
                                                 }
                                                 ?>
                                                 <span title="<?= htmlspecialchars($pillTitle) ?>"
-                                                    style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; background: <?= $pillBg ?>; border: 1px solid <?= $pillBorder ?>; color: <?= $pillColor ?>; cursor: pointer;"
+                                                    style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 46px; height: 24px; padding: 0 6px; border-radius: 5px; font-size: 0.725rem; font-weight: 600; background: <?= $pillBg ?>; border: 1px solid <?= $pillBorder ?>; color: <?= $pillColor ?>; cursor: pointer; box-sizing: border-box;"
                                                     onclick="openBedDetailModal('<?= htmlspecialchars($p['MaPhong']) ?>')">
                                                     <i class="<?= $pillIcon ?>" style="font-size: 0.65rem;"></i>
-                                                    <?= htmlspecialchars($g['KyHieuGiuong']) ?>
+                                                    <span><?= htmlspecialchars($g['KyHieuGiuong']) ?></span>
                                                 </span>
                                             <?php endforeach; ?>
-
-                                            <button type="button" class="btn btn-outline btn-sm"
-                                                style="border-radius: 4px; padding: 2px 6px; font-size: 0.725rem; height: 22px; line-height: 1; color: var(--primary); border-color: var(--primary); background: #eff6ff;"
-                                                onclick="openBedDetailModal('<?= htmlspecialchars($p['MaPhong']) ?>')"
-                                                title="Xem chi tiết & Quản lý toàn bộ giường">
-                                                <i class="fa-solid fa-gear" style="font-size: 0.65rem; margin-right: 3px;"></i> Giường
-                                            </button>
                                         </div>
                                     </td>
 
                                     <!-- 6. Trưởng phòng -->
-                                    <td>
+                                    <td style="vertical-align: middle;">
                                         <?php if (!empty($p['TruongPhong'])): ?>
-                                            <span class="badge badge-success" style="font-size: 0.8rem; font-weight: 600;" title="MSSV: <?= htmlspecialchars($p['TruongPhong']) ?>">
+                                            <span style="display: inline-block; padding: 3px 8px; border-radius: 6px; background: #f0fdf4; color: #166534; font-size: 0.8rem; font-weight: 600; border: none;" title="MSSV: <?= htmlspecialchars($p['TruongPhong']) ?>">
                                                 <?= htmlspecialchars($p['TenTruongPhong'] ?? $p['TruongPhong']) ?>
                                             </span>
                                         <?php elseif ($occupied > 0): ?>
@@ -429,10 +568,29 @@ ob_start();
                                         <?php endif; ?>
                                     </td>
 
-                                    <!-- 7. Trạng thái -->
-                                    <td>
-                                        <span class="badge <?= $stBadge ?>" style="font-size: 0.8rem;">
-                                            <?= htmlspecialchars($p['TrangThaiPhong']) ?>
+                                    <!-- 7. Trạng thái (BỎ VIỀN 100%) -->
+                                    <td style="vertical-align: middle; text-align: center;">
+                                        <?php
+                                        if ($isLocked || $p['TrangThaiPhong'] === 'Khóa bảo trì' || $p['TrangThaiPhong'] === 'Đang bảo trì') {
+                                            $stBg = '#fef3c7';
+                                            $stColor = '#b45309';
+                                            $stLabel = 'Khóa bảo trì';
+                                        } elseif ($p['TrangThaiPhong'] === 'Đầy chỗ') {
+                                            $stBg = '#fee2e2';
+                                            $stColor = '#b91c1c';
+                                            $stLabel = 'Đầy chỗ';
+                                        } elseif ($p['TrangThaiPhong'] === 'Đang sử dụng' || $occupied > 0) {
+                                            $stBg = '#dbeafe';
+                                            $stColor = '#1d4ed8';
+                                            $stLabel = 'Đang sử dụng';
+                                        } else {
+                                            $stBg = '#dcfce7';
+                                            $stColor = '#15803d';
+                                            $stLabel = 'Còn chỗ';
+                                        }
+                                        ?>
+                                        <span style="display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.775rem; font-weight: 600; background: <?= $stBg ?>; color: <?= $stColor ?>; border: none; white-space: nowrap; line-height: 1.2;">
+                                            <?= $stLabel ?>
                                         </span>
                                     </td>
 
@@ -525,6 +683,7 @@ ob_start();
 
                 <form action="<?= url('staff/rooms/import') ?>" method="POST" enctype="multipart/form-data" style="margin: 0; display: flex; flex-direction: column; flex: 1 1 auto; overflow: hidden;">
                     <?= csrf_field() ?>
+                    <input type="hidden" name="maToa" value="<?= htmlspecialchars($maToa) ?>">
                     <div style="padding: 20px; overflow-y: auto; flex: 1 1 auto; max-height: calc(100vh - 170px);">
                         <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 14px 16px; margin-bottom: 18px; font-size: 0.85rem; color: #1e40af;">
                             <div style="font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
@@ -746,11 +905,170 @@ ob_start();
             </div>
         </div>
 
+        <!-- ========================================================================= -->
+        <!-- MODAL CẬP NHẬT THÔNG TIN TÒA NHÀ (RU TÒA NHÀ) -->
+        <!-- ========================================================================= -->
+        <div id="modalUpdateToa" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 20px 16px; box-sizing: border-box;">
+            <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 540px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
+                <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc;">
+                    <div style="font-size: 1.05rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-building" style="color: #4f46e5; margin-right: 6px;"></i>
+                        <span>Cập nhật Thông tin Tòa nhà</span>
+                    </div>
+                    <button type="button" onclick="closeModal('modalUpdateToa')" style="background: none; border: none; font-size: 1.25rem; color: #64748b; cursor: pointer; padding: 4px;" title="Đóng">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <form action="<?= url('staff/rooms/update-toa') ?>" method="POST" style="margin: 0; padding: 20px;">
+                    <?= csrf_field() ?>
+
+                    <?php if (!empty($isAllToas) && count($availableToas) > 1): ?>
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #334155;">
+                                Chọn Tòa nhà cần cập nhật <span style="color:#dc2626;">*</span>
+                            </label>
+                            <select id="modalSelectToa" name="maToa" class="btn-outline" style="width: 100%; padding: 10px; border-radius: 6px; font-size: 0.9rem; font-weight: 600; background: #fff;" onchange="onSelectToaToUpdate(this.value)">
+                                <?php foreach ($availableToas as $at): ?>
+                                    <option value="<?= htmlspecialchars($at['MaToaNha']) ?>">
+                                        <?= htmlspecialchars($formatTenToa($at['TenToaNha'] ?? $at['MaToaNha'], $at['MaToaNha'])) ?> (<?= htmlspecialchars($at['MaToaNha']) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    <?php else: ?>
+                        <input type="hidden" name="maToa" value="<?= htmlspecialchars($maToa) ?>">
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #334155;">
+                                Mã Tòa nhà định danh
+                            </label>
+                            <input type="text" class="btn-outline" value="<?= htmlspecialchars($formatTenToa($toaInfo['TenToaNha'] ?? $maToa, $maToa)) ?> (<?= htmlspecialchars($maToa) ?>)" readonly style="width: 100%; padding: 10px; border-radius: 6px; font-size: 0.9rem; background: #f1f5f9; font-weight: 700; color: #1e293b;">
+                        </div>
+                    <?php endif; ?>
+
+                    <div style="margin-bottom: 14px;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #334155;">
+                            Tên hiển thị Tòa nhà <span style="color:#dc2626;">*</span>
+                        </label>
+                        <input type="text" id="modalTenToaNha" name="tenToaNha" class="btn-outline" value="<?= htmlspecialchars($formatTenToa($toaInfo['TenToaNha'] ?? $maToa, $maToa)) ?>" required style="width: 100%; padding: 10px; border-radius: 6px; font-size: 0.9rem;">
+                    </div>
+
+                    <div style="margin-bottom: 14px;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #334155;">
+                            Giới tính quy định lưu trú <span style="color:#dc2626;">*</span>
+                        </label>
+                        <select id="modalGioiTinhQuyDinh" name="gioiTinhQuyDinh" class="btn-outline" style="width: 100%; padding: 10px; border-radius: 6px; font-size: 0.9rem;" required>
+                            <option value="Nam" <?= (($toaInfo['GioiTinhQuyDinh'] ?? 'Nam') === 'Nam') ? 'selected' : '' ?>>Nam (Ký túc xá Nam)</option>
+                            <option value="Nữ" <?= (($toaInfo['GioiTinhQuyDinh'] ?? '') === 'Nữ') ? 'selected' : '' ?>>Nữ (Ký túc xá Nữ)</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 18px;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #334155;">
+                            Trạng thái vận hành Tòa nhà <span style="color:#dc2626;">*</span>
+                        </label>
+                        <select id="modalTrangThaiToaNha" name="trangThaiToaNha" class="btn-outline" style="width: 100%; padding: 10px; border-radius: 6px; font-size: 0.9rem;" required>
+                            <option value="Đang hoạt động" <?= (($toaInfo['TrangThaiToaNha'] ?? '') === 'Đang hoạt động') ? 'selected' : '' ?>>Đang hoạt động</option>
+                            <option value="Tạm khóa bảo trì" <?= (($toaInfo['TrangThaiToaNha'] ?? '') === 'Tạm khóa bảo trì') ? 'selected' : '' ?>>Tạm khóa bảo trì</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('modalUpdateToa')" style="border-radius: 6px; padding: 9px 18px;">
+                            Hủy bỏ
+                        </button>
+                        <button type="submit" class="btn btn-primary" style="border-radius: 6px; padding: 9px 20px; font-weight: 600;">
+                            <i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i> Lưu cập nhật Tòa nhà
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- JAVASCRIPT XỬ LÝ PHÂN TRANG, BỘ LỌC, EXPORT, IMPORT VÀ MODAL GIƯỜNG -->
         <script>
             const currentMaToa = <?= json_encode($maToa) ?>;
+            const currentScopeLevel = <?= json_encode($scope['level'] ?? 'TOA') ?>;
+            const allAvailableToas = <?= json_encode($availableToas ?? [], JSON_UNESCAPED_UNICODE) ?>;
             const roomsData = <?= json_encode($phongList ?? [], JSON_UNESCAPED_UNICODE) ?>;
             const bedsData = <?= json_encode($giuongByPhong ?? [], JSON_UNESCAPED_UNICODE) ?>;
+
+            function onToaChange(toaCode) {
+                const url = new URL(window.location.href);
+                if (!toaCode) {
+                    url.searchParams.delete('toa');
+                } else {
+                    url.searchParams.set('toa', toaCode);
+                }
+                window.location.href = url.toString();
+            }
+
+            function onKhuChange(khuCode) {
+                const url = new URL(window.location.href);
+                if (!khuCode) {
+                    url.searchParams.delete('khu');
+                } else {
+                    url.searchParams.set('khu', khuCode);
+                }
+                url.searchParams.delete('cum');
+                url.searchParams.delete('toa');
+                window.location.href = url.toString();
+            }
+
+            function onCumChange(cumCode) {
+                const url = new URL(window.location.href);
+                if (!cumCode) {
+                    url.searchParams.delete('cum');
+                } else {
+                    url.searchParams.set('cum', cumCode);
+                }
+                url.searchParams.delete('toa');
+                window.location.href = url.toString();
+            }
+
+            function onSelectToaToUpdate(toaCode) {
+                if (!toaCode) return;
+                const found = allAvailableToas.find(t => t.MaToaNha === toaCode);
+                if (found) {
+                    const tenInput = document.getElementById('modalTenToaNha');
+                    const gtSelect = document.getElementById('modalGioiTinhQuyDinh');
+                    const ttSelect = document.getElementById('modalTrangThaiToaNha');
+                    if (tenInput) tenInput.value = found.TenToaNha || found.MaToaNha;
+                    if (gtSelect) gtSelect.value = found.GioiTinhQuyDinh || 'Nam';
+                    if (ttSelect) ttSelect.value = found.TrangThaiToaNha || 'Đang hoạt động';
+                }
+            }
+
+            function openUpdateToaModal() {
+                const el = document.getElementById('modalUpdateToa');
+                if (el) {
+                    el.style.display = 'flex';
+                    const select = document.getElementById('modalSelectToa');
+                    if (select && select.value) {
+                        onSelectToaToUpdate(select.value);
+                    }
+                }
+            }
+
+            function onRoomFormToaChange(toaCode) {
+                const found = allAvailableToas.find(t => t.MaToaNha === toaCode);
+                const tongTang = found ? parseInt(found.TongSoTang || 5) : 5;
+                const tangSelect = document.getElementById('roomTang');
+                if (tangSelect) {
+                    const curTang = parseInt(tangSelect.value) || 1;
+                    tangSelect.innerHTML = '';
+                    for (let t = 1; t <= tongTang; t++) {
+                        const opt = document.createElement('option');
+                        opt.value = t;
+                        opt.innerText = 'Tầng ' + t;
+                        if (t === curTang) opt.selected = true;
+                        tangSelect.appendChild(opt);
+                    }
+                }
+                const maxFloorLabel = document.getElementById('roomFormMaxFloor');
+                if (maxFloorLabel) maxFloorLabel.innerText = tongTang;
+                updateRoomCodePreview();
+            }
 
             // =========================================================================
             // 1. PHÂN TRANG VÀ LỌC TÌM KIẾM PHÒNG (REAL-TIME PAGINATION & FILTER)
@@ -854,7 +1172,7 @@ ob_start();
                     if (total === allRoomRows.length) {
                         exportBtnText.innerText = `Xuất Excel (${total})`;
                     } else {
-                        exportBtnText.innerText = `Xuất Excel (${total} đã lọc)`;
+                        exportBtnText.innerText = `Xuất Excel (${total})`;
                     }
                 }
 
@@ -985,6 +1303,12 @@ ob_start();
                 idsInp.value = matchedIds.join(',');
                 form.appendChild(idsInp);
 
+                const toaInp = document.createElement('input');
+                toaInp.type = 'hidden';
+                toaInp.name = 'toa';
+                toaInp.value = currentMaToa;
+                form.appendChild(toaInp);
+
                 document.body.appendChild(form);
                 form.submit();
             }
@@ -1020,8 +1344,15 @@ ob_start();
                 document.getElementById('roomTang').value = '1';
                 document.getElementById('roomMaLoaiPhong').value = '';
                 document.getElementById('roomTrangThaiPhong').value = 'Còn chỗ';
-                document.getElementById('roomCodePreview').value = currentMaToa + '.---';
-                document.getElementById('formTitleText').innerText = 'Thêm mới Phòng ở (Tòa ' + currentMaToa + ')';
+
+                const toaSelect = document.getElementById('roomMaToaSelect');
+                if (toaSelect) {
+                    toaSelect.disabled = false;
+                    onRoomFormToaChange(toaSelect.value);
+                }
+                const activeToa = toaSelect ? toaSelect.value : currentMaToa;
+                document.getElementById('roomCodePreview').value = (activeToa || 'TOA') + '.---';
+                document.getElementById('formTitleText').innerText = 'Thêm mới Phòng ở' + (activeToa ? ' (Tòa ' + activeToa + ')' : '');
                 document.getElementById('btnSubmitRoomText').innerText = 'Lưu phòng & Khởi tạo giường';
                 document.getElementById('roomAutoBedNotice').style.display = 'block';
 
@@ -1035,12 +1366,14 @@ ob_start();
                 const isEdit = document.getElementById('roomIsEdit').value === '1';
                 if (isEdit) return;
 
+                const toaSelect = document.getElementById('roomMaToaSelect');
+                const maToa = toaSelect ? toaSelect.value : (currentMaToa || (allAvailableToas[0] ? allAvailableToas[0].MaToaNha : 'A01'));
                 const soPhong = document.getElementById('roomSoPhong').value.trim();
                 const preview = document.getElementById('roomCodePreview');
                 if (soPhong) {
-                    preview.value = currentMaToa + '.' + soPhong;
+                    preview.value = (maToa || 'TOA') + '.' + soPhong;
                 } else {
-                    preview.value = currentMaToa + '.---';
+                    preview.value = (maToa || 'TOA') + '.---';
                 }
             }
 
@@ -1052,6 +1385,14 @@ ob_start();
                 document.getElementById('roomMaPhong').value = room.MaPhong;
                 document.getElementById('roomSoPhong').value = room.SoPhong;
                 document.getElementById('roomSoPhong').readOnly = true;
+
+                const toaSelect = document.getElementById('roomMaToaSelect');
+                if (toaSelect) {
+                    toaSelect.value = room.MaToaNha;
+                    toaSelect.disabled = true;
+                    onRoomFormToaChange(room.MaToaNha);
+                }
+
                 document.getElementById('roomTang').value = room.Tang;
                 document.getElementById('roomMaLoaiPhong').value = room.MaLoaiPhong;
                 document.getElementById('roomTrangThaiPhong').value = room.TrangThaiPhong;
@@ -1421,8 +1762,8 @@ ob_start();
 
 <?php
 $content = ob_get_clean();
-$title = !empty($isTruongToa)
-    ? "Sơ đồ Phòng & Giường - Tòa " . ($toaInfo['TenToaNha'] ?? $maToa ?? '')
-    : "Quản lý Sơ đồ Phòng & Giường - KTX ĐHQG-HCM";
+$title = !empty($isAllowed)
+    ? "Sơ đồ Phòng & Giường - " . (!empty($isAllToas) ? 'Tất cả Tòa nhà' : $formatTenToa($toaInfo['TenToaNha'] ?? $maToa, $maToa ?? ''))
+    : "Từ chối truy cập - Sơ đồ Phòng & Giường KTX";
 require dirname(__DIR__) . '/layouts/main.php';
 ?>

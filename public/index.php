@@ -95,6 +95,7 @@ Router::post('/staff/rooms/toggle-status', 'Staff\\RoomController@toggleRoomStat
 Router::post('/staff/rooms/add-bed', 'Staff\\RoomController@addBed', [AuthMiddleware::class]);
 Router::post('/staff/rooms/update-bed-status', 'Staff\\RoomController@updateBedStatus', [AuthMiddleware::class]);
 Router::post('/staff/rooms/delete-bed', 'Staff\\RoomController@deleteBed', [AuthMiddleware::class]);
+Router::post('/staff/rooms/update-toa', 'Staff\\RoomController@updateToaInfo', [AuthMiddleware::class]);
 Router::post('/staff/rooms/confirm-checkin', 'Staff\\RoomController@confirmCheckIn', [AuthMiddleware::class]);
 Router::post('/staff/rooms/toggle-ct01', 'Staff\\RoomController@toggleCT01', [AuthMiddleware::class]);
 Router::post('/staff/rooms/remove-student', 'Staff\\RoomController@removeStudentFromBed', [AuthMiddleware::class]);
