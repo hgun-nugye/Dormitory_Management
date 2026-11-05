@@ -522,7 +522,7 @@ ALTER TABLE `sinhvien`
 ALTER TABLE `phong`
   ADD CONSTRAINT `chk_phong_tang` CHECK (`Tang` >= 1),
   ADD CONSTRAINT `chk_phong_sosv` CHECK (`SoSVDangO` BETWEEN 0 AND 8),
-  ADD CONSTRAINT `chk_phong_trangthai` CHECK (`TrangThaiPhong` IN ('Còn chỗ', 'Đã đầy', 'Đang sử dụng', 'Đang bảo trì'));
+  ADD CONSTRAINT `chk_phong_trangthai` CHECK (`TrangThaiPhong` IN ('Còn chỗ', 'Đã đầy', 'Bảo trì'));
 
 ALTER TABLE `giuong`
   ADD CONSTRAINT `chk_giuong_tang` CHECK (`ViTriTangGiuong` IN (1, 2)),
@@ -589,7 +589,7 @@ ALTER TABLE `renluyennoitru`
   ADD CONSTRAINT `chk_renluyen_dagui` CHECK (`DaGuiVeTruong` IN (0, 1));
 
 -- ------------------------------------------------------------------------------------
--- 1.6. Thiết lập Trigger Ràng buộc Nghiệp vụ Liên bảng (INTER-TABLE TRIGGERS)
+-- 1.6. Thiết lập Trigger Ràng buộc Nghiệp vụ Liên bảng (INTER-TABLE TRIGGERS: 8 triggers)
 -- ------------------------------------------------------------------------------------
 
 DELIMITER $$
@@ -624,7 +624,7 @@ BEGIN
         SELECT `GioiTinh` INTO v_gioitinh_tp
         FROM `sinhvien` WHERE `MaSinhVien` = NEW.`TruongPhong`;
 
-        IF v_gioitinh_tp <> v_gioitinh_toa THEN
+        IF v_gioitinh_tp IS NULL OR v_gioitinh_toa IS NULL OR v_gioitinh_tp <> v_gioitinh_toa THEN
             SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Lỗi RBTV: Giới tính của Trưởng phòng không khớp với giới tính quy định của tòa nhà!';
         END IF;
@@ -661,7 +661,7 @@ BEGIN
         SELECT `GioiTinh` INTO v_gioitinh_tp
         FROM `sinhvien` WHERE `MaSinhVien` = NEW.`TruongPhong`;
 
-        IF v_gioitinh_tp <> v_gioitinh_toa THEN
+        IF v_gioitinh_tp IS NULL OR v_gioitinh_toa IS NULL OR v_gioitinh_tp <> v_gioitinh_toa THEN
             SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Lỗi RBTV: Giới tính của Trưởng phòng không khớp với giới tính quy định của tòa nhà!';
         END IF;
@@ -686,7 +686,7 @@ BEGIN
         JOIN `toanha` t ON p.`MaToaNha` = t.`MaToaNha`
         WHERE g.`MaGiuong` = NEW.`MaGiuong`;
 
-        IF v_gioitinh_sv <> v_gioitinh_toa THEN
+        IF v_gioitinh_sv IS NULL OR v_gioitinh_toa IS NULL OR v_gioitinh_sv <> v_gioitinh_toa THEN
             SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Lỗi RBTV: Giới tính sinh viên không khớp với giới tính quy định của tòa nhà đăng ký!';
         END IF;
@@ -710,7 +710,7 @@ BEGIN
         JOIN `toanha` t ON p.`MaToaNha` = t.`MaToaNha`
         WHERE g.`MaGiuong` = NEW.`MaGiuong`;
 
-        IF v_gioitinh_sv <> v_gioitinh_toa THEN
+        IF v_gioitinh_sv IS NULL OR v_gioitinh_toa IS NULL OR v_gioitinh_sv <> v_gioitinh_toa THEN
             SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Lỗi RBTV: Giới tính sinh viên không khớp với giới tính quy định của tòa nhà đăng ký!';
         END IF;
@@ -734,9 +734,32 @@ BEGIN
     JOIN `toanha` t ON p.`MaToaNha` = t.`MaToaNha`
     WHERE g.`MaGiuong` = NEW.`MaGiuong`;
 
-    IF v_gioitinh_sv <> v_gioitinh_toa THEN
+    IF v_gioitinh_sv IS NULL OR v_gioitinh_toa IS NULL OR v_gioitinh_sv <> v_gioitinh_toa THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Lỗi RBTV: Không thể ký hợp đồng xếp sinh viên vào tòa nhà khác giới tính!';
+    END IF;
+END$$
+
+-- 4b. Kiểm tra lại giới tính khi CẬP NHẬT hợp đồng nội trú
+CREATE TRIGGER `trg_hopdong_before_update`
+BEFORE UPDATE ON `hopdongnoitru`
+FOR EACH ROW
+BEGIN
+    DECLARE v_gioitinh_sv VARCHAR(10);
+    DECLARE v_gioitinh_toa VARCHAR(20);
+
+    SELECT `GioiTinh` INTO v_gioitinh_sv
+    FROM `sinhvien` WHERE `MaSinhVien` = NEW.`MaSinhVien`;
+
+    SELECT t.`GioiTinhQuyDinh` INTO v_gioitinh_toa
+    FROM `giuong` g
+    JOIN `phong` p ON g.`MaPhong` = p.`MaPhong`
+    JOIN `toanha` t ON p.`MaToaNha` = t.`MaToaNha`
+    WHERE g.`MaGiuong` = NEW.`MaGiuong`;
+
+    IF v_gioitinh_sv IS NULL OR v_gioitinh_toa IS NULL OR v_gioitinh_sv <> v_gioitinh_toa THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Lỗi RBTV: Không thể cập nhật hợp đồng vào tòa nhà không khớp giới tính sinh viên!';
     END IF;
 END$$
 
@@ -758,9 +781,34 @@ BEGIN
         JOIN `toanha` t ON p.`MaToaNha` = t.`MaToaNha`
         WHERE g.`MaGiuong` = NEW.`MaGiuongChuyenDen`;
 
-        IF v_gioitinh_sv <> v_gioitinh_toa THEN
+        IF v_gioitinh_sv IS NULL OR v_gioitinh_toa IS NULL OR v_gioitinh_sv <> v_gioitinh_toa THEN
             SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Lỗi RBTV: Giường xin chuyển đến thuộc tòa nhà không khớp giới tính sinh viên!';
+        END IF;
+    END IF;
+END$$
+
+-- 5b. Kiểm tra lại giới tính khi CẬP NHẬT đơn xin chuyển phòng
+CREATE TRIGGER `trg_dontumotcua_before_update`
+BEFORE UPDATE ON `dontumotcua`
+FOR EACH ROW
+BEGIN
+    DECLARE v_gioitinh_sv VARCHAR(10);
+    DECLARE v_gioitinh_toa VARCHAR(20);
+
+    IF NEW.`MaGiuongChuyenDen` IS NOT NULL THEN
+        SELECT `GioiTinh` INTO v_gioitinh_sv
+        FROM `sinhvien` WHERE `MaSinhVien` = NEW.`MaSinhVien`;
+
+        SELECT t.`GioiTinhQuyDinh` INTO v_gioitinh_toa
+        FROM `giuong` g
+        JOIN `phong` p ON g.`MaPhong` = p.`MaPhong`
+        JOIN `toanha` t ON p.`MaToaNha` = t.`MaToaNha`
+        WHERE g.`MaGiuong` = NEW.`MaGiuongChuyenDen`;
+
+        IF v_gioitinh_sv IS NULL OR v_gioitinh_toa IS NULL OR v_gioitinh_sv <> v_gioitinh_toa THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Lỗi RBTV: Giường chuyển đến không khớp giới tính sinh viên!';
         END IF;
     END IF;
 END$$
@@ -769,7 +817,7 @@ DELIMITER ;
 
 
 -- ====================================================================================
--- PHẦN 2: DỮ LIỆU MẪU ĐỒNG BỘ 100% (SAMPLE DATA - VƯỢT QUA TOÀN BỘ RÀNG BUỘC)
+-- PHẦN 2: DỮ LIỆU MẪU ĐÃ HIỆU CHỈNH ĐỒNG NHẤT (SAMPLE DATA)
 -- ====================================================================================
 
 -- 2.1. Khu KTX
@@ -935,11 +983,11 @@ INSERT INTO `sinhvien` (`MaSinhVien`, `MaTaiKhoan`, `MaTruong`, `MSSVTaiTruong`,
 ('2416088', 44, 'UHS', 'Y2416088', 'Lê Thị Thanh Tâm', '2006-06-25', 'Nữ', '083306005562', 2024, '0905333555', 'tamltt2416@uhsvnu.edu.vn', 'SV483306005562', '/uploads/avatar/2416088_4x6.jpg', '/uploads/cccd/2416088_cccd.jpg', '/uploads/minhchung/2416088_thesv.jpg', '1029380003', 'Agribank', '0918001003', 'Đang nội trú'),
 ('2358012', 45, 'AGU', 'DTH2358012', 'Trần Ngọc Ánh', '2005-09-09', 'Nữ', '089305005563', 2023, '0905444666', 'anh_dth2358012@student.agu.edu.vn', 'SV489305005563', '/uploads/avatar/2358012_4x6.jpg', '/uploads/cccd/2358012_cccd.jpg', '/uploads/minhchung/2358012_thesv.jpg', '1029380004', 'VietinBank', '0918001004', 'Đang nội trú');
 
--- 2.10. Phòng ở (15 phòng trải đều các tòa và các trạng thái: Còn chỗ, Đã đầy, Đang bảo trì)
+-- 2.10. Phòng ở (15 phòng trải đều các tòa và các trạng thái: Còn chỗ, Đã đầy, Bảo trì)
 INSERT INTO `phong` (`MaPhong`, `MaToaNha`, `MaLoaiPhong`, `SoPhong`, `Tang`, `SoSVDangO`, `TrangThaiPhong`, `TruongPhong`) VALUES
 ('A01.101', 'A01', 'LP4', '101', 1, 3, 'Còn chỗ', '2110001'),
 ('A01.102', 'A01', 'LP4', '102', 1, 0, 'Còn chỗ', NULL),
-('A01.201', 'A01', 'LP8', '201', 2, 0, 'Đang bảo trì', NULL),
+('A01.201', 'A01', 'LP8', '201', 2, 0, 'Bảo trì', NULL),
 ('G01.201', 'G01', 'LP4ML', '201', 2, 0, 'Còn chỗ', NULL),
 ('G01.202', 'G01', 'LP4FULL', '202', 2, 4, 'Đã đầy', '2210555'),
 ('A07.101', 'A07', 'LP6', '101', 1, 0, 'Còn chỗ', NULL),
@@ -953,7 +1001,7 @@ INSERT INTO `phong` (`MaPhong`, `MaToaNha`, `MaLoaiPhong`, `SoPhong`, `Tang`, `S
 ('D05.201', 'D05', 'LP4', '201', 2, 1, 'Còn chỗ', '2358012'),
 ('E04.101', 'E04', 'LP4KT', '101', 1, 1, 'Còn chỗ', '2313045');
 
--- 2.11. Giường (72 giường đủ các trạng thái: Trống, Đang giữ chỗ, Đã có người ở, Đang bảo trì)
+-- 2.11. Giường (76 giường đủ các trạng thái: Trống, Đang giữ chỗ, Đã có người ở, Đang bảo trì)
 INSERT INTO `giuong` (`MaGiuong`, `MaPhong`, `KyHieuGiuong`, `ViTriTangGiuong`, `TrangThaiGiuong`) VALUES
 ('A01101-G1', 'A01.101', 'G1', 1, 'Đã có người ở'),
 ('A01101-G2', 'A01.101', 'G2', 2, 'Đã có người ở'),
@@ -967,6 +1015,10 @@ INSERT INTO `giuong` (`MaGiuong`, `MaPhong`, `KyHieuGiuong`, `ViTriTangGiuong`, 
 ('A01201-G2', 'A01.201', 'G2', 2, 'Đang bảo trì'),
 ('A01201-G3', 'A01.201', 'G3', 1, 'Đang bảo trì'),
 ('A01201-G4', 'A01.201', 'G4', 2, 'Đang bảo trì'),
+('A01201-G5', 'A01.201', 'G5', 1, 'Đang bảo trì'),
+('A01201-G6', 'A01.201', 'G6', 2, 'Đang bảo trì'),
+('A01201-G7', 'A01.201', 'G7', 1, 'Đang bảo trì'),
+('A01201-G8', 'A01.201', 'G8', 2, 'Đang bảo trì'),
 ('G01201-G1', 'G01.201', 'G1', 1, 'Trống'),
 ('G01201-G2', 'G01.201', 'G2', 2, 'Trống'),
 ('G01201-G3', 'G01.201', 'G3', 1, 'Trống'),
@@ -1111,7 +1163,7 @@ INSERT INTO `hopdongnoitru` (`MaHopDong`, `MaHoSo`, `MaSinhVien`, `MaGiuong`, `N
 ('HD2026017', 'HS2026019', '2218999', 'B02111-G1', '2026-09-01', '2027-06-30', '2026-09-01 14:00:00', 1, 'Chấm dứt trước hạn'),
 ('HD2026018', 'HS2026020', '2352999', 'BA1101-G3', '2026-09-01', '2027-06-30', '2026-09-01 15:00:00', 1, 'Đang hiệu lực'),
 ('HD2026019', 'HS2026021', '2416088', 'C05305-G3', '2026-09-01', '2027-06-30', '2026-09-02 10:00:00', 1, 'Đang hiệu lực'),
-('HD2026020', 'HS2026022', '2358012', 'D05201-G1', '2026-09-01', '2027-06-30', '2026-09-03 08:30:00', 0, 'Chờ hiệu lực');
+('HD2026020', 'HS2026022', '2358012', 'D05201-G1', '2026-09-01', '2027-06-30', '2026-09-03 08:30:00', 0, 'Đang hiệu lực');
 
 -- 2.16. Hồ sơ miễn giảm lệ phí phòng ở (Đủ 3 trạng thái: Đã duyệt, Chờ duyệt, Từ chối)
 INSERT INTO `hosomiengiam` (`MaMienGiam`, `MaSinhVien`, `MaHopDong`, `DoiTuongMienGiam`, `TepMinhChung`, `DonGiaTranApDung`, `PhanTramGiam`, `SoTienHoanTra`, `TrangThaiDuyet`) VALUES

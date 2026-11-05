@@ -852,7 +852,14 @@ class ZoneController extends Controller
         $maLoaiPhong = trim((string)$request->input('maLoaiPhong', ''));
         $soPhong = trim((string)$request->input('soPhong', ''));
         $tang = max(1, (int)$request->input('tang', 1));
-        $trangThaiPhong = trim((string)$request->input('trangThaiPhong', 'Còn chỗ'));
+        $rawZcSt = trim((string)$request->input('trangThaiPhong', 'Còn chỗ'));
+        if (str_contains(mb_strtolower($rawZcSt), 'bảo trì') || str_contains(mb_strtolower($rawZcSt), 'khóa')) {
+            $trangThaiPhong = 'Bảo trì';
+        } elseif (str_contains(mb_strtolower($rawZcSt), 'đầy')) {
+            $trangThaiPhong = 'Đã đầy';
+        } else {
+            $trangThaiPhong = 'Còn chỗ';
+        }
         $isEdit = (int)$request->input('isEdit', 0) === 1;
 
         if ($isEdit) {
@@ -860,6 +867,18 @@ class ZoneController extends Controller
                 Session::flash('error', 'Bạn không có quyền sửa thông tin Phòng ở! Nghiệp vụ này chỉ dành cho Quản lý KTX.');
                 $this->redirect('staff/zones');
                 return;
+            }
+            $existing = Database::fetch("SELECT * FROM Phong WHERE MaPhong = :mp", ['mp' => $maPhong]);
+            if (!$existing) {
+                Session::flash('error', "Không tìm thấy phòng {$maPhong}!");
+                $this->redirect('staff/zones');
+                return;
+            }
+            if (empty($maToaNha)) {
+                $maToaNha = $existing['MaToaNha'];
+            }
+            if (empty($soPhong)) {
+                $soPhong = $existing['SoPhong'];
             }
         } else {
             if (empty($scope['canCreatePhong'])) {
@@ -878,7 +897,7 @@ class ZoneController extends Controller
             $maPhong = $maToaNha . '.' . $soPhong;
         }
 
-        if (empty($maPhong) || empty($maToaNha) || empty($maLoaiPhong) || empty($soPhong)) {
+        if (empty($maPhong) || empty($maLoaiPhong) || (!$isEdit && (empty($maToaNha) || empty($soPhong)))) {
             Session::flash('error', 'Vui lòng điền đầy đủ Mã phòng, Tòa nhà, Loại phòng và Số phòng!');
             $this->redirect('staff/zones');
             return;
@@ -899,6 +918,32 @@ class ZoneController extends Controller
                     'st' => $trangThaiPhong,
                     'mp' => $maPhong
                 ]);
+
+                // Đồng bộ giường theo 3 trạng thái chuẩn: Còn chỗ, Đã đầy, Bảo trì
+                if ($trangThaiPhong === 'Bảo trì') {
+                    Database::execute("UPDATE Giuong SET TrangThaiGiuong = 'Đang bảo trì' WHERE MaPhong = :mp AND TrangThaiGiuong = 'Trống'", ['mp' => $maPhong]);
+                } else {
+                    Database::execute("UPDATE Giuong SET TrangThaiGiuong = 'Trống' WHERE MaPhong = :mp AND TrangThaiGiuong IN ('Bảo trì')", ['mp' => $maPhong]);
+                }
+
+                // Nếu đổi loại phòng có sức chứa lớn hơn số giường hiện có, tự động sinh thêm giường
+                $currentBedsCount = (int)(Database::fetch("SELECT COUNT(*) AS c FROM Giuong WHERE MaPhong = :mp", ['mp' => $maPhong])['c'] ?? 0);
+                if ($soGiuongToiDa > $currentBedsCount) {
+                    for ($i = $currentBedsCount + 1; $i <= $soGiuongToiDa; $i++) {
+                        $maGiuong = str_replace('.', '', $maPhong) . '-G' . $i;
+                        Database::execute("
+                            INSERT INTO Giuong (MaGiuong, MaPhong, KyHieuGiuong, ViTriTangGiuong, TrangThaiGiuong)
+                            VALUES (:mg, :mp, :kh, :vt, 'Trống')
+                            ON DUPLICATE KEY UPDATE TrangThaiGiuong = VALUES(TrangThaiGiuong)
+                        ", [
+                            'mg' => $maGiuong,
+                            'mp' => $maPhong,
+                            'kh' => 'G' . $i,
+                            'vt' => ($i % 2 === 1) ? 1 : 2
+                        ]);
+                    }
+                }
+
                 Session::flash('success', "Đã cập nhật thành công phòng {$maPhong}!");
             } else {
                 $dup = Database::fetch("SELECT MaPhong FROM Phong WHERE MaPhong = :mp OR (MaToaNha = :toa AND SoPhong = :so)", [
