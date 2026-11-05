@@ -159,6 +159,7 @@ Router::post('/staff/discipline/simulate-scan', 'Staff\\DisciplineController@sim
 Router::post('/staff/discipline/absence-action', 'Staff\\DisciplineController@absenceAction', [AuthMiddleware::class]);
 Router::get('/staff/discipline/history', 'Staff\\DisciplineController@history', [AuthMiddleware::class]);
 Router::get('/staff/discipline/export', 'Staff\\DisciplineController@export', [AuthMiddleware::class]);
+Router::post('/staff/discipline/import', 'Staff\\DisciplineController@import', [AuthMiddleware::class]);
 
 // Admin Routes - Tách theo từng nghiệp vụ chuẩn
 Router::get('/admin/dashboard', 'Admin\\DashboardController@index');
