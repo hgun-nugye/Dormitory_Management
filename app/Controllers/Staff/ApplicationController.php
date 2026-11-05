@@ -269,6 +269,14 @@ class ApplicationController extends Controller
             $filterToa = $scope['maToa'];
         }
 
+        // TIẾN TRÌNH TỰ ĐỘNG HỦY GIỮ CHỖ CÁC HỒ SƠ QUÁ HẠN 72H (BACKGROUND AUTO-RELEASE)
+        $autoReleaseResult = AutoReleaseService::scanAndReleaseExpiredBeds();
+        $autoReleasedCount = (int)($autoReleaseResult['total_released'] ?? 0);
+        $autoReleasedMessage = '';
+        if ($autoReleasedCount > 0) {
+            $autoReleasedMessage = "Hệ thống đã tự động hủy giữ chỗ và giải phóng {$autoReleasedCount} vị trí giường quá hạn thanh toán 72 giờ về lại quỹ phòng trống!";
+        }
+
         // Lọc danh sách cụm và tòa cascading tương thích
         $availableKhus = $scope['availableKhus'] ?? [];
         $availableCums = $scope['availableCums'] ?? [];
@@ -511,6 +519,8 @@ class ApplicationController extends Controller
             'availableKhus' => $availableKhus,
             'availableCums' => $availableCums,
             'availableToas' => $availableToas,
+            'autoReleasedCount' => $autoReleasedCount ?? 0,
+            'autoReleasedMessage' => $autoReleasedMessage ?? '',
             'flashSuccess' => Session::flash('success'),
             'flashError' => Session::flash('error'),
             'flashWarning' => Session::flash('warning')
@@ -586,12 +596,21 @@ class ApplicationController extends Controller
     }
 
     /**
-     * Cán bộ kích hoạt quét thu hồi giường quá hạn 72h tức thời (Background Scan)
+     * Cán bộ hoặc client kích hoạt quét thu hồi giường quá hạn 72h tức thời (Background / Realtime Auto-Release)
      */
     public function scanRelease72h(): void
     {
         $scope = $this->getStaffScope();
+        $request = new Request();
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'))
+            || ($request->input('ajax') == '1');
+
         if (!$scope['isAllowed']) {
+            if ($isAjax) {
+                $this->json(['success' => false, 'message' => 'Từ chối quyền: Bạn không có quyền thực hiện thao tác này.'], 403);
+                return;
+            }
             Session::flash('error', 'Từ chối quyền: Bạn không có quyền thực hiện thao tác này.');
             $this->redirect('staff/applications');
             return;
@@ -600,6 +619,20 @@ class ApplicationController extends Controller
         $result = AutoReleaseService::scanAndReleaseExpiredBeds();
         $totalReleased = (int)($result['total_released'] ?? 0);
         $totalScanned = (int)($result['total_scanned'] ?? 0);
+
+        if ($isAjax) {
+            $this->json([
+                'success' => true,
+                'total_scanned' => $totalScanned,
+                'total_released' => $totalReleased,
+                'released_beds' => $result['released_beds'] ?? [],
+                'released_records' => $result['released_records'] ?? [],
+                'message' => $totalReleased > 0
+                    ? "Đã tự động hủy giữ chỗ và giải phóng {$totalReleased} vị trí giường quá hạn 72h."
+                    : "Hệ thống đã kiểm tra: Hiện không có hồ sơ nào quá hạn 72h."
+            ]);
+            return;
+        }
 
         if ($totalReleased > 0) {
             Session::flash('success', "Đã hoàn tất quét đối soát 72h: Tìm thấy {$totalScanned} hồ sơ và tự động giải phóng {$totalReleased} vị trí giường quá hạn thanh toán về lại quỹ phòng trống!");
@@ -712,6 +745,14 @@ class ApplicationController extends Controller
             $filterKhu = $scope['maKhu'];
             $filterCum = $scope['maCum'];
             $filterToa = $scope['maToa'];
+        }
+
+        // TIẾN TRÌNH TỰ ĐỘNG HỦY GIỮ CHỖ CÁC HỒ SƠ QUÁ HẠN 72H (BACKGROUND AUTO-RELEASE)
+        $autoReleaseResult = AutoReleaseService::scanAndReleaseExpiredBeds();
+        $autoReleasedCount = (int)($autoReleaseResult['total_released'] ?? 0);
+        $autoReleasedMessage = '';
+        if ($autoReleasedCount > 0) {
+            $autoReleasedMessage = "Hệ thống đã tự động hủy giữ chỗ và giải phóng {$autoReleasedCount} vị trí giường quá hạn thanh toán 72 giờ về lại quỹ phòng trống!";
         }
 
         $scopeConditions = [];
