@@ -56,11 +56,13 @@ Router::get('/logout', 'AuthController@logout');
 Router::get('/register', 'RegistrationController@show');
 Router::post('/register', 'RegistrationController@submit');
 Router::get('/register/options', 'RegistrationController@options');
+Router::post('/register/options', 'RegistrationController@options');
 
 // Student Routes - Cổng thông tin Sinh viên
 Router::get('/student/dashboard', 'Student\\DashboardController@index', [AuthMiddleware::class]);
 Router::get('/student/profile', 'Student\\ProfileController@index', [AuthMiddleware::class]);
 Router::post('/student/profile/update', 'Student\\ProfileController@update', [AuthMiddleware::class]);
+Router::post('/student/profile/change-password', 'Student\\ProfileController@changePassword', [AuthMiddleware::class]);
 Router::get('/student/payments', 'Student\\PaymentController@index', [AuthMiddleware::class]);
 
 // Student - Dịch vụ một cửa (Yêu cầu & Đơn từ trực tuyến)

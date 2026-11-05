@@ -71,88 +71,114 @@ class RegistrationController extends Controller
     }
 
     public function options(): void
-{
-    $request = new Request();
-    $type = trim((string) $request->input('type', ''));
-    $values = [];
+    {
+        $request = new Request();
+        $type = trim((string) $request->input('type', ''));
+        $values = [];
 
-    try {
-        if ($type === 'buildings') {
-            $area = trim((string) $request->input('area', ''));
-            $gender = trim((string) $request->input('gender', ''));
+        try {
+            if ($type === 'buildings') {
+                $area = trim((string) $request->input('area', ''));
+                $gender = trim((string) $request->input('gender', ''));
+                $roomType = trim((string) $request->input('roomType', ''));
 
-            $values = Database::fetchAll(
-                "SELECT DISTINCT tn.MaToaNha, tn.TenToaNha
-                 FROM ToaNha tn
-                 JOIN CumNha cn ON cn.MaCum = tn.MaCum
-                 WHERE cn.MaKhu = :area 
-                   AND LOWER(tn.GioiTinhQuyDinh) = LOWER(:gender)
-                   AND tn.TrangThaiToaNha NOT IN ('Ngưng sử dụng', 'Tạm đóng bảo trì')
-                 ORDER BY tn.TenToaNha",
-                ['area' => $area, 'gender' => $gender]
-            );
-        } elseif ($type === 'floors') {
-            $building = trim((string) $request->input('building', ''));
-            $roomType = trim((string) $request->input('roomType', ''));
-            $roomTypeSql = $roomType !== '' ? " AND p.MaLoaiPhong = :roomType" : '';
+                $roomTypeSql = '';
+                $params = ['area' => $area, 'gender' => $gender];
+                if ($roomType !== '') {
+                    $roomTypeSql = " AND EXISTS (
+                        SELECT 1 FROM Phong p 
+                        JOIN Giuong g ON g.MaPhong = p.MaPhong 
+                        WHERE p.MaToaNha = tn.MaToaNha 
+                          AND p.MaLoaiPhong = :roomType 
+                          AND p.TrangThaiPhong NOT IN ('Bảo trì')
+                          AND g.TrangThaiGiuong IN (:available, :availableLegacy, 'Trong')
+                    )";
+                    $params['roomType'] = $roomType;
+                    $params['available'] = self::BED_AVAILABLE;
+                    $params['availableLegacy'] = self::BED_AVAILABLE_LEGACY;
+                }
 
-            $values = Database::fetchAll(
-                "SELECT DISTINCT p.Tang
-                 FROM Phong p
-                 WHERE p.MaToaNha = :building
-                   AND p.TrangThaiPhong NOT IN ('Bảo trì')
-                   {$roomTypeSql}
-                 ORDER BY p.Tang",
-                [
-                    'building' => $building,
-                    ...($roomType !== '' ? ['roomType' => $roomType] : [])
-                ]
-            );
-        } elseif ($type === 'rooms') {
-            $building = trim((string) $request->input('building', ''));
-            $floor = trim((string) $request->input('floor', ''));
-            $roomType = trim((string) $request->input('roomType', ''));
-            $roomTypeSql = $roomType !== '' ? " AND p.MaLoaiPhong = :roomType" : '';
+                $values = Database::fetchAll(
+                    "SELECT DISTINCT tn.MaToaNha, tn.TenToaNha
+                     FROM ToaNha tn
+                     JOIN CumNha cn ON cn.MaCum = tn.MaCum
+                     WHERE cn.MaKhu = :area 
+                       AND (tn.GioiTinhQuyDinh = :gender OR tn.GioiTinhQuyDinh = 'Tất cả')
+                       AND tn.TrangThaiToaNha NOT IN ('Ngưng sử dụng', 'Tạm đóng bảo trì')
+                       {$roomTypeSql}
+                     ORDER BY tn.TenToaNha",
+                    $params
+                );
+            } elseif ($type === 'floors') {
+                $building = trim((string) $request->input('building', ''));
+                $roomType = trim((string) $request->input('roomType', ''));
+                $roomTypeSql = $roomType !== '' ? " AND p.MaLoaiPhong = :roomType" : '';
 
-            $values = Database::fetchAll(
-                "SELECT DISTINCT p.MaPhong, p.SoPhong
-                 FROM Phong p
-                 WHERE p.MaToaNha = :building
-                   AND p.Tang = :floor
-                   AND p.TrangThaiPhong NOT IN ('Bảo trì')
-                   {$roomTypeSql}
-                 ORDER BY p.SoPhong",
-                [
-                    'building' => $building,
-                    'floor' => $floor,
-                    ...($roomType !== '' ? ['roomType' => $roomType] : [])
-                ]
-            );
-        } elseif ($type === 'beds') {
-            $room = trim((string) $request->input('room', ''));
+                $values = Database::fetchAll(
+                    "SELECT DISTINCT p.Tang
+                     FROM Phong p
+                     JOIN Giuong g ON g.MaPhong = p.MaPhong
+                     WHERE p.MaToaNha = :building
+                       AND p.TrangThaiPhong NOT IN ('Bảo trì')
+                       AND g.TrangThaiGiuong IN (:available, :availableLegacy, 'Trong')
+                       {$roomTypeSql}
+                     ORDER BY p.Tang",
+                    [
+                        'building' => $building,
+                        'available' => self::BED_AVAILABLE,
+                        'availableLegacy' => self::BED_AVAILABLE_LEGACY,
+                        ...($roomType !== '' ? ['roomType' => $roomType] : [])
+                    ]
+                );
+            } elseif ($type === 'rooms') {
+                $building = trim((string) $request->input('building', ''));
+                $floor = trim((string) $request->input('floor', ''));
+                $roomType = trim((string) $request->input('roomType', ''));
+                $roomTypeSql = $roomType !== '' ? " AND p.MaLoaiPhong = :roomType" : '';
 
-            $values = Database::fetchAll(
-                "SELECT g.MaGiuong, g.KyHieuGiuong
-                 FROM Giuong g
-                 JOIN Phong p ON p.MaPhong = g.MaPhong
-                 WHERE g.MaPhong = :room
-                   AND g.TrangThaiGiuong IN (:available, :availableLegacy)
-                   AND p.TrangThaiPhong NOT IN ('Bảo trì', 'Đang bảo trì', 'Khóa bảo trì')
-                 ORDER BY g.KyHieuGiuong",
-                [
-                    'room' => $room,
-                    'available' => self::BED_AVAILABLE,
-                    'availableLegacy' => self::BED_AVAILABLE_LEGACY,
-                ]
-            );
+                $values = Database::fetchAll(
+                    "SELECT DISTINCT p.MaPhong, p.SoPhong
+                     FROM Phong p
+                     JOIN Giuong g ON g.MaPhong = p.MaPhong
+                     WHERE p.MaToaNha = :building
+                       AND p.Tang = :floor
+                       AND p.TrangThaiPhong NOT IN ('Bảo trì')
+                       AND g.TrangThaiGiuong IN (:available, :availableLegacy, 'Trong')
+                       {$roomTypeSql}
+                     ORDER BY p.SoPhong",
+                    [
+                        'building' => $building,
+                        'floor' => $floor,
+                        'available' => self::BED_AVAILABLE,
+                        'availableLegacy' => self::BED_AVAILABLE_LEGACY,
+                        ...($roomType !== '' ? ['roomType' => $roomType] : [])
+                    ]
+                );
+            } elseif ($type === 'beds') {
+                $room = trim((string) $request->input('room', ''));
+
+                $values = Database::fetchAll(
+                    "SELECT g.MaGiuong, g.KyHieuGiuong
+                     FROM Giuong g
+                     JOIN Phong p ON p.MaPhong = g.MaPhong
+                     WHERE g.MaPhong = :room
+                       AND g.TrangThaiGiuong IN (:available, :availableLegacy, 'Trong')
+                       AND p.TrangThaiPhong NOT IN ('Bảo trì', 'Đang bảo trì', 'Khóa bảo trì')
+                     ORDER BY g.KyHieuGiuong",
+                    [
+                        'room' => $room,
+                        'available' => self::BED_AVAILABLE,
+                        'availableLegacy' => self::BED_AVAILABLE_LEGACY,
+                    ]
+                );
+            }
+        } catch (\PDOException $e) {
+            $this->json(['values' => [], 'error' => 'Lỗi kết nối CSDL: ' . $e->getMessage()], 500);
+            return;
         }
-    } catch (\PDOException $e) {
-        $this->json(['values' => [], 'error' => 'Lỗi kết nối CSDL.'], 500);
-        return;
-    }
 
-    $this->json(['values' => $values]);
-}
+        $this->json(['values' => $values]);
+    }
 
     public function submit(): void
     {
@@ -204,9 +230,19 @@ class RegistrationController extends Controller
                     'error',
                     $existingApplication
                         ? 'MSSV này đã có hồ sơ đang xử lý và không thể đăng ký lại.'
-                        : 'MSSV này đã có tài khoản trong hệ thống. Hãy đăng nhập hoặc sử dụng chức năng quên tài khoản.'
+                        : 'MSSV này đã có tài khoản trong hệ thống. Hãy đăng nhập hoặc liên hệ Ban Quản lý KTX.'
                 );
                 $this->redirect($existingApplication ? 'student/dashboard' : 'login');
+                return;
+            }
+
+            $existingAccount = Database::fetch(
+                "SELECT MaTaiKhoan FROM TaiKhoan WHERE TenDangNhap = :u LIMIT 1",
+                ['u' => $mssv]
+            );
+            if ($existingAccount) {
+                Session::flash('error', 'Tài khoản với MSSV này đã tồn tại trong hệ thống. Vui lòng đăng nhập.');
+                $this->redirect('login');
                 return;
             }
         } catch (\Throwable $e) {
@@ -217,7 +253,8 @@ class RegistrationController extends Controller
 
         $studentId = $mssv;
         $username = $studentId;
-        $password = 'KTX-' . bin2hex(random_bytes(5));
+        // Mật khẩu sinh ngẫu nhiên đúng 8 ký tự an toàn
+        $password = MailService::generatePassword(8);
 
         $uploads = [
             'cccdFront' => 'cccd_front',
@@ -261,19 +298,25 @@ class RegistrationController extends Controller
             Database::beginTransaction();
 
             $bed = Database::fetch(
-                "SELECT g.MaGiuong, p.MaPhong, tn.GioiTinhQuyDinh
+                "SELECT g.MaGiuong, p.MaPhong, tn.GioiTinhQuyDinh, tn.TenToaNha
                  FROM Giuong g
                  JOIN Phong p ON p.MaPhong = g.MaPhong
                  JOIN ToaNha tn ON tn.MaToaNha = p.MaToaNha
                  WHERE g.MaGiuong = :bed
-                   AND g.TrangThaiGiuong IN (:bedStatus, :bedStatusLegacy)
+                   AND g.TrangThaiGiuong IN (:bedStatus, :bedStatusLegacy, 'Trong')
                    AND p.TrangThaiPhong NOT IN (:roomMaintenance, :roomMaintenanceLegacy, 'Bảo trì')
-                   AND tn.TrangThaiToaNha IN (:buildingStatus, :buildingStatusLegacy)
+                   AND tn.TrangThaiToaNha NOT IN ('Ngưng sử dụng', 'Tạm đóng bảo trì')
                  FOR UPDATE",
-                ['bed' => $bedId, 'bedStatus' => self::BED_AVAILABLE, 'bedStatusLegacy' => self::BED_AVAILABLE_LEGACY, 'roomMaintenance' => self::ROOM_MAINTENANCE, 'roomMaintenanceLegacy' => self::ROOM_MAINTENANCE_LEGACY, 'buildingStatus' => self::BUILDING_ACTIVE, 'buildingStatusLegacy' => self::BUILDING_ACTIVE_LEGACY]
+                [
+                    'bed' => $bedId,
+                    'bedStatus' => self::BED_AVAILABLE,
+                    'bedStatusLegacy' => self::BED_AVAILABLE_LEGACY,
+                    'roomMaintenance' => self::ROOM_MAINTENANCE,
+                    'roomMaintenanceLegacy' => self::ROOM_MAINTENANCE_LEGACY,
+                ]
             );
-            if (!$bed || $bed['GioiTinhQuyDinh'] !== $gender) {
-                throw new \RuntimeException('Giường không còn trống hoặc không phù hợp giới tính.');
+            if (!$bed || ($bed['GioiTinhQuyDinh'] !== 'Tất cả' && $bed['GioiTinhQuyDinh'] !== $gender)) {
+                throw new \RuntimeException('Giường đã chọn không còn trống hoặc không phù hợp giới tính.');
             }
 
             $dot = Database::fetch(
@@ -347,26 +390,72 @@ class RegistrationController extends Controller
 
             Database::commit();
             $loginUrl = function_exists('url') ? url('login') : '';
-            $subject = '[KTX ĐHQG-HCM] Tài khoản sinh viên đã được tạo';
-            $plain = "Nộp hồ sơ thành công. MSSV/Tên đăng nhập: {$username}\nMật khẩu: {$password}\nMã hồ sơ: {$applicationId}\nĐăng nhập tại: {$loginUrl}";
-            $html = '<p>Xin chào <strong>' . htmlspecialchars($hoTen) . '</strong>,</p>'
-                . '<p>Hồ sơ nội trú của bạn đã được gửi thành công.</p>'
-                . '<div style="background:#f1f5f9;padding:16px;border-radius:8px">'
-                . '<p><strong>Tên đăng nhập (MSSV):</strong> ' . htmlspecialchars($username) . '</p>'
-                . '<p><strong>Mật khẩu tạm thời:</strong> <code>' . htmlspecialchars($password) . '</code></p>'
-                . '<p><strong>Mã hồ sơ:</strong> ' . htmlspecialchars($applicationId) . '</p>'
-                . '</div>'
-                . '<p><a href="' . htmlspecialchars($loginUrl) . '">Đăng nhập hệ thống KTX</a></p>';
+            $subject = '[KTX ĐHQG-HCM] Tài khoản đăng ký nội trú mới - Yêu cầu đổi mật khẩu';
+            
+            $plain = "Xin chào {$hoTen},\n\n"
+                . "Hồ sơ đăng ký nội trú của bạn đã được tiếp nhận thành công vào hệ thống!\n"
+                . "--------------------------------------------------------\n"
+                . "THÔNG TIN TÀI KHOẢN VÀ HỒ SƠ:\n"
+                . "- Tên đăng nhập (MSSV): {$username}\n"
+                . "- Mật khẩu tạm thời (8 ký tự): {$password}\n"
+                . "- Mã hồ sơ đăng ký: {$applicationId}\n"
+                . "- Cổng đăng nhập KTX: {$loginUrl}\n"
+                . "--------------------------------------------------------\n"
+                . "YÊU CẦU BẮT BUỘC:\n"
+                . "Mật khẩu trên được sinh ngẫu nhiên gồm 8 ký tự. Vì lý do an toàn bảo mật thông tin cá nhân, bạn vui lòng đăng nhập vào hệ thống tại link trên và đổi mật khẩu mới ngay trong lần đầu đăng nhập.\n\n"
+                . "Trân trọng,\nBan Quản lý Ký túc xá ĐHQG-HCM";
+
+            $html = <<<HTML
+<div style="font-family: Arial, 'Segoe UI', sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #ffffff;">
+    <div style="background: linear-gradient(135deg, #1e40af, #3b82f6); color: #ffffff; padding: 26px 20px; text-align: center;">
+        <h2 style="margin: 0; font-size: 21px; font-weight: 700; letter-spacing: 0.5px;">KÝ TÚC XÁ ĐHQG-HCM</h2>
+        <p style="margin: 6px 0 0; font-size: 13px; opacity: 0.92;">Cổng thông tin Đăng ký & Quản lý Cư trú Nội trú</p>
+    </div>
+    <div style="padding: 24px;">
+        <p style="font-size: 15px; margin-top: 0;">Xin chào <strong>{$hoTen}</strong>,</p>
+        <p style="font-size: 14px; color: #475569;">Hồ sơ đăng ký chỗ ở nội trú của bạn đã được tiếp nhận thành công vào hệ thống. Dưới đây là thông tin tài khoản được cấp tự động:</p>
+        
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 20px 0;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <tr>
+                    <td style="padding: 7px 0; color: #64748b; width: 45%;">Tên đăng nhập (MSSV):</td>
+                    <td style="padding: 7px 0; font-weight: 700; color: #1e40af; font-size: 15px;">{$username}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 7px 0; color: #64748b;">Mật khẩu tạm thời (8 ký tự):</td>
+                    <td style="padding: 7px 0;"><code style="background: #fee2e2; border: 1px solid #fca5a5; padding: 4px 10px; border-radius: 4px; font-size: 16px; font-weight: 700; color: #b91c1c; letter-spacing: 1.5px;">{$password}</code></td>
+                </tr>
+                <tr>
+                    <td style="padding: 7px 0; color: #64748b;">Mã hồ sơ đăng ký:</td>
+                    <td style="padding: 7px 0; font-weight: 600; color: #0f172a;">{$applicationId}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 14px; border-radius: 4px; margin-bottom: 22px;">
+            <p style="margin: 0; font-size: 13px; color: #b45309; font-weight: 700;">⚠️ YÊU CẦU ĐỔI MẬT KHẨU:</p>
+            <p style="margin: 6px 0 0; font-size: 13px; color: #92400e;">Mật khẩu trên là mật khẩu tạm thời 8 ký tự được tạo tự động cho hồ sơ của bạn. Vì lý do an toàn bảo mật thông tin cá nhân, bạn <strong>bắt buộc phải đổi mật khẩu mới</strong> ngay sau khi đăng nhập thành công vào hệ thống KTX.</p>
+        </div>
+
+        <div style="text-align: center; margin: 26px 0;">
+            <a href="{$loginUrl}" style="background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 28px; font-size: 14px; font-weight: 700; border-radius: 6px; display: inline-block;">Đăng nhập hệ thống & Đổi mật khẩu</a>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
+        <p style="font-size: 12px; color: #94a3b8; margin: 0; text-align: center;">Đây là email tự động từ Hệ thống Quản lý KTX ĐHQG-HCM. Vui lòng không trả lời thư này.</p>
+    </div>
+</div>
+HTML;
             $mailResult = MailService::send($email, $hoTen, $subject, $html, $plain);
             $emailDelivered = ($mailResult['mode'] ?? '') === 'smtp';
 
             Session::flash(
                 'success',
-                "Nộp hồ sơ thành công. Mã hồ sơ: {$applicationId}. "
-                . "Tài khoản đăng nhập {$username} đã được tạo. "
+                "Đăng ký nội trú thành công! Mã hồ sơ: <b>{$applicationId}</b>.<br>"
+                . "Hệ thống đã tự động tạo tài khoản với Tên đăng nhập (MSSV): <b>{$username}</b> và Mật khẩu tạm thời gồm 8 ký tự.<br>"
                 . ($emailDelivered
-                    ? "Thông tin đăng nhập và mật khẩu đã được gửi đến {$email}."
-                    : 'Email chưa được gửi qua máy chủ SMTP. Hãy kiểm tra cấu hình MAIL_HOST/MAIL_USERNAME/MAIL_PASSWORD hoặc liên hệ quản trị viên.')
+                    ? "Thông tin đăng nhập cùng <b>yêu cầu đổi mật khẩu</b> đã được gửi đến email <b>{$email}</b>. Vui lòng kiểm tra hộp thư để đăng nhập và đổi mật khẩu."
+                    : "Tài khoản của bạn đã được tạo thành công. Bạn có thể sử dụng mật khẩu ngẫu nhiên 8 ký tự: <code>{$password}</code> để đăng nhập và tiến hành đổi mật khẩu mới.")
             );
             $this->redirect('login');
         } catch (\Throwable $e) {

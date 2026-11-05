@@ -7,7 +7,7 @@ ob_start();
 <div class="register-page">
   <div class="register-card">
     <h1>Đăng ký hồ sơ nội trú mới</h1>
-    <p class="register-note">Trang công khai - không cần tài khoản trước. MSSV do trường cung cấp sẽ là tên đăng nhập; hệ thống tự tạo mật khẩu và gửi thông tin tài khoản đến email cá nhân.</p>
+    <p class="register-note">Trang công khai - không cần tài khoản trước. MSSV do trường cung cấp sẽ là tên đăng nhập; hệ thống tự động tạo tài khoản với mật khẩu ngẫu nhiên 8 ký tự và gửi về email cá nhân kèm yêu cầu đổi mật khẩu sau khi đăng nhập.</p>
     <?php if (!empty($success)): ?><div class="alert-success"><?= htmlspecialchars($success) ?></div><?php endif; ?>
     <?php if (!empty($error)): ?><div class="alert-danger"><?= htmlspecialchars($error) ?></div><?php endif; ?>
     <form action="<?= htmlspecialchars(parse_url(url('register'), PHP_URL_PATH), ENT_QUOTES, 'UTF-8') ?>" method="post" enctype="multipart/form-data">
@@ -27,9 +27,9 @@ ob_start();
       <div class="register-section"><h3>Chọn chỗ ở</h3><div class="form-grid">
         <div class="form-group"><label>Khu</label><select id="area" name="area" class="form-control" required><option value="">-- Chọn khu --</option><?php foreach (($areas ?? []) as $a): ?><option value="<?= htmlspecialchars($a['MaKhu']) ?>"><?= htmlspecialchars($a['TenKhu']) ?></option><?php endforeach; ?></select></div>
         <div class="form-group"><label>Loại phòng</label><select id="roomType" name="roomType" class="form-control"><option value="">-- Tất cả loại phòng --</option><?php if (!empty($roomTypes) && is_array($roomTypes)): ?><?php foreach ($roomTypes as $r): ?><option value="<?= htmlspecialchars($r['MaLoaiPhong']) ?>"><?= htmlspecialchars($r['TenLoaiPhong']) ?></option><?php endforeach; ?><?php endif; ?></select></div>
-        <div class="form-group"><label>Tòa nhà</label><select id="building" class="form-control" required><option value="">-- Chọn tòa --</option></select></div>
-        <div class="form-group"><label>Tầng</label><select id="floor" class="form-control" required><option value="">-- Chọn tầng --</option></select></div>
-        <div class="form-group"><label>Phòng</label><select id="room" class="form-control" required><option value="">-- Chọn phòng --</option></select></div>
+        <div class="form-group"><label>Tòa nhà</label><select id="building" name="building" class="form-control" required><option value="">-- Chọn tòa --</option></select></div>
+        <div class="form-group"><label>Tầng</label><select id="floor" name="floor" class="form-control" required><option value="">-- Chọn tầng --</option></select></div>
+        <div class="form-group"><label>Phòng</label><select id="room" name="room" class="form-control" required><option value="">-- Chọn phòng --</option></select></div>
         <div class="form-group"><label>Giường trống</label><select name="bed" id="bed" class="form-control" required><option value="">-- Chọn giường --</option></select></div>
       </div></div>
       <p id="accommodationHint" class="register-note" style="margin:14px 0 0;min-height:20px"></p>
@@ -105,10 +105,29 @@ const csrfToken = csrfInput ? csrfInput.value : '';
   resetSelect($('room'),'-- Chọn phòng --');
   resetSelect($('bed'),'-- Chọn giường --');
   setHint('');
-  if(!$('area').value || !$('gender').value){resetSelect($('building'),'-- Chọn tòa --');setHint('Vui lòng chọn khu và giới tính để tải danh sách tòa nhà.');return;}
-  const rows=await load('buildings',{area:$('area').value,gender:$('gender').value},$('building'),'MaToaNha','-- Chọn tòa --',(row)=>row.TenToaNha);
-  if(rows.length===0){setHint('Không có tòa nhà phù hợp với khu và giới tính đã chọn.',true);return;}
-  if(rows.length===1){$('building').value=rows[0].MaToaNha;await loadFloor();}
+  if(!$('area').value || !$('gender').value){
+    resetSelect($('building'),'-- Chọn tòa --');
+    if(!$('gender').value && !$('area').value) {
+      setHint('Vui lòng chọn giới tính (ở mục thông tin phía trên) và khu KTX để tải danh sách tòa nhà.');
+    } else if(!$('gender').value) {
+      setHint('Vui lòng chọn giới tính ở mục thông tin cá nhân phía trên.');
+    } else {
+      setHint('Vui lòng chọn khu KTX (Khu A hoặc Khu B).');
+    }
+    return;
+  }
+  const rows=await load('buildings',{area:$('area').value,gender:$('gender').value,roomType:$('roomType').value},$('building'),'MaToaNha','-- Chọn tòa --',(row)=>row.TenToaNha);
+  if(rows.length===0){
+    setHint('Không có tòa nhà phù hợp với khu, giới tính hoặc loại phòng đã chọn.',true);
+    return;
+  }
+  if(rows.length===1){
+    $('building').value=rows[0].MaToaNha;
+    setHint('Đã tự chọn tòa duy nhất phù hợp: ' + rows[0].TenToaNha);
+    await loadFloor();
+  } else {
+    setHint('Đã tìm thấy ' + rows.length + ' tòa nhà phù hợp. Vui lòng chọn một tòa nhà.');
+  }
  }
  async function loadFloor(){
   invalidate('rooms');invalidate('beds');
@@ -136,7 +155,13 @@ const csrfToken = csrfInput ? csrfInput.value : '';
  }
  $('area').addEventListener('change',loadBuilding);
  $('gender').addEventListener('change',loadBuilding);
- $('roomType').addEventListener('change',async function(){await loadFloor();});
+ $('roomType').addEventListener('change',async function(){
+   if(!$('building').value){
+     await loadBuilding();
+   } else {
+     await loadFloor();
+   }
+ });
  $('building').addEventListener('change',loadFloor);
  $('floor').addEventListener('change',loadRoom);
  $('room').addEventListener('change',loadBed);

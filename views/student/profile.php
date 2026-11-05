@@ -181,6 +181,30 @@ $hoSoDangKy = $hoSoDangKy ?? null;
                     </table>
                 </div>
 
+                <!-- Change Password Card -->
+                <div class="card">
+                    <div class="card-title">
+                        <span><i class="fa-solid fa-key" style="margin-right: 6px; color: var(--primary);"></i> Đổi mật khẩu tài khoản</span>
+                    </div>
+                    <form method="POST" action="<?= url('student/profile/change-password') ?>" style="display: flex; flex-direction: column; gap: 14px;">
+                        <?= csrf_field() ?>
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 5px;">Mật khẩu hiện tại / Mật khẩu tạm</label>
+                            <input type="password" name="old_password" class="form-control" placeholder="Nhập mật khẩu nhận qua email" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 12px; font-size: 0.9rem;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 5px;">Mật khẩu mới (tối thiểu 6 ký tự)</label>
+                            <input type="password" name="new_password" class="form-control" placeholder="Nhập mật khẩu mới" required minlength="6" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 12px; font-size: 0.9rem;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 5px;">Xác nhận mật khẩu mới</label>
+                            <input type="password" name="confirm_password" class="form-control" placeholder="Nhập lại mật khẩu mới" required minlength="6" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 12px; font-size: 0.9rem;">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="margin-top: 6px; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.9rem; align-self: flex-start;">
+                            <i class="fa-solid fa-shield-halved" style="margin-right: 6px;"></i> Cập nhật mật khẩu
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     <?php endif; ?>

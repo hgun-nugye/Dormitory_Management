@@ -93,4 +93,39 @@ class ProfileController extends Controller {
         }
         $this->redirect('student/profile');
     }
+
+    public function changePassword(): void {
+        $request = new Request();
+        $token = (string) $request->input('csrf_token', '');
+        $sessionToken = (string) Session::get('csrf_token', '');
+        if ($token === '' || $sessionToken === '' || !hash_equals($sessionToken, $token)) {
+            Session::flash('error', 'Phiên làm việc đã hết hạn. Vui lòng tải lại trang.');
+            $this->redirect('student/profile');
+            return;
+        }
+
+        $user = Auth::user();
+        if (!$user) {
+            $this->redirect('login');
+            return;
+        }
+
+        $oldPassword = (string)$request->input('old_password', '');
+        $newPassword = (string)$request->input('new_password', '');
+        $confirmPassword = (string)$request->input('confirm_password', '');
+
+        if ($newPassword !== $confirmPassword) {
+            Session::flash('error', 'Mật khẩu xác nhận không khớp với mật khẩu mới.');
+            $this->redirect('student/profile');
+            return;
+        }
+
+        $res = Auth::changePassword((int)$user['MaTaiKhoan'], $oldPassword, $newPassword);
+        if ($res['success']) {
+            Session::flash('success', 'Đổi mật khẩu thành công! Hãy ghi nhớ mật khẩu mới cho các lần đăng nhập tiếp theo.');
+        } else {
+            Session::flash('error', $res['message'] ?? 'Đổi mật khẩu thất bại.');
+        }
+        $this->redirect('student/profile');
+    }
 }
