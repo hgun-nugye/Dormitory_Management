@@ -5,29 +5,25 @@ namespace App\Controllers\Student;
 use App\Core\Auth;
 use App\Core\Controller;
 use App\Core\Database;
+use App\Core\Request;
+use App\Core\Session;
 
-/**
- * Controller: Giao diện mẫu - Hiển thị thông tin của sinh viên
- * Các bảng dữ liệu: SINHVIEN + SV_NOITRU / SV_TAMTRU + TRUONG / BAN_QUAN_LY_CUM_NHA / PHONG
- */
 class ProfileController extends Controller {
     public function index(): void {
         $user = Auth::user();
-        $mssv = $user['TenDangNhap'] ?? '2110001';
-
-        // Lấy dữ liệu hoặc dùng mẫu sườn tiêu chuẩn
+        $mssv = $user['profile']['MaSinhVien'] ?? $user['TenDangNhap'] ?? '';
         $sinhVien = null;
         $hopDong = null;
+        $hoSoDangKy = null;
 
         try {
             $sinhVien = Database::fetch(
-                "SELECT sv.*, t.TenTruong 
-                 FROM SinhVien sv 
-                 JOIN TruongDaiHoc t ON sv.MaTruong = t.MaTruong 
+                "SELECT sv.*, t.TenTruong
+                 FROM SinhVien sv
+                 JOIN TruongDaiHoc t ON sv.MaTruong = t.MaTruong
                  WHERE sv.MaSinhVien = :mssv",
                 ['mssv' => $mssv]
             );
-
             if ($sinhVien) {
                 $hopDong = Database::fetch(
                     "SELECT hd.*, g.KyHieuGiuong, g.MaPhong, lp.TenLoaiPhong, tn.TenToaNha, cn.TenCum, cn.SoDienThoaiCum
@@ -40,46 +36,61 @@ class ProfileController extends Controller {
                      WHERE hd.MaSinhVien = :mssv AND hd.TrangThaiHopDong = 'Đang hiệu lực'",
                     ['mssv' => $mssv]
                 );
+                $hoSoDangKy = Database::fetch(
+                    "SELECT hs.*, g.KyHieuGiuong, g.MaPhong, p.Tang, tn.TenToaNha, cn.TenCum
+                     FROM HoSoDangKy hs
+                     JOIN Giuong g ON g.MaGiuong = hs.MaGiuong
+                     JOIN Phong p ON p.MaPhong = g.MaPhong
+                     JOIN ToaNha tn ON tn.MaToaNha = p.MaToaNha
+                     JOIN CumNha cn ON cn.MaCum = tn.MaCum
+                     WHERE hs.MaSinhVien = :mssv
+                     AND hs.TrangThaiHoSo IN ('Chờ duyệt', 'Chờ thanh toán')
+                     ORDER BY hs.ThoiGianNop DESC, hs.MaHoSo DESC
+                     LIMIT 1",
+                    ['mssv' => $mssv]
+                );
             }
         } catch (\Throwable $e) {
-            // Fallback sang khung sườn mẫu
-        }
-
-        // Khung sườn mẫu các trường cần hiển thị (theo CSDL & PDF)
-        if (!$sinhVien) {
-            $sinhVien = [
-                'MaSinhVien' => '2110001',
-                'HoVaTen' => 'Nguyễn Văn An',
-                'NgaySinh' => '2003-08-15',
-                'GioiTinh' => 'Nam',
-                'SoCCCD' => '079203001234',
-                'TenTruong' => 'Trường Đại học Bách Khoa (ĐHQG-HCM)',
-                'KhoaTuyenSinh' => 'Khóa 2021',
-                'SoDienThoai' => '0901 234 567',
-                'Email' => 'an.nguyen@student.vnuhcm.edu.vn',
-                'SDTPhuHuynh' => '0912 345 678',
-                'SoTaiKhoanNganHang' => '19036789101112 (Techcombank)',
-                'TrangThaiNoiTru' => 'Đang ở nội trú'
-            ];
-        }
-
-        if (!$hopDong) {
-            $hopDong = [
-                'MaHopDong' => 'HD-2026-001',
-                'MaPhong' => 'P.304',
-                'KyHieuGiuong' => 'G02 (Tầng 1)',
-                'TenToaNha' => 'Tòa A01',
-                'TenCum' => 'Cụm nhà A1 - A4 (Khu A)',
-                'SoDienThoaiCum' => '028.3724.2160',
-                'NgayBatDau' => '2026-09-01',
-                'NgayKetThuc' => '2027-06-30'
-            ];
+            $sinhVien = null;
         }
 
         $this->view('student.profile', [
-            'sinhVien' => $sinhVien,
+            'sinhVien' => $sinhVien ?? [],
             'hopDong' => $hopDong,
-            'title' => 'Giao diện mẫu: Hiển thị thông tin sinh viên'
+            'hoSoDangKy' => $hoSoDangKy,
+            'title' => 'Thông tin sinh viên',
+            'error' => Session::flash('error'),
+            'success' => Session::flash('success')
         ]);
+    }
+
+    public function update(): void {
+        $request = new Request();
+        $token = (string) $request->input('csrf_token', '');
+        $sessionToken = (string) Session::get('csrf_token', '');
+        if ($token === '' || $sessionToken === '' || !hash_equals($sessionToken, $token)) {
+            Session::flash('error', 'Phiên làm việc đã hết hạn. Vui lòng tải lại trang.');
+            $this->redirect('student/profile');
+            return;
+        }
+
+        $user = Auth::user();
+        $mssv = $user['profile']['MaSinhVien'] ?? $user['TenDangNhap'] ?? '';
+        $phone = trim((string) $request->input('SoDienThoai', ''));
+        $email = trim((string) $request->input('Email', ''));
+        if (!preg_match('/^[0-9+\s.-]{9,15}$/', $phone)) {
+            Session::flash('error', 'Số điện thoại không hợp lệ.');
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            Session::flash('error', 'Email không hợp lệ.');
+        } elseif ($mssv !== '') {
+            Database::execute(
+                'UPDATE SinhVien SET SoDienThoai = :phone, Email = :email WHERE MaSinhVien = :mssv',
+                ['phone' => $phone, 'email' => $email, 'mssv' => $mssv]
+            );
+            Session::flash('success', 'Đã cập nhật thông tin liên hệ.');
+        } else {
+            Session::flash('error', 'Không xác định được hồ sơ sinh viên.');
+        }
+        $this->redirect('student/profile');
     }
 }

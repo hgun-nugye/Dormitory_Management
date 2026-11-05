@@ -15,7 +15,7 @@
     <main>
         <?php include __DIR__ . '/layout/topbar.php'; ?>
         <div class="content">
-            <?php if ($message): ?>
+            <?php if (!empty($message)): ?>
                 <div class="alert"><?= htmlspecialchars($message) ?></div>
             <?php endif; ?>
             <?php include __DIR__ . '/' . $view . '.php'; ?>

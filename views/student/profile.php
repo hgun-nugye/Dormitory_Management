@@ -1,8 +1,15 @@
 <?php
 ob_start();
+$hopDong = $hopDong ?? null;
 ?>
 
 <div class="container">
+    <?php if (!empty($error)): ?>
+        <div class="alert alert-danger" style="margin-bottom:16px;"><?= htmlspecialchars($error) ?></div>
+    <?php endif; ?>
+    <?php if (!empty($success)): ?>
+        <div class="alert alert-success" style="margin-bottom:16px;"><?= htmlspecialchars($success) ?></div>
+    <?php endif; ?>
     <!-- Header -->
     <div style="margin-bottom: 20px;">
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
@@ -27,6 +34,12 @@ ob_start();
     </div>
 
     <!-- KHỐI 1: THÔNG TIN CÁ NHÂN & HỌC VỤ -->
+    <?php if (empty($sinhVien)): ?>
+        <div class="card" style="margin-bottom:20px;">
+            <div class="card-title"><span>Thông tin cá nhân & Học vụ</span></div>
+            <p class="text-muted">Không tìm thấy hồ sơ sinh viên gắn với tài khoản hiện tại.</p>
+        </div>
+    <?php else: ?>
     <div class="card" style="margin-bottom: 20px;">
         <div class="card-title">
             <span>Thông tin cá nhân & Học vụ</span>
@@ -42,7 +55,7 @@ ob_start();
             </tr>
             <tr>
                 <td class="info-label">Ngày sinh</td>
-                <td class="info-value"><?= date('d/m/Y', strtotime($sinhVien['NgaySinh'])) ?></td>
+                <td class="info-value"><?= !empty($sinhVien['NgaySinh']) ? date('d/m/Y', strtotime($sinhVien['NgaySinh'])) : 'Chưa cập nhật' ?></td>
             </tr>
             <tr>
                 <td class="info-label">Giới tính</td>
@@ -62,6 +75,7 @@ ob_start();
             </tr>
         </table>
     </div>
+    <?php endif; ?>
 
     <!-- KHỐI 2: THÔNG TIN LIÊN HỆ & TÀI KHOẢN -->
     <div class="card" style="margin-bottom: 20px;">
@@ -71,11 +85,11 @@ ob_start();
         <table class="info-table">
             <tr>
                 <td class="info-label">Số điện thoại</td>
-                <td class="info-value"><b><?= htmlspecialchars($sinhVien['SoDienThoai']) ?></b></td>
+                <td class="info-value"><b><?= htmlspecialchars($sinhVien['SoDienThoai'] ?? 'Chưa cập nhật') ?></b></td>
             </tr>
             <tr>
                 <td class="info-label">Email</td>
-                <td class="info-value"><?= htmlspecialchars($sinhVien['Email']) ?></td>
+                <td class="info-value"><?= htmlspecialchars($sinhVien['Email'] ?? 'Chưa cập nhật') ?></td>
             </tr>
             <tr>
                 <td class="info-label">Số ĐT phụ huynh</td>
@@ -87,9 +101,16 @@ ob_start();
             </tr>
         </table>
         <div style="margin-top: 14px;">
-            <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px;" onclick="alert('Mở form cập nhật thông tin liên hệ')">
-                ✏️ Cập nhật thông tin liên hệ
-            </button>
+            <form method="post" action="<?= url('student/profile/update') ?>" class="grid grid-cols-2" style="gap:12px;align-items:end;">
+                <?= csrf_field() ?>
+                <label>Số điện thoại
+                    <input class="form-control" name="SoDienThoai" value="<?= htmlspecialchars($sinhVien['SoDienThoai'] ?? '') ?>" required>
+                </label>
+                <label>Email
+                    <input class="form-control" type="email" name="Email" value="<?= htmlspecialchars($sinhVien['Email'] ?? '') ?>" required>
+                </label>
+                <button type="submit" class="btn btn-outline btn-sm" style="border-radius:6px;width:max-content;">✏️ Lưu thông tin liên hệ</button>
+            </form>
         </div>
     </div>
 
@@ -98,6 +119,18 @@ ob_start();
         <div class="card-title">
             <span>Thông tin lưu trú & Chỗ ở</span>
         </div>
+        <?php if (!$hopDong): ?>
+        <?php if (!empty($hoSoDangKy)): ?>
+        <div style="padding: 12px; border: 1px solid #dbeafe; border-radius: 8px; background: #eff6ff;">
+            <p style="margin: 0 0 8px;"><b>Hồ sơ đang xử lý</b></p>
+            <p style="margin: 0 0 6px;">Mã hồ sơ: <b><?= htmlspecialchars($hoSoDangKy['MaHoSo']) ?></b></p>
+            <p style="margin: 0 0 6px;">Trạng thái: <b><?= htmlspecialchars($hoSoDangKy['TrangThaiHoSo']) ?></b></p>
+            <p style="margin: 0;">Chỗ đăng ký: <?= htmlspecialchars($hoSoDangKy['TenToaNha'] . ' - Phòng ' . $hoSoDangKy['MaPhong'] . ' - Giường ' . $hoSoDangKy['KyHieuGiuong']) ?></p>
+        </div>
+        <?php else: ?>
+        <p class="text-muted">Tài khoản chưa có hợp đồng nội trú đang hiệu lực.</p>
+        <?php endif; ?>
+        <?php else: ?>
         <table class="info-table">
             <tr>
                 <td class="info-label">Trạng thái lưu trú</td>
@@ -116,6 +149,7 @@ ob_start();
                 <td class="info-value">Từ <?= date('d/m/Y', strtotime($hopDong['NgayBatDau'])) ?> đến <?= date('d/m/Y', strtotime($hopDong['NgayKetThuc'])) ?></td>
             </tr>
         </table>
+        <?php endif; ?>
     </div>
 
     <!-- KHỐI 4: DỊCH VỤ LƯU TRÚ -->
@@ -124,12 +158,12 @@ ob_start();
             <span>Dịch vụ một cửa sinh viên</span>
         </div>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <button type="button" class="btn btn-outline" style="border-radius: 6px;" onclick="alert('Đơn xin chuyển phòng')">
+            <a href="<?= url('student/requests/transfer') ?>" class="btn btn-outline" style="border-radius: 6px;">
                 🔄 Đơn xin chuyển phòng
-            </button>
-            <button type="button" class="btn btn-outline" style="border-radius: 6px;" onclick="alert('Báo hỏng thiết bị phòng')">
+            </a>
+            <a href="<?= url('student/requests/repair') ?>" class="btn btn-outline" style="border-radius: 6px;">
                 🛠️ Báo hỏng thiết bị phòng
-            </button>
+            </a>
         </div>
     </div>
 </div>

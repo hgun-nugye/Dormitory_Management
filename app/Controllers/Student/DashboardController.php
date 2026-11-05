@@ -9,7 +9,7 @@ use App\Core\Database;
 class DashboardController extends Controller {
     public function index(): void {
         $user = Auth::user();
-        $mssv = $user['TenDangNhap'] ?? '';
+        $mssv = $user['profile']['MaSinhVien'] ?? $user['TenDangNhap'] ?? '';
 
         // Thông tin sinh viên
         $sinhVien = Database::fetch(
@@ -33,6 +33,23 @@ class DashboardController extends Controller {
             ['mssv' => $mssv]
         );
 
+        $hoSoDangKy = null;
+        if ($mssv !== '') {
+            $hoSoDangKy = Database::fetch(
+                "SELECT hs.*, g.KyHieuGiuong, g.MaPhong, p.Tang, tn.TenToaNha, cn.TenCum
+                 FROM HoSoDangKy hs
+                 JOIN Giuong g ON g.MaGiuong = hs.MaGiuong
+                 JOIN Phong p ON p.MaPhong = g.MaPhong
+                 JOIN ToaNha tn ON tn.MaToaNha = p.MaToaNha
+                 JOIN CumNha cn ON cn.MaCum = tn.MaCum
+                 WHERE hs.MaSinhVien = :mssv
+                   AND hs.TrangThaiHoSo IN ('Chờ duyệt', 'Chờ thanh toán')
+                 ORDER BY hs.ThoiGianNop DESC, hs.MaHoSo DESC
+                 LIMIT 1",
+                ['mssv' => $mssv]
+            );
+        }
+
         // Hóa đơn chưa thanh toán
         $hoaDons = Database::fetchAll(
             "SELECT * FROM HoaDon WHERE MaSinhVien = :mssv ORDER BY NgayTao DESC LIMIT 5",
@@ -53,6 +70,7 @@ class DashboardController extends Controller {
             'user' => $user,
             'sinhVien' => $sinhVien,
             'hopDong' => $hopDong,
+            'hoSoDangKy' => $hoSoDangKy,
             'hoaDons' => $hoaDons,
             'phieuBaoHong' => $phieuBaoHong
         ]);

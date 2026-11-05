@@ -1,5 +1,8 @@
 <?php
 ob_start();
+$hoaDons = $hoaDons ?? [];
+$chiSoDienNuoc = $chiSoDienNuoc ?? [];
+$giaoDichs = $giaoDichs ?? [];
 ?>
 
 <div class="container">
@@ -46,7 +49,9 @@ ob_start();
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($hoaDons as $hd): ?>
+                    <?php if (empty($hoaDons)): ?>
+                        <tr><td colspan="7" class="text-muted">Hiện chưa có hóa đơn nào.</td></tr>
+                    <?php else: foreach ($hoaDons as $hd): ?>
                         <tr>
                             <td><b><?= htmlspecialchars($hd['MaHoaDon']) ?></b></td>
                             <td><?= htmlspecialchars($hd['LoaiHoaDon']) ?></td>
@@ -62,7 +67,7 @@ ob_start();
                             </td>
                             <td style="text-align: right;">
                                 <?php if ($hd['TrangThai'] === 'Chưa thanh toán'): ?>
-                                    <button type="button" class="btn btn-primary btn-sm" style="border-radius: 6px;" onclick="alert('Mở cổng thanh toán hóa đơn <?= $hd['MaHoaDon'] ?>')">
+                                    <button type="button" class="btn btn-primary btn-sm" style="border-radius: 6px;" disabled title="Thanh toán trực tuyến cần đối tác cổng thanh toán">
                                         💳 Thanh toán
                                     </button>
                                 <?php else: ?>
@@ -70,7 +75,7 @@ ob_start();
                                 <?php endif; ?>
                             </td>
                         </tr>
-                    <?php endforeach; ?>
+                    <?php endforeach; endif; ?>
                 </tbody>
             </table>
         </div>
@@ -118,6 +123,9 @@ ob_start();
                             <td><b style="color: var(--primary);"><?= format_money($tienMoiSV) ?></b></td>
                         </tr>
                     <?php endforeach; ?>
+                    <?php if (empty($chiSoDienNuoc)): ?>
+                        <tr><td colspan="10" class="text-muted">Chưa có chỉ số điện nước cho phòng đang lưu trú.</td></tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -156,6 +164,9 @@ ob_start();
                             </td>
                         </tr>
                     <?php endforeach; ?>
+                    <?php if (empty($giaoDichs)): ?>
+                        <tr><td colspan="6" class="text-muted">Chưa có giao dịch thanh toán.</td></tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -167,9 +178,9 @@ ob_start();
             <span>Cổng thanh toán trực tuyến</span>
         </div>
         <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-            <button type="button" class="btn btn-primary" style="border-radius: 6px;" onclick="alert('Mở cổng quét mã VietQR')">
-                📲 Quét mã VietQR thanh toán
-            </button>
+            <span class="badge badge-warning" style="border-radius: 6px;">
+                ⚠️ Thanh toán trực tuyến chưa được kích hoạt
+            </span>
             <span style="font-size: 0.85rem; color: var(--text-muted);">
                 Nội dung chuyển khoản: <code>KTX [MSSV] [MaHoaDon]</code>
             </span>

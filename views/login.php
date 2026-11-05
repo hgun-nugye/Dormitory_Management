@@ -22,7 +22,7 @@
                 <label class="active"><input type="radio" name="display_role" value="staff" checked><span>♟</span> Cán bộ / BQL KTX</label>
                 <label><input type="radio" name="display_role" value="student"><span>♧</span> Sinh viên Nội trú</label>
             </div>
-            <?php if ($message): ?><div class="alert"><?= htmlspecialchars($message) ?></div><?php endif; ?>
+            <?php if (!empty($message)): ?><div class="alert"><?= htmlspecialchars($message) ?></div><?php endif; ?>
             <form method="post" class="login-form">
                 <input type="hidden" name="action" value="login">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
