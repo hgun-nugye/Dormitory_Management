@@ -220,17 +220,31 @@ class RequestController extends Controller {
                 if (!$equipment) {
                     throw new \RuntimeException('equipment_missing');
                 }
+                $imagePath = null;
+                if (isset($_FILES['HinhAnh']) && ($_FILES['HinhAnh']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+                    $image = $_FILES['HinhAnh'];
+                    if (($image['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK || ($image['size'] ?? 0) > 5 * 1024 * 1024) throw new \RuntimeException('Ảnh không hợp lệ hoặc vượt quá 5 MB.');
+                    $mime = mime_content_type($image['tmp_name']);
+                    $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+                    if (!isset($extensions[$mime])) throw new \RuntimeException('Chỉ nhận ảnh JPG, PNG hoặc WEBP.');
+                    $uploadDir = dirname(__DIR__, 3) . '/storage/uploads/repairs';
+                    if (!is_dir($uploadDir)) mkdir($uploadDir, 0775, true);
+                    $filename = 'repair_' . bin2hex(random_bytes(8)) . '.' . $extensions[$mime];
+                    if (!move_uploaded_file($image['tmp_name'], $uploadDir . '/' . $filename)) throw new \RuntimeException('Không thể lưu ảnh minh họa.');
+                    $imagePath = 'storage/uploads/repairs/' . $filename;
+                }
                 Database::execute(
                     "INSERT INTO PhieuBaoHong
-                     (MaPhieu,MaPhong,MaToaNha,MaThietBi,MaSinhVienBao,LoaiSuCo,MoTaHuHong,TrangThaiSua,NgayBao)
-                     VALUES (:id,:room,:building,:equipment,:mssv,'PHONG',:reason,'Chờ xử lý',NOW())",
+                     (MaPhieu,MaPhong,MaToaNha,MaThietBi,MaSinhVienBao,LoaiSuCo,MoTaHuHong,HinhAnh,TrangThaiSua,NgayBao)
+                     VALUES (:id,:room,:building,:equipment,:mssv,'PHONG',:reason,:image,'Chờ xử lý',NOW())",
                     [
                         'id' => $this->newRequestId('BH'),
                         'room' => $room['MaPhong'],
                         'building' => $room['MaToaNha'],
                         'equipment' => $equipmentId,
                         'mssv' => $mssv,
-                        'reason' => $reason
+                        'reason' => $reason,
+                        'image' => $imagePath
                     ]
                 );
             } else {

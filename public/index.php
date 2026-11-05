@@ -55,6 +55,7 @@ Router::post('/login', 'AuthController@login');
 Router::get('/logout', 'AuthController@logout');
 Router::get('/register', 'RegistrationController@show');
 Router::post('/register', 'RegistrationController@submit');
+Router::post('/register/send-otp', 'RegistrationController@sendEmailOtp');
 Router::get('/register/options', 'RegistrationController@options');
 Router::post('/register/options', 'RegistrationController@options');
 

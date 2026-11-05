@@ -75,7 +75,7 @@ class MailService
      * @param string $plainText Nội dung văn bản thô
      * @return array ['success' => bool, 'mode' => 'smtp'|'log'|'error', 'message' => string, 'trace' => array]
      */
-    public static function send(string $toEmail, string $toName, string $subject, string $htmlBody, string $plainText = ''): array
+    public static function send(string $toEmail, string $toName, string $subject, string $htmlBody, string $plainText = '', bool $writeLog = true): array
     {
         $toEmail = trim($toEmail);
         if (empty($toEmail) || !filter_var($toEmail, FILTER_VALIDATE_EMAIL)) {
@@ -109,7 +109,9 @@ class MailService
                 );
 
                 if ($smtpSent) {
-                    self::logEmail($toEmail, $toName, $subject, $htmlBody, 'SMTP_SUCCESS');
+                    if ($writeLog) {
+                        self::logEmail($toEmail, $toName, $subject, $htmlBody, 'SMTP_SUCCESS');
+                    }
                     return [
                         'success' => true,
                         'mode' => 'smtp',
@@ -119,14 +121,27 @@ class MailService
                 }
             } catch (Throwable $e) {
                 // Ghi nhận lỗi SMTP nhưng vẫn tiếp tục ghi log dự phòng để hệ thống không bị crash
-                self::logEmail($toEmail, $toName, $subject, $htmlBody, 'SMTP_ERROR: ' . $e->getMessage());
+                if ($writeLog) {
+                    self::logEmail($toEmail, $toName, $subject, $htmlBody, 'SMTP_ERROR: ' . $e->getMessage());
+                }
                 return [
-                    'success' => true,
-                    'mode' => 'log_fallback',
-                    'message' => "Lỗi kết nối SMTP ngoài ({$e->getMessage()}). Nội dung thư đã được lưu an toàn vào hệ thống log KTX.",
+                    'success' => $writeLog,
+                    'mode' => $writeLog ? 'log_fallback' : 'error',
+                    'message' => $writeLog
+                        ? "Lỗi kết nối SMTP ngoài ({$e->getMessage()}). Nội dung thư đã được lưu an toàn vào hệ thống log KTX."
+                        : "Lỗi kết nối SMTP ngoài ({$e->getMessage()}).",
                     'trace' => $trace
                 ];
             }
+        }
+
+        if (!$writeLog) {
+            return [
+                'success' => false,
+                'mode' => 'error',
+                'message' => 'Tài khoản SMTP chưa được cấu hình; email chưa được gửi.',
+                'trace' => ["Mode: LOCAL_LOG disabled for this message"]
+            ];
         }
 
         // Môi trường thử nghiệm / Localhost: ghi nhận email vào log hệ thống KTX (storage/logs/mail.log)
