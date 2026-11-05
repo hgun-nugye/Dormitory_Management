@@ -236,6 +236,7 @@ class ApplicationController extends Controller
                 'active72hApplications' => [],
                 'historyApplications' => [],
                 'mienGiamList' => [],
+                'dotDangKyList' => [],
                 'stats' => ['pending' => 0, 'active' => 0, 'expired' => 0, 'completed' => 0, 'miengiam' => 0],
                 'filters' => ['khu' => '', 'cum' => '', 'toa' => '', 'status' => '', 'search' => '', 'tab' => 'cho_duyet'],
                 'availableKhus' => [],
@@ -464,6 +465,30 @@ class ApplicationController extends Controller
             $stats = ['pending' => 0, 'active' => 0, 'expired' => 0, 'completed' => 0, 'miengiam' => 0];
         }
 
+        // 6. Danh sách các Đợt Đăng Ký Nội Trú (Dành cho Quản lý KTX theo dõi & điều hành)
+        $dotDangKyList = [];
+        try {
+            $sqlDot = "
+                SELECT d.*,
+                       COUNT(hs.MaHoSo) AS TongHoSo,
+                       SUM(CASE WHEN hs.TrangThaiHoSo = 'Đã duyệt' THEN 1 ELSE 0 END) AS SoHoSoDaDuyet,
+                       SUM(CASE WHEN hs.TrangThaiHoSo = 'Chờ duyệt' THEN 1 ELSE 0 END) AS SoHoSoChoDuyet,
+                       SUM(CASE WHEN hs.TrangThaiHoSo = 'Chờ thanh toán' THEN 1 ELSE 0 END) AS SoHoSoChoThanhToan,
+                       CASE
+                           WHEN NOW() < d.ThoiGianMoCong THEN 'Sắp mở'
+                           WHEN NOW() BETWEEN d.ThoiGianMoCong AND d.ThoiGianDongCong THEN 'Đang mở cổng'
+                           ELSE 'Đã đóng cổng'
+                       END AS TrangThaiDot
+                FROM dotdangky d
+                LEFT JOIN hosodangky hs ON d.MaDot = hs.MaDot
+                GROUP BY d.MaDot
+                ORDER BY d.MaDot DESC
+            ";
+            $dotDangKyList = Database::fetchAll($sqlDot);
+        } catch (\Throwable $e) {
+            $dotDangKyList = [];
+        }
+
         $this->view('staff.applications', [
             'user' => $user,
             'isAllowed' => true,
@@ -473,6 +498,7 @@ class ApplicationController extends Controller
             'active72hApplications' => $active72hApplications,
             'historyApplications' => $historyApplications,
             'mienGiamList' => $mienGiamList,
+            'dotDangKyList' => $dotDangKyList,
             'stats' => $stats,
             'filters' => [
                 'khu' => $filterKhu,
@@ -1155,5 +1181,216 @@ class ApplicationController extends Controller
         }
 
         $this->redirect('staff/applications');
+    }
+
+    /**
+     * Tạo Đợt Đăng Ký Mới (Chỉ dành riêng cho Cán bộ Quản lý KTX cấp cao: Giám đốc / Admin)
+     */
+    public function createPeriod(): void
+    {
+        $request = new Request();
+        $token = (string) $request->input('csrf_token', '');
+        if (!hash_equals((string) Session::get('csrf_token', ''), $token) || $token === '') {
+            Session::flash('error', 'Phiên làm việc đã hết hạn. Vui lòng thử lại.');
+            $this->redirect('staff/applications?tab=dot_dang_ky');
+            return;
+        }
+
+        $user = Auth::user() ?? [];
+        $scope = $this->getStaffScope($user);
+        if (!$scope['isAllowed'] || $scope['level'] !== 'ALL') {
+            Session::flash('error', 'Từ chối quyền hạn: Chỉ Cán bộ Quản lý KTX cấp cao (Ban Giám đốc / Admin) mới có thẩm quyền tạo và cấu hình Đợt đăng ký nội trú!');
+            $this->redirect('staff/applications');
+            return;
+        }
+
+        $tenDot = trim((string)$request->input('tenDot', ''));
+        $namHoc = trim((string)$request->input('namHoc', ''));
+        $thoiGianMoCong = trim((string)$request->input('thoiGianMoCong', ''));
+        $thoiGianDongCong = trim((string)$request->input('thoiGianDongCong', ''));
+        $mocKetThuc1 = trim((string)$request->input('mocKetThuc1', ''));
+        $mocKetThuc2 = trim((string)$request->input('mocKetThuc2', ''));
+        $soGioGiuCho = (int)$request->input('soGioGiuCho', 72);
+
+        if (empty($tenDot) || empty($namHoc) || empty($thoiGianMoCong) || empty($thoiGianDongCong)) {
+            Session::flash('error', 'Vui lòng nhập đầy đủ các thông tin bắt buộc: Tên đợt, Năm học, Thời gian mở cổng và Thời gian đóng cổng!');
+            $this->redirect('staff/applications?tab=dot_dang_ky');
+            return;
+        }
+
+        $normalizeDt = function(string $dt): ?string {
+            $timestamp = strtotime($dt);
+            if ($timestamp === false) {
+                return null;
+            }
+            return date('Y-m-d H:i:s', $timestamp);
+        };
+
+        $moCongFmt = $normalizeDt($thoiGianMoCong);
+        $dongCongFmt = $normalizeDt($thoiGianDongCong);
+
+        if (!$moCongFmt || !$dongCongFmt) {
+            Session::flash('error', 'Định dạng thời gian mở hoặc đóng cổng không hợp lệ!');
+            $this->redirect('staff/applications?tab=dot_dang_ky');
+            return;
+        }
+
+        // Ràng buộc 1: chk_dot_thoigian -> ThoiGianDongCong > ThoiGianMoCong
+        if (strtotime($dongCongFmt) <= strtotime($moCongFmt)) {
+            Session::flash('error', 'Lỗi ràng buộc: Thời gian đóng cổng phải sau thời gian mở cổng!');
+            $this->redirect('staff/applications?tab=dot_dang_ky');
+            return;
+        }
+
+        // Ràng buộc 2: chk_dot_mocketthuc -> MocKetThuc2 >= MocKetThuc1
+        $m1 = !empty($mocKetThuc1) ? date('Y-m-d', strtotime($mocKetThuc1)) : null;
+        $m2 = !empty($mocKetThuc2) ? date('Y-m-d', strtotime($mocKetThuc2)) : null;
+        if ($m1 && $m2 && strtotime($m2) < strtotime($m1)) {
+            Session::flash('error', 'Lỗi ràng buộc: Mốc kết thúc kỳ 2 phải sau hoặc bằng mốc kết thúc kỳ 1!');
+            $this->redirect('staff/applications?tab=dot_dang_ky');
+            return;
+        }
+
+        // Ràng buộc 3: chk_dot_giucho -> SoGioGiuCho > 0
+        if ($soGioGiuCho <= 0) {
+            Session::flash('error', 'Lỗi ràng buộc: Số giờ giữ chỗ thanh toán phải lớn hơn 0!');
+            $this->redirect('staff/applications?tab=dot_dang_ky');
+            return;
+        }
+
+        try {
+            Database::execute("
+                INSERT INTO dotdangky 
+                (TenDot, NamHoc, ThoiGianMoCong, ThoiGianDongCong, MocKetThuc1, MocKetThuc2, SoGioGiuCho)
+                VALUES 
+                (:tenDot, :namHoc, :moCong, :dongCong, :m1, :m2, :soGio)
+            ", [
+                'tenDot' => $tenDot,
+                'namHoc' => $namHoc,
+                'moCong' => $moCongFmt,
+                'dongCong' => $dongCongFmt,
+                'm1' => $m1,
+                'm2' => $m2,
+                'soGio' => $soGioGiuCho
+            ]);
+
+            Session::flash('success', "Đã tạo thành công Đợt đăng ký mới: \"{$tenDot}\" (Năm học {$namHoc}). Cổng đăng ký sẽ mở và tiếp nhận hồ sơ theo đúng khung thời gian cấu hình!");
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Lỗi khi lưu đợt đăng ký: ' . $e->getMessage());
+        }
+
+        $this->redirect('staff/applications?tab=dot_dang_ky');
+    }
+
+    /**
+     * Đóng cổng đợt đăng ký sớm / khẩn cấp (Chỉ Cán bộ Quản lý KTX ALL)
+     */
+    public function closePeriod(): void
+    {
+        $request = new Request();
+        $token = (string) $request->input('csrf_token', '');
+        if (!hash_equals((string) Session::get('csrf_token', ''), $token) || $token === '') {
+            Session::flash('error', 'Phiên làm việc đã hết hạn. Vui lòng thử lại.');
+            $this->redirect('staff/applications?tab=dot_dang_ky');
+            return;
+        }
+
+        $scope = $this->getStaffScope();
+        if (!$scope['isAllowed'] || $scope['level'] !== 'ALL') {
+            Session::flash('error', 'Từ chối quyền hạn: Chỉ Cán bộ Quản lý KTX cấp cao mới có quyền đóng cổng đợt đăng ký!');
+            $this->redirect('staff/applications');
+            return;
+        }
+
+        $maDot = (int)$request->input('maDot', 0);
+        if ($maDot <= 0) {
+            Session::flash('error', 'Mã đợt đăng ký không hợp lệ!');
+            $this->redirect('staff/applications?tab=dot_dang_ky');
+            return;
+        }
+
+        try {
+            $dot = Database::fetch("SELECT * FROM dotdangky WHERE MaDot = :id", ['id' => $maDot]);
+            if (!$dot) {
+                Session::flash('error', 'Không tìm thấy đợt đăng ký chỉ định!');
+                $this->redirect('staff/applications?tab=dot_dang_ky');
+                return;
+            }
+
+            Database::execute("
+                UPDATE dotdangky 
+                SET ThoiGianDongCong = NOW() 
+                WHERE MaDot = :id AND ThoiGianDongCong > NOW()
+            ", ['id' => $maDot]);
+
+            Session::flash('success', "Đã đóng cổng đợt đăng ký \"{$dot['TenDot']}\" thành công. Hệ thống dừng tiếp nhận hồ sơ mới!");
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Lỗi đóng cổng: ' . $e->getMessage());
+        }
+
+        $this->redirect('staff/applications?tab=dot_dang_ky');
+    }
+
+    /**
+     * Gia hạn thời gian đóng cổng đợt đăng ký (Chỉ Cán bộ Quản lý KTX ALL)
+     */
+    public function extendPeriod(): void
+    {
+        $request = new Request();
+        $token = (string) $request->input('csrf_token', '');
+        if (!hash_equals((string) Session::get('csrf_token', ''), $token) || $token === '') {
+            Session::flash('error', 'Phiên làm việc đã hết hạn. Vui lòng thử lại.');
+            $this->redirect('staff/applications?tab=dot_dang_ky');
+            return;
+        }
+
+        $scope = $this->getStaffScope();
+        if (!$scope['isAllowed'] || $scope['level'] !== 'ALL') {
+            Session::flash('error', 'Từ chối quyền hạn: Chỉ Cán bộ Quản lý KTX cấp cao mới có quyền gia hạn đợt đăng ký!');
+            $this->redirect('staff/applications');
+            return;
+        }
+
+        $maDot = (int)$request->input('maDot', 0);
+        $thoiGianDongCongMoi = trim((string)$request->input('thoiGianDongCongMoi', ''));
+        $timestamp = strtotime($thoiGianDongCongMoi);
+
+        if ($maDot <= 0 || !$timestamp) {
+            Session::flash('error', 'Thông tin gia hạn thời gian không hợp lệ!');
+            $this->redirect('staff/applications?tab=dot_dang_ky');
+            return;
+        }
+
+        $dongCongFmt = date('Y-m-d H:i:s', $timestamp);
+
+        try {
+            $dot = Database::fetch("SELECT * FROM dotdangky WHERE MaDot = :id", ['id' => $maDot]);
+            if (!$dot) {
+                Session::flash('error', 'Không tìm thấy đợt đăng ký chỉ định!');
+                $this->redirect('staff/applications?tab=dot_dang_ky');
+                return;
+            }
+
+            if (strtotime($dongCongFmt) <= strtotime($dot['ThoiGianMoCong'])) {
+                Session::flash('error', 'Thời gian đóng cổng gia hạn phải sau thời gian mở cổng!');
+                $this->redirect('staff/applications?tab=dot_dang_ky');
+                return;
+            }
+
+            Database::execute("
+                UPDATE dotdangky 
+                SET ThoiGianDongCong = :dongCong 
+                WHERE MaDot = :id
+            ", [
+                'dongCong' => $dongCongFmt,
+                'id' => $maDot
+            ]);
+
+            Session::flash('success', "Đã gia hạn thành công thời gian đóng cổng cho đợt \"{$dot['TenDot']}\" đến " . date('H:i d/m/Y', $timestamp) . "!");
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Lỗi cập nhật gia hạn: ' . $e->getMessage());
+        }
+
+        $this->redirect('staff/applications?tab=dot_dang_ky');
     }
 }

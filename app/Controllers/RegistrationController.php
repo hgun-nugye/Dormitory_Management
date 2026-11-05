@@ -50,6 +50,30 @@ class RegistrationController extends Controller
         if (!Session::has('csrf_token')) {
             Session::set('csrf_token', bin2hex(random_bytes(32)));
         }
+
+        // Kiểm tra đợt đăng ký đang có hiệu lực
+        $activeDot = Database::fetch(
+            "SELECT * FROM DotDangKy
+             WHERE ThoiGianMoCong <= NOW() AND ThoiGianDongCong >= NOW()
+             ORDER BY ThoiGianDongCong DESC LIMIT 1"
+        );
+        $isOpen = !empty($activeDot);
+        $upcomingDot = null;
+        $latestClosedDot = null;
+
+        if (!$isOpen) {
+            $upcomingDot = Database::fetch(
+                "SELECT * FROM DotDangKy
+                 WHERE ThoiGianMoCong > NOW()
+                 ORDER BY ThoiGianMoCong ASC LIMIT 1"
+            );
+            $latestClosedDot = Database::fetch(
+                "SELECT * FROM DotDangKy
+                 WHERE ThoiGianDongCong < NOW()
+                 ORDER BY ThoiGianDongCong DESC LIMIT 1"
+            );
+        }
+
         $universities = Database::fetchAll(
             "SELECT MaTruong, TenTruong FROM TruongDaiHoc WHERE DangHopTac = 1 ORDER BY TenTruong"
         );
@@ -62,6 +86,10 @@ class RegistrationController extends Controller
 
         $this->view('registration', [
             'title' => 'Đăng ký hồ sơ nội trú',
+            'isOpen' => $isOpen,
+            'activeDot' => $activeDot,
+            'upcomingDot' => $upcomingDot,
+            'latestClosedDot' => $latestClosedDot,
             'universities' => $universities,
             'areas' => $areas,
             'roomTypes' => $roomTypes,
@@ -77,6 +105,17 @@ class RegistrationController extends Controller
         $values = [];
 
         try {
+            // Kiểm tra cổng đăng ký có đang mở không
+            $activeDot = Database::fetch(
+                "SELECT MaDot FROM DotDangKy
+                 WHERE ThoiGianMoCong <= NOW() AND ThoiGianDongCong >= NOW()
+                 LIMIT 1"
+            );
+            if (!$activeDot) {
+                $this->json(['values' => [], 'error' => 'Cổng đăng ký nội trú hiện đang đóng. Không thể chọn chỗ ở lúc này.'], 403);
+                return;
+            }
+
             if ($type === 'buildings') {
                 $area = trim((string) $request->input('area', ''));
                 $gender = trim((string) $request->input('gender', ''));
@@ -185,6 +224,18 @@ class RegistrationController extends Controller
         $request = new Request();
         if (!$this->validCsrf($request)) {
             Session::flash('error', 'Phiên biểu mẫu đã hết hạn. Vui lòng tải lại trang.');
+            $this->redirect('register');
+            return;
+        }
+
+        // 1. RÀNG BUỘC THỜI GIAN ĐỢT ĐĂNG KÝ: Cổng phải đang mở
+        $activeDot = Database::fetch(
+            "SELECT MaDot, TenDot, SoGioGiuCho FROM DotDangKy
+             WHERE ThoiGianMoCong <= NOW() AND ThoiGianDongCong >= NOW()
+             ORDER BY ThoiGianDongCong DESC LIMIT 1"
+        );
+        if (!$activeDot) {
+            Session::flash('error', 'Cổng đăng ký nội trú hiện đang đóng hoặc chưa tới thời gian tiếp nhận. Vui lòng theo dõi thông báo đợt đăng ký tiếp theo!');
             $this->redirect('register');
             return;
         }
@@ -325,10 +376,7 @@ class RegistrationController extends Controller
                  ORDER BY ThoiGianDongCong DESC LIMIT 1"
             );
             if (!$dot) {
-                $dot = Database::fetch("SELECT MaDot FROM DotDangKy ORDER BY MaDot DESC LIMIT 1");
-            }
-            if (!$dot) {
-                throw new \RuntimeException('Hiện không có đợt đăng ký nội trú.');
+                throw new \RuntimeException('Cổng đăng ký nội trú đã kết thúc thời hạn tiếp nhận hồ sơ trong quá trình xử lý.');
             }
 
             Database::execute(
