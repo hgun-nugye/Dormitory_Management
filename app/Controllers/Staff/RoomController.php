@@ -375,7 +375,7 @@ class RoomController extends Controller
                    lp.TenLoaiPhong, lp.SoGiuongToiDa, lp.DonGiaLuuTruChuan, lp.DonGiaDichVuTangThem,
                    (SELECT COUNT(*) FROM Giuong g WHERE g.MaPhong = p.MaPhong) AS TongGiuong,
                    (SELECT COUNT(*) FROM Giuong g WHERE g.MaPhong = p.MaPhong AND g.TrangThaiGiuong = 'Trống') AS SoGiuongTrong,
-                   (SELECT COUNT(*) FROM Giuong g WHERE g.MaPhong = p.MaPhong AND g.TrangThaiGiuong = 'Khóa bảo trì') AS SoGiuongBaoTri,
+                   (SELECT COUNT(*) FROM Giuong g WHERE g.MaPhong = p.MaPhong AND g.TrangThaiGiuong IN ('Đang bảo trì', 'Khóa bảo trì')) AS SoGiuongBaoTri,
                    (SELECT COUNT(*) FROM Giuong g WHERE g.MaPhong = p.MaPhong AND g.TrangThaiGiuong = 'Đã có người ở') AS SoGiuongCoNguoi,
                    sv.HoVaTen AS TenTruongPhong
             FROM Phong p
@@ -446,12 +446,12 @@ class RoomController extends Controller
         $statsSql = "
             SELECT 
                 COUNT(DISTINCT p.MaPhong) AS TongPhong,
-                SUM(CASE WHEN p.TrangThaiPhong != 'Khóa bảo trì' THEN 1 ELSE 0 END) AS PhongHoatDong,
-                SUM(CASE WHEN p.TrangThaiPhong = 'Khóa bảo trì' THEN 1 ELSE 0 END) AS PhongBaoTri,
+                SUM(CASE WHEN p.TrangThaiPhong NOT IN ('Bảo trì', 'Khóa bảo trì', 'Đang bảo trì') THEN 1 ELSE 0 END) AS PhongHoatDong,
+                SUM(CASE WHEN p.TrangThaiPhong IN ('Bảo trì', 'Khóa bảo trì', 'Đang bảo trì') THEN 1 ELSE 0 END) AS PhongBaoTri,
                 COUNT(g.MaGiuong) AS TongGiuong,
                 SUM(CASE WHEN g.TrangThaiGiuong = 'Trống' THEN 1 ELSE 0 END) AS GiuongTrong,
                 SUM(CASE WHEN g.TrangThaiGiuong = 'Đã có người ở' THEN 1 ELSE 0 END) AS GiuongDangO,
-                SUM(CASE WHEN g.TrangThaiGiuong = 'Khóa bảo trì' THEN 1 ELSE 0 END) AS GiuongBaoTri
+                SUM(CASE WHEN g.TrangThaiGiuong IN ('Đang bảo trì', 'Khóa bảo trì') THEN 1 ELSE 0 END) AS GiuongBaoTri
             FROM Phong p
             LEFT JOIN Giuong g ON p.MaPhong = g.MaPhong
             WHERE {$toaCondition}
@@ -576,8 +576,8 @@ class RoomController extends Controller
                     $this->redirect('staff/rooms?toa=' . urlencode($maToa));
                     return;
                 }
-                Database::execute("UPDATE Giuong SET TrangThaiGiuong = 'Khóa bảo trì' WHERE MaGiuong = :g", ['g' => $maGiuong]);
-                Session::flash('success', "Đã chuyển giường {$maGiuong} sang trạng thái Khóa bảo trì.");
+                Database::execute("UPDATE Giuong SET TrangThaiGiuong = 'Đang bảo trì' WHERE MaGiuong = :g", ['g' => $maGiuong]);
+                Session::flash('success', "Đã chuyển giường {$maGiuong} sang trạng thái Đang bảo trì.");
             } else {
                 Database::execute("UPDATE Giuong SET TrangThaiGiuong = 'Trống' WHERE MaGiuong = :g", ['g' => $maGiuong]);
                 Session::flash('success', "Đã mở lại giường {$maGiuong} về trạng thái Trống.");
@@ -613,25 +613,15 @@ class RoomController extends Controller
 
         try {
             if ($action === 'lock') {
-                Database::execute("UPDATE Phong SET TrangThaiPhong = 'Khóa bảo trì' WHERE MaPhong = :p", ['p' => $maPhong]);
-                Session::flash('success', "Đã khóa bảo trì phòng {$maPhong}.");
+                Database::execute("UPDATE Phong SET TrangThaiPhong = 'Bảo trì' WHERE MaPhong = :p", ['p' => $maPhong]);
+                Database::execute("UPDATE Giuong SET TrangThaiGiuong = 'Đang bảo trì' WHERE MaPhong = :p AND TrangThaiGiuong = 'Trống'", ['p' => $maPhong]);
+                Session::flash('success', "Đã chuyển phòng {$maPhong} sang trạng thái Bảo trì.");
             } else {
-                $p = Database::fetch("
-                    SELECT p.SoSVDangO, lp.SoGiuongToiDa 
-                    FROM Phong p 
-                    JOIN LoaiPhong lp ON p.MaLoaiPhong = lp.MaLoaiPhong 
-                    WHERE p.MaPhong = :p
-                ", ['p' => $maPhong]);
-                $newStatus = 'Còn chỗ';
-                if ($p) {
-                    if ($p['SoSVDangO'] >= $p['SoGiuongToiDa']) {
-                        $newStatus = 'Đầy chỗ';
-                    } elseif ($p['SoSVDangO'] > 0) {
-                        $newStatus = 'Đang sử dụng';
-                    }
-                }
-                Database::execute("UPDATE Phong SET TrangThaiPhong = :st WHERE MaPhong = :p", ['st' => $newStatus, 'p' => $maPhong]);
-                Session::flash('success', "Đã mở lại phòng {$maPhong} (Trạng thái: {$newStatus}).");
+                Database::execute("UPDATE Giuong SET TrangThaiGiuong = 'Trống' WHERE MaPhong = :mp AND TrangThaiGiuong IN ('Đang bảo trì', 'Khóa bảo trì', 'Bảo trì')", ['mp' => $maPhong]);
+                $this->syncRoomOccupancy($maPhong, true);
+                $updated = Database::fetch("SELECT TrangThaiPhong FROM Phong WHERE MaPhong = :mp", ['mp' => $maPhong]);
+                $statusText = $updated['TrangThaiPhong'] ?? 'Còn chỗ';
+                Session::flash('success', "Đã mở lại phòng {$maPhong} (Trạng thái: {$statusText}).");
             }
         } catch (\Throwable $e) {
             Session::flash('error', 'Lỗi khi cập nhật trạng thái phòng: ' . $e->getMessage());
@@ -668,14 +658,23 @@ class RoomController extends Controller
         $soSV = min($maxCap, max(0, $rawSoSV));
         $currentStatus = $info['TrangThaiPhong'] ?? 'Còn chỗ';
 
+        $isMaintenance = in_array($currentStatus, ['Bảo trì'], true) || str_contains(mb_strtolower($currentStatus), 'bảo trì');
         $newStatus = $currentStatus;
         if (!$preserveStatus) {
-            if ($forceUnlock || $currentStatus !== 'Khóa bảo trì') {
-                if ($soSV > 0) {
-                    $newStatus = 'Đang sử dụng';
+            if ($forceUnlock || !$isMaintenance) {
+                if ($soSV >= $maxCap) {
+                    $newStatus = 'Đã đầy';
                 } else {
                     $newStatus = 'Còn chỗ';
                 }
+            }
+        } else {
+            if ($isMaintenance) {
+                $newStatus = 'Bảo trì';
+            } elseif ($currentStatus === 'Đã đầy' || $currentStatus === 'Đầy' || $currentStatus === 'Đầy chỗ' || $soSV >= $maxCap) {
+                $newStatus = 'Đã đầy';
+            } else {
+                $newStatus = 'Còn chỗ';
             }
         }
 
@@ -721,7 +720,14 @@ class RoomController extends Controller
         $soPhong = trim((string)$request->input('soPhong', ''));
         $tang = max(1, (int)$request->input('tang', 1));
         $maLoaiPhong = trim((string)$request->input('maLoaiPhong', ''));
-        $trangThaiPhong = trim((string)$request->input('trangThaiPhong', 'Còn chỗ'));
+        $rawSt = trim((string)$request->input('trangThaiPhong', 'Còn chỗ'));
+        if (str_contains(mb_strtolower($rawSt), 'bảo trì') || str_contains(mb_strtolower($rawSt), 'khóa')) {
+            $trangThaiPhong = 'Bảo trì';
+        } elseif (str_contains(mb_strtolower($rawSt), 'đầy')) {
+            $trangThaiPhong = 'Đã đầy';
+        } else {
+            $trangThaiPhong = 'Còn chỗ';
+        }
 
         if (empty($maLoaiPhong)) {
             Session::flash('error', 'Vui lòng chọn loại phòng!');
@@ -806,6 +812,13 @@ class RoomController extends Controller
                     'tp' => $truongPhongVal,
                     'mp' => $maPhong
                 ]);
+
+                // Đồng bộ giường theo 3 trạng thái chuẩn: Còn chỗ, Đã đầy, Bảo trì
+                if ($trangThaiPhong === 'Bảo trì') {
+                    Database::execute("UPDATE Giuong SET TrangThaiGiuong = 'Đang bảo trì' WHERE MaPhong = :mp AND TrangThaiGiuong = 'Trống'", ['mp' => $maPhong]);
+                } else {
+                    Database::execute("UPDATE Giuong SET TrangThaiGiuong = 'Trống' WHERE MaPhong = :mp AND TrangThaiGiuong IN ('Đang bảo trì', 'Khóa bảo trì', 'Bảo trì')", ['mp' => $maPhong]);
+                }
 
                 $this->syncRoomOccupancy($maPhong, false, true);
                 Session::flash('success', "Đã cập nhật phòng {$maPhong} thành công!");
@@ -939,14 +952,19 @@ class RoomController extends Controller
 
         $maToa = $room['MaToaNha'];
 
-        if ($room['TrangThaiPhong'] === 'Khóa bảo trì') {
+        $isCurrentMaintenance = in_array($room['TrangThaiPhong'], ['Bảo trì'], true) 
+            || str_contains(mb_strtolower($room['TrangThaiPhong']), 'bảo trì');
+
+        if ($isCurrentMaintenance) {
+            Database::execute("UPDATE Giuong SET TrangThaiGiuong = 'Trống' WHERE MaPhong = :mp AND TrangThaiGiuong IN ('Đang bảo trì', 'Khóa bảo trì', 'Bảo trì')", ['mp' => $maPhong]);
             $this->syncRoomOccupancy($maPhong, true);
             $updated = Database::fetch("SELECT TrangThaiPhong FROM Phong WHERE MaPhong = :mp", ['mp' => $maPhong]);
-            $statusText = $updated['TrangThaiPhong'] ?? 'Đang sử dụng';
-            Session::flash('success', "Đã mở khóa hoạt động cho phòng {$maPhong} (chuyển về trạng thái '{$statusText}')!");
+            $statusText = $updated['TrangThaiPhong'] ?? 'Còn chỗ';
+            Session::flash('success', "Đã mở lại hoạt động cho phòng {$maPhong} (trạng thái: '{$statusText}')!");
         } else {
-            Database::execute("UPDATE Phong SET TrangThaiPhong = 'Khóa bảo trì' WHERE MaPhong = :mp", ['mp' => $maPhong]);
-            Session::flash('success', "Đã chuyển phòng {$maPhong} sang trạng thái Khóa bảo trì!");
+            Database::execute("UPDATE Phong SET TrangThaiPhong = 'Bảo trì' WHERE MaPhong = :mp", ['mp' => $maPhong]);
+            Database::execute("UPDATE Giuong SET TrangThaiGiuong = 'Đang bảo trì' WHERE MaPhong = :mp AND TrangThaiGiuong = 'Trống'", ['mp' => $maPhong]);
+            Session::flash('success', "Đã chuyển phòng {$maPhong} sang trạng thái Bảo trì!");
         }
 
         $this->redirect('staff/rooms?toa=' . urlencode($maToa));
@@ -1035,7 +1053,19 @@ class RoomController extends Controller
     {
         $request = new Request();
         $maGiuong = trim((string)$request->input('maGiuong', ''));
-        $trangThai = trim((string)$request->input('trangThaiGiuong', 'Trống'));
+        $rawStatus = trim((string)$request->input('trangThaiGiuong', 'Trống'));
+
+        // Chuẩn hóa trạng thái giường theo đúng CHECK constraint chk_giuong_trangthai:
+        // CHECK (TrangThaiGiuong IN ('Trống', 'Đang giữ chỗ', 'Đã có người ở', 'Đang bảo trì'))
+        if (str_contains(mb_strtolower($rawStatus), 'trì') || str_contains(mb_strtolower($rawStatus), 'khóa')) {
+            $trangThai = 'Đang bảo trì';
+        } elseif (str_contains(mb_strtolower($rawStatus), 'giữ') || str_contains(mb_strtolower($rawStatus), 'giu')) {
+            $trangThai = 'Đang giữ chỗ';
+        } elseif (str_contains(mb_strtolower($rawStatus), 'người') || str_contains(mb_strtolower($rawStatus), 'nguoi') || str_contains(mb_strtolower($rawStatus), 'ở') || str_contains(mb_strtolower($rawStatus), 'o')) {
+            $trangThai = 'Đã có người ở';
+        } else {
+            $trangThai = 'Trống';
+        }
 
         if (empty($maGiuong)) {
             Session::flash('error', 'Mã giường không hợp lệ!');
@@ -1065,7 +1095,7 @@ class RoomController extends Controller
             WHERE MaGiuong = :mg AND TrangThaiHopDong = 'Đang hiệu lực'
         ", ['mg' => $maGiuong]);
 
-        if ($hasActiveContract && in_array($trangThai, ['Trống', 'Khóa bảo trì', 'Hỏng'], true)) {
+        if ($hasActiveContract && in_array($trangThai, ['Trống', 'Đang bảo trì'], true)) {
             Session::flash('error', "Không thể đổi trạng thái giường sang '{$trangThai}' vì sinh viên đang cư trú theo hợp đồng {$hasActiveContract['MaHopDong']}!");
             $this->redirect('staff/rooms?toa=' . urlencode($maToa));
             return;
@@ -1444,7 +1474,7 @@ class RoomController extends Controller
                        (SELECT COUNT(*) FROM Giuong g WHERE g.MaPhong = p.MaPhong) AS TongGiuong,
                        (SELECT COUNT(*) FROM Giuong g WHERE g.MaPhong = p.MaPhong AND g.TrangThaiGiuong = 'Trống') AS SoGiuongTrong,
                        (SELECT COUNT(*) FROM Giuong g WHERE g.MaPhong = p.MaPhong AND g.TrangThaiGiuong = 'Đã có người ở') AS SoGiuongCoNguoi,
-                       (SELECT COUNT(*) FROM Giuong g WHERE g.MaPhong = p.MaPhong AND g.TrangThaiGiuong = 'Khóa bảo trì') AS SoGiuongBaoTri,
+                       (SELECT COUNT(*) FROM Giuong g WHERE g.MaPhong = p.MaPhong AND g.TrangThaiGiuong IN ('Đang bảo trì', 'Khóa bảo trì')) AS SoGiuongBaoTri,
                        sv.HoVaTen AS TenTruongPhong
                 FROM Phong p
                 LEFT JOIN LoaiPhong lp ON p.MaLoaiPhong = lp.MaLoaiPhong
@@ -1587,7 +1617,7 @@ class RoomController extends Controller
         fputcsv($output, ['201', '2', 'LP6', 'Còn chỗ', 'G1', '1', '', '', '', '', '', '', '', '0', '0']);
 
         // Phòng 301 (LP4ML): Phòng đang khóa bảo trì
-        fputcsv($output, ['301', '3', 'LP4ML', 'Khóa bảo trì', 'G1', '1', '', '', '', '', '', '', '', '0', '0']);
+        fputcsv($output, ['301', '3', 'LP4ML', 'Bảo trì', 'G1', '1', '', '', '', '', '', '', '', '0', '0']);
 
         fclose($output);
         exit;
@@ -1761,7 +1791,11 @@ class RoomController extends Controller
                         $maLoaiPhong = $defaultLoaiPhong;
                     }
                     $trangThaiPhong = isset($colMap['trangthai'], $row[$colMap['trangthai']]) ? trim((string)$row[$colMap['trangthai']]) : 'Còn chỗ';
-                    if (!in_array($trangThaiPhong, ['Còn chỗ', 'Đang sử dụng', 'Đầy chỗ', 'Khóa bảo trì'], true)) {
+                    if (str_contains(mb_strtolower($trangThaiPhong), 'trì') || str_contains(mb_strtolower($trangThaiPhong), 'khóa')) {
+                        $trangThaiPhong = 'Bảo trì';
+                    } elseif (str_contains(mb_strtolower($trangThaiPhong), 'đầy') || str_contains(mb_strtolower($trangThaiPhong), 'day')) {
+                        $trangThaiPhong = 'Đã đầy';
+                    } else {
                         $trangThaiPhong = 'Còn chỗ';
                     }
 

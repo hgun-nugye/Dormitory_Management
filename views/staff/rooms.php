@@ -1,7 +1,7 @@
 <?php
 ob_start();
 
-$formatTenToa = function(?string $name, string $code = '') {
+$formatTenToa = function (?string $name, string $code = '') {
     $str = trim((string)($name ?: $code));
     $cleaned = preg_replace('/^(tòa\s*|toà\s*)+/ui', '', $str);
     return 'Tòa ' . (!empty($cleaned) ? $cleaned : $str);
@@ -247,10 +247,9 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                             Trạng thái phòng <span style="color:#dc2626;">*</span>
                         </label>
                         <select id="roomTrangThaiPhong" name="trangThaiPhong" class="btn-outline" style="width: 100%; padding: 10px; border-radius: 6px; font-size: 0.9rem;" required>
-                            <option value="Còn chỗ">Còn chỗ (Sẵn sàng tiếp nhận sinh viên)</option>
-                            <option value="Đang sử dụng">Đang sử dụng</option>
-                            <option value="Đầy chỗ">Đầy chỗ</option>
-                            <option value="Khóa bảo trì">Khóa bảo trì</option>
+                            <option value="Còn chỗ">Còn chỗ</option>
+                            <option value="Đã đầy">Đã đầy</option>
+                            <option value="Bảo trì">Bảo trì</option>
                         </select>
                     </div>
                 </div>
@@ -415,9 +414,8 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     onchange="filterRooms()">
                     <option value="">-- Tất cả trạng thái --</option>
                     <option value="Còn chỗ">Còn chỗ</option>
-                    <option value="Đang sử dụng">Đang sử dụng</option>
-                    <option value="Đầy chỗ">Đầy chỗ</option>
-                    <option value="Khóa bảo trì">Khóa bảo trì</option>
+                    <option value="Đã đầy">Đã đầy</option>
+                    <option value="Bảo trì">Bảo trì</option>
                 </select>
 
                 <!-- 6. NÚT XÓA BỘ LỌC -->
@@ -451,14 +449,37 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                 $maxCap = (int)($p['SoGiuongToiDa'] ?? 4);
                                 $occupied = (int)($p['SoSVDangO'] ?? 0);
                                 $fillPercent = ($maxCap > 0) ? round(($occupied / $maxCap) * 100) : 0;
-                                $isLocked = ($p['TrangThaiPhong'] === 'Khóa bảo trì');
+
+                                $rawStatus = trim($p['TrangThaiPhong'] ?? '');
+                                $maintenanceBedsCount = 0;
+                                foreach ($beds as $bg) {
+                                    $stG = mb_strtolower(trim($bg['TrangThaiGiuong'] ?? ''));
+                                    if (str_contains($stG, 'trì') || str_contains($stG, 'tri') || str_contains($stG, 'khóa') || str_contains($stG, 'khoa')) {
+                                        $maintenanceBedsCount++;
+                                    }
+                                }
+                                $isMaintenance = in_array($rawStatus, ['Bảo trì', 'Đang bảo trì', 'Khóa bảo trì'], true)
+                                    || str_contains(mb_strtolower($rawStatus), 'bảo trì') 
+                                    || str_contains(mb_strtolower($rawStatus), 'bao tri') 
+                                    || str_contains(mb_strtolower($rawStatus), 'khóa') 
+                                    || str_contains(mb_strtolower($rawStatus), 'khoa');
+
+                                $isFull = !$isMaintenance && (($occupied >= $maxCap && $maxCap > 0) || in_array($rawStatus, ['Đã đầy', 'Đầy', 'Đầy chỗ'], true));
+
+                                if ($isMaintenance) {
+                                    $roomStatus = 'Bảo trì';
+                                } elseif ($isFull) {
+                                    $roomStatus = 'Đã đầy';
+                                } else {
+                                    $roomStatus = 'Còn chỗ';
+                                }
                                 ?>
                                 <tr class="room-row"
                                     data-id="<?= htmlspecialchars($p['MaPhong'], ENT_QUOTES, 'UTF-8') ?>"
                                     data-tang="<?= (int)$p['Tang'] ?>"
                                     data-loaiphong="<?= htmlspecialchars($p['MaLoaiPhong'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
-                                    data-status="<?= htmlspecialchars($p['TrangThaiPhong'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
-                                    style="<?= $isLocked ? 'background: #fffbeb;' : '' ?>">
+                                    data-status="<?= $roomStatus ?>"
+                                    style="<?= $isMaintenance ? 'background: #fffbeb;' : '' ?>">
 
                                     <!-- 1. Mã phòng -->
                                     <td>
@@ -492,18 +513,33 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                                 <span style="font-weight: 700; color: #0f172a; font-size: 0.875rem;">
                                                     <?= $occupied ?> <span style="font-weight: 500; font-size: 0.75rem; color: #64748b;">/ <?= $maxCap ?> chỗ</span>
                                                 </span>
-                                                <span style="font-size: 0.75rem; font-weight: 700; color: <?= $isLocked ? '#d97706' : ($fillPercent >= 100 ? '#dc2626' : ($fillPercent > 0 ? '#2563eb' : '#94a3b8')) ?>;">
+                                                <span style="font-size: 0.75rem; font-weight: 700; color: <?= $isMaintenance ? '#d97706' : ($isFull ? '#16a34a' : ($fillPercent > 0 ? '#2563eb' : '#94a3b8')) ?>;">
                                                     <?= $fillPercent ?>%
                                                 </span>
                                             </div>
                                             <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 9999px; overflow: hidden;">
-                                                <div style="width: <?= min(100, $fillPercent) ?>%; height: 100%; background: <?= $isLocked ? '#f59e0b' : ($fillPercent >= 100 ? '#ef4444' : ($fillPercent > 0 ? '#3b82f6' : '#cbd5e1')) ?>; border-radius: 9999px;"></div>
+                                                <div style="width: <?= min(100, $fillPercent) ?>%; height: 100%; background: <?= $isMaintenance ? '#f59e0b' : ($isFull ? '#16a34a' : ($fillPercent > 0 ? '#3b82f6' : '#cbd5e1')) ?>; border-radius: 9999px;"></div>
                                             </div>
                                         </div>
                                     </td>
 
-                                    <!-- 5. Sơ đồ Giường (Pills trực quan, đồng bộ) -->
+                                    <!-- 5. Sơ đồ Giường -->
                                     <td style="vertical-align: middle;">
+                                        <?php
+                                        // Kiểm tra số giường đã có người và tổng số giường
+                                        $totalBeds = count($beds);
+                                        $occupiedBeds = 0;
+
+                                        foreach ($beds as $bed) {
+                                            if (!empty($bed['MaSinhVien']) || ($bed['TrangThaiGiuong'] === 'Đã có người ở')) {
+                                                $occupiedBeds++;
+                                            }
+                                        }
+
+                                        // Phòng FULL khi tất cả giường đều có người
+                                        $isRoomFull = ($totalBeds > 0 && $occupiedBeds === $totalBeds);
+                                        ?>
+
                                         <div style="display: flex; gap: 5px; align-items: center; flex-wrap: wrap; max-width: 230px;">
                                             <?php foreach ($beds as $g): ?>
                                                 <?php
@@ -513,25 +549,36 @@ $isAllToas = $isAllToas ?? empty($filterToa);
 
                                                 if ($bOccupied) {
                                                     if ($bLeader) {
+                                                        // Giường trưởng phòng: VÀNG
                                                         $pillBg = '#fef3c7';
                                                         $pillColor = '#b45309';
                                                         $pillBorder = '#fde68a';
                                                         $pillIcon = 'fa-solid fa-star';
                                                         $pillTitle = $g['KyHieuGiuong'] . ': ' . ($g['HoVaTen'] ?? 'Sinh viên') . ' (Trưởng phòng)';
-                                                    } else {
+                                                    } elseif ($isRoomFull) {
+                                                        // Giường thuộc phòng FULL: XANH LÁ
                                                         $pillBg = '#dcfce7';
                                                         $pillColor = '#15803d';
                                                         $pillBorder = '#bbf7d0';
                                                         $pillIcon = 'fa-solid fa-user';
+                                                        $pillTitle = $g['KyHieuGiuong'] . ': ' . ($g['HoVaTen'] ?? 'Sinh viên') . ' (Phòng đã FULL)';
+                                                    } else {
+                                                        // Giường đang sử dụng nhưng phòng chưa FULL: XANH DƯƠNG
+                                                        $pillBg = '#dbeafe';
+                                                        $pillColor = '#1d4ed8';
+                                                        $pillBorder = '#bfdbfe';
+                                                        $pillIcon = 'fa-solid fa-user';
                                                         $pillTitle = $g['KyHieuGiuong'] . ': ' . ($g['HoVaTen'] ?? 'Sinh viên') . ' (' . ($g['MSSVTaiTruong'] ?? '') . ')';
                                                     }
                                                 } elseif ($bLocked) {
+                                                    // Giường bảo trì: ĐỎ
                                                     $pillBg = '#fee2e2';
                                                     $pillColor = '#991b1b';
                                                     $pillBorder = '#fecaca';
                                                     $pillIcon = 'fa-solid fa-lock';
                                                     $pillTitle = $g['KyHieuGiuong'] . ': Đang bảo trì';
                                                 } else {
+                                                    // Giường trống: XÁM
                                                     $pillBg = '#f8fafc';
                                                     $pillColor = '#64748b';
                                                     $pillBorder = '#e2e8f0';
@@ -539,12 +586,14 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                                     $pillTitle = $g['KyHieuGiuong'] . ': Trống';
                                                 }
                                                 ?>
+
                                                 <span title="<?= htmlspecialchars($pillTitle) ?>"
                                                     style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 46px; height: 24px; padding: 0 6px; border-radius: 5px; font-size: 0.725rem; font-weight: 600; background: <?= $pillBg ?>; border: 1px solid <?= $pillBorder ?>; color: <?= $pillColor ?>; cursor: pointer; box-sizing: border-box;"
                                                     onclick="openBedDetailModal('<?= htmlspecialchars($p['MaPhong']) ?>')">
                                                     <i class="<?= $pillIcon ?>" style="font-size: 0.65rem;"></i>
                                                     <span><?= htmlspecialchars($g['KyHieuGiuong']) ?></span>
                                                 </span>
+
                                             <?php endforeach; ?>
                                         </div>
                                     </td>
@@ -571,21 +620,17 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                     <!-- 7. Trạng thái (BỎ VIỀN 100%) -->
                                     <td style="vertical-align: middle; text-align: center;">
                                         <?php
-                                        if ($isLocked || $p['TrangThaiPhong'] === 'Khóa bảo trì' || $p['TrangThaiPhong'] === 'Đang bảo trì') {
+                                        if ($isMaintenance) {
                                             $stBg = '#fef3c7';
                                             $stColor = '#b45309';
-                                            $stLabel = 'Khóa bảo trì';
-                                        } elseif ($p['TrangThaiPhong'] === 'Đầy chỗ') {
-                                            $stBg = '#fee2e2';
-                                            $stColor = '#b91c1c';
-                                            $stLabel = 'Đầy chỗ';
-                                        } elseif ($p['TrangThaiPhong'] === 'Đang sử dụng' || $occupied > 0) {
-                                            $stBg = '#dbeafe';
-                                            $stColor = '#1d4ed8';
-                                            $stLabel = 'Đang sử dụng';
-                                        } else {
+                                            $stLabel = 'Bảo trì';
+                                        } elseif ($isFull) {
                                             $stBg = '#dcfce7';
                                             $stColor = '#15803d';
+                                            $stLabel = 'Đã đầy';
+                                        } else {
+                                            $stBg = '#eff6ff';
+                                            $stColor = '#1d4ed8';
                                             $stLabel = 'Còn chỗ';
                                         }
                                         ?>
@@ -612,14 +657,14 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                             <i class="fa-solid fa-pen-to-square" style="margin-right: 4px;"></i> Sửa
                                         </button>
 
-                                        <!-- Nút Khóa / Mở bảo trì -->
-                                        <form method="POST" action="<?= url('staff/rooms/toggle-status') ?>" style="display: inline;" onsubmit="return confirm('<?= $isLocked ? "Xác nhận mở khóa phòng " . $p['MaPhong'] . "?" : "Xác nhận chuyển phòng " . $p['MaPhong'] . " sang trạng thái Khóa bảo trì?" ?>');">
+                                        <!-- Nút Bảo trì / Mở lại hoạt động -->
+                                        <form method="POST" action="<?= url('staff/rooms/toggle-status') ?>" style="display: inline;" onsubmit="return confirm('<?= $isMaintenance ? "Xác nhận mở lại hoạt động cho phòng " . $p['MaPhong'] . "?" : "Xác nhận chuyển phòng " . $p['MaPhong'] . " sang trạng thái Bảo trì?" ?>');">
                                             <?= csrf_field() ?>
                                             <input type="hidden" name="maPhong" value="<?= htmlspecialchars($p['MaPhong']) ?>">
                                             <button type="submit" class="btn btn-outline btn-sm"
-                                                style="border-radius: 6px; margin-right: 4px; <?= $isLocked ? 'color: #15803d; border-color: #86efac; background: #f0fdf4;' : 'color: #b45309; border-color: #fde68a;' ?>"
-                                                title="<?= $isLocked ? 'Mở khóa phòng' : 'Khóa bảo trì phòng' ?>">
-                                                <i class="fa-solid <?= $isLocked ? 'fa-lock-open' : 'fa-lock' ?>" style="margin-right: 4px;"></i> <?= $isLocked ? 'Mở' : 'Khóa' ?>
+                                                style="border-radius: 6px; margin-right: 4px; <?= $isMaintenance ? 'color: #15803d; border-color: #86efac; background: #f0fdf4;' : 'color: #b45309; border-color: #fde68a;' ?>"
+                                                title="<?= $isMaintenance ? 'Mở lại hoạt động' : 'Chuyển sang Bảo trì' ?>">
+                                                <i class="fa-solid <?= $isMaintenance ? 'fa-lock-open' : 'fa-lock' ?>" style="margin-right: 4px;"></i> <?= $isMaintenance ? 'Mở' : 'Bảo trì' ?>
                                             </button>
                                         </form>
 
@@ -692,7 +737,7 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                             <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
                                 <li>Hỗ trợ file định dạng <b>.CSV</b> hoặc <b>.TXT</b> (mã hóa UTF-8), phân cách bởi dấu phẩy <code>,</code> hoặc chấm phẩy <code>;</code>.</li>
                                 <li><b>Cột bắt buộc:</b> <code>SoPhong</code> (Số phòng, ví dụ: <code>101</code>, <code>102</code>...).</li>
-                                <li><b>Thông tin phòng:</b> <code>Tang</code>, <code>MaLoaiPhong</code> (LP4, LP6, LP8...), <code>TrangThaiPhong</code> (Còn chỗ, Đang sử dụng, Khóa bảo trì).</li>
+                                <li><b>Thông tin phòng:</b> <code>Tang</code>, <code>MaLoaiPhong</code> (LP4, LP6, LP8...), <code>TrangThaiPhong</code> (Còn chỗ, Đã đầy, Bảo trì).</li>
                                 <li><b>Sơ đồ giường & Sinh viên cư trú:</b> <code>KyHieuGiuong</code> (G1, G2...), <code>ViTriTangGiuong</code> (1: dưới, 2: trên), <code>MaSinhVien</code> (MSSV sinh viên đang ở giường này), <code>HoVaTen</code>, <code>GioiTinh</code>, <code>SoCCCD</code>, <code>SoDienThoai</code>, <code>Email</code>, <code>MaTruong</code>.</li>
                                 <li><b>Chức vụ & Tạm trú:</b> <code>LaTruongPhong</code> (1: Trưởng phòng, 0: Thành viên), <code>DaNopCT01</code> (1: Đã nộp, 0: Chưa nộp).</li>
                                 <li><i>Hệ thống tự động liên kết hợp đồng nội trú cho sinh viên và tự động sinh đủ số giường còn lại theo đúng tiêu chuẩn Loại phòng!</i></li>
@@ -1336,6 +1381,11 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                 if (card) card.style.display = 'none';
             }
 
+                        document.getElementById('roomActionForm')?.addEventListener('submit', function() {
+                const toaSelect = document.getElementById('roomMaToaSelect');
+                if (toaSelect) toaSelect.disabled = false;
+            });
+
             function resetRoomForm() {
                 document.getElementById('roomIsEdit').value = '0';
                 document.getElementById('roomMaPhong').value = '';
@@ -1348,6 +1398,8 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                 const toaSelect = document.getElementById('roomMaToaSelect');
                 if (toaSelect) {
                     toaSelect.disabled = false;
+                    toaSelect.style.pointerEvents = 'auto';
+                    toaSelect.style.background = '#fff';
                     onRoomFormToaChange(toaSelect.value);
                 }
                 const activeToa = toaSelect ? toaSelect.value : currentMaToa;
@@ -1389,13 +1441,25 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                 const toaSelect = document.getElementById('roomMaToaSelect');
                 if (toaSelect) {
                     toaSelect.value = room.MaToaNha;
-                    toaSelect.disabled = true;
+                    toaSelect.style.pointerEvents = 'none';
+                    toaSelect.style.background = '#f1f5f9';
                     onRoomFormToaChange(room.MaToaNha);
                 }
 
                 document.getElementById('roomTang').value = room.Tang;
                 document.getElementById('roomMaLoaiPhong').value = room.MaLoaiPhong;
-                document.getElementById('roomTrangThaiPhong').value = room.TrangThaiPhong;
+                
+                let curStatus = (room.TrangThaiPhong || 'Còn chỗ').trim();
+                if (curStatus.toLowerCase().includes('trì') || curStatus.toLowerCase().includes('khóa')) {
+                    curStatus = 'Bảo trì';
+                } else if (curStatus.toLowerCase().includes('đầy') || curStatus.toLowerCase().includes('day')) {
+                    curStatus = 'Đã đầy';
+                } else {
+                    curStatus = 'Còn chỗ';
+                }
+                const stSelect = document.getElementById('roomTrangThaiPhong');
+                if (stSelect) stSelect.value = curStatus;
+
                 document.getElementById('roomCodePreview').value = room.MaPhong;
 
                 document.getElementById('formTitleText').innerText = 'Chỉnh sửa thông tin Phòng ' + room.MaPhong;
@@ -1468,7 +1532,7 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     <div>
                         <strong>Tòa: ${currentMaToa}</strong> &bull; Tầng: <strong>${room ? room.Tang : 1}</strong> &bull; 
                         Loại phòng: <strong>${room ? (room.TenLoaiPhong || room.MaLoaiPhong) : ''}</strong> &bull; 
-                        Trạng thái: <span class="badge ${room && room.TrangThaiPhong === 'Khóa bảo trì' ? 'badge-warning' : 'badge-success'}">${room ? room.TrangThaiPhong : ''}</span>
+                        Trạng thái: <span class="badge ${room && (room.TrangThaiPhong === 'Bảo trì' || room.TrangThaiPhong === 'Đang bảo trì' || room.TrangThaiPhong === 'Khóa bảo trì') ? 'badge-warning' : (room && (room.TrangThaiPhong === 'Đã đầy' || room.TrangThaiPhong === 'Đầy chỗ') ? 'badge-success' : 'badge-info')}">${room ? (room.TrangThaiPhong.includes('trì') || room.TrangThaiPhong.includes('khóa') ? 'Bảo trì' : (room.TrangThaiPhong.includes('đầy') ? 'Đã đầy' : 'Còn chỗ')) : ''}</span>
                     </div>
                     <div>
                         Sĩ số: <strong style="color: var(--primary); font-size: 1rem;">${occupied} / ${maxCap} SV</strong> (${fillPercent}%) &bull; 
@@ -1500,7 +1564,7 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     let html = '';
                     beds.forEach(g => {
                         const isOccupied = !!g.MaSinhVien || g.TrangThaiGiuong === 'Đã có người ở';
-                        const isLocked = g.TrangThaiGiuong === 'Khóa bảo trì';
+                        const isLocked = g.TrangThaiGiuong === 'Đang bảo trì' || g.TrangThaiGiuong === 'Khóa bảo trì' || (g.TrangThaiGiuong && g.TrangThaiGiuong.includes('trì'));
                         const isLeader = room && room.TruongPhong && room.TruongPhong === g.MaSinhVien;
                         const isCheckedIn = !!g.NgayNhanPhong;
                         const hasCT01 = parseInt(g.DaNopMauCT01 || 0) === 1;
@@ -1616,7 +1680,7 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                             // Giường trống / bảo trì
                             html += `
                                 <td colspan="4" style="color: var(--text-muted); font-style: italic;">
-                                    ${isLocked ? '<span style="color:#d97706; font-weight:600;"><i class="fa-solid fa-lock"></i> Giường Khóa bảo trì</span>' : 'Giường trống'}
+                                    ${isLocked ? '<span style="color:#d97706; font-weight:600;"><i class="fa-solid fa-lock"></i> Giường đang bảo trì</span>' : 'Giường trống'}
                                 </td>
                                 <td>—</td>
                                 <td>
@@ -1642,9 +1706,9 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                     <form method="POST" action="<?= url('staff/rooms/update-bed-status') ?>" style="display:inline;">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="maGiuong" value="${g.MaGiuong}">
-                                        <input type="hidden" name="trangThaiGiuong" value="Khóa bảo trì">
-                                        <button type="submit" class="btn btn-outline btn-sm" style="border-radius: 4px; padding: 3px 7px; font-size: 0.75rem;" title="Khóa bảo trì giường">
-                                            <i class="fa-solid fa-lock"></i> Khóa
+                                        <input type="hidden" name="trangThaiGiuong" value="Đang bảo trì">
+                                        <button type="submit" class="btn btn-outline btn-sm" style="border-radius: 4px; padding: 3px 7px; font-size: 0.75rem;" title="Bảo trì giường">
+                                            <i class="fa-solid fa-lock"></i> Bảo trì
                                         </button>
                                     </form>
                                 `;

@@ -100,7 +100,7 @@ class RegistrationController extends Controller
                 "SELECT DISTINCT p.Tang
                  FROM Phong p
                  WHERE p.MaToaNha = :building
-                   AND p.TrangThaiPhong NOT IN ('Đang bảo trì')
+                   AND p.TrangThaiPhong NOT IN ('Bảo trì')
                    {$roomTypeSql}
                  ORDER BY p.Tang",
                 [
@@ -119,7 +119,7 @@ class RegistrationController extends Controller
                  FROM Phong p
                  WHERE p.MaToaNha = :building
                    AND p.Tang = :floor
-                   AND p.TrangThaiPhong NOT IN ('Đang bảo trì')
+                   AND p.TrangThaiPhong NOT IN ('Bảo trì')
                    {$roomTypeSql}
                  ORDER BY p.SoPhong",
                 [
@@ -137,7 +137,7 @@ class RegistrationController extends Controller
                  JOIN Phong p ON p.MaPhong = g.MaPhong
                  WHERE g.MaPhong = :room
                    AND g.TrangThaiGiuong IN (:available, :availableLegacy)
-                   AND p.TrangThaiPhong NOT IN ('Đang bảo trì')
+                   AND p.TrangThaiPhong NOT IN ('Bảo trì', 'Đang bảo trì', 'Khóa bảo trì')
                  ORDER BY g.KyHieuGiuong",
                 [
                     'room' => $room,
@@ -267,7 +267,7 @@ class RegistrationController extends Controller
                  JOIN ToaNha tn ON tn.MaToaNha = p.MaToaNha
                  WHERE g.MaGiuong = :bed
                    AND g.TrangThaiGiuong IN (:bedStatus, :bedStatusLegacy)
-                   AND p.TrangThaiPhong NOT IN (:roomMaintenance, :roomMaintenanceLegacy)
+                   AND p.TrangThaiPhong NOT IN (:roomMaintenance, :roomMaintenanceLegacy, 'Bảo trì')
                    AND tn.TrangThaiToaNha IN (:buildingStatus, :buildingStatusLegacy)
                  FOR UPDATE",
                 ['bed' => $bedId, 'bedStatus' => self::BED_AVAILABLE, 'bedStatusLegacy' => self::BED_AVAILABLE_LEGACY, 'roomMaintenance' => self::ROOM_MAINTENANCE, 'roomMaintenanceLegacy' => self::ROOM_MAINTENANCE_LEGACY, 'buildingStatus' => self::BUILDING_ACTIVE, 'buildingStatusLegacy' => self::BUILDING_ACTIVE_LEGACY]

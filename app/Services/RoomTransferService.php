@@ -31,15 +31,15 @@ class RoomTransferService {
         $soSV = min($maxCap, max(0, (int)($info['SoSV'] ?? 0)));
         $currentStatus = $info['TrangThaiPhong'] ?? 'Còn chỗ';
 
-        $newStatus = $currentStatus;
-        if ($currentStatus !== 'Khóa bảo trì') {
+        $isMaintenance = in_array($currentStatus, ['Bảo trì'], true) || str_contains(mb_strtolower($currentStatus), 'bảo trì');
+        if (!$isMaintenance) {
             if ($soSV >= $maxCap) {
-                $newStatus = 'Đầy chỗ';
-            } elseif ($soSV > 0) {
-                $newStatus = 'Đang sử dụng';
+                $newStatus = 'Đã đầy';
             } else {
                 $newStatus = 'Còn chỗ';
             }
+        } else {
+            $newStatus = 'Bảo trì';
         }
 
         Database::execute(
