@@ -141,6 +141,7 @@ Router::get('/staff/requests/export', 'Staff\\RequestController@exportRequests',
 Router::post('/staff/requests/approve', 'Staff\\RequestController@approveRequest', [AuthMiddleware::class]);
 Router::post('/staff/requests/reject', 'Staff\\RequestController@rejectRequest', [AuthMiddleware::class]);
 Router::get('/staff/maintenance', 'Staff\\MaintenanceController@maintenance', [AuthMiddleware::class]);
+Router::get('/staff/maintenance/export', 'Staff\\MaintenanceController@exportMaintenance', [AuthMiddleware::class]);
 Router::post('/staff/maintenance/assign', 'Staff\\MaintenanceController@assign', [AuthMiddleware::class]);
 Router::post('/staff/maintenance/create-staff-ticket', 'Staff\\MaintenanceController@createStaffTicket', [AuthMiddleware::class]);
 Router::post('/staff/maintenance/update-progress', 'Staff\\MaintenanceController@updateProgress', [AuthMiddleware::class]);

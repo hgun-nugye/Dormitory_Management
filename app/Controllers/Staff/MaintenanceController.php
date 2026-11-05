@@ -14,10 +14,11 @@ use App\Services\MaintenanceService;
  * 
  * PHÂN CẤP QUYỀN HẠN CHUẨN HÓA (RBAC HIERARCHY):
  * - Cấp 4 (ADMIN / NV_QUAN_LY_KTX): Toàn quyền trên toàn bộ hệ thống KTX.
- * - Cấp 3 (TRUONG_KHU): Toàn quyền trong Khu (Khu A hoặc Khu B); duyệt thay Cụm & Tòa.
- * - Cấp 2 (TRUONG_CUM): Quản lý Cụm (AG, AH, BA...); duyệt thay Trưởng Tòa trong Cụm; duyệt phiếu do Trưởng Tòa lập.
+ * - Cấp 3 (TRUONG_KHU): Toàn quyền trong Khu (Khu A hoặc Khu B); duyệt thay Cụm & Tòa; phân công KTV trong Khu.
+ * - Cấp 2 (TRUONG_CUM): Quản lý Cụm (AG, AH, BA...); duyệt thay Trưởng Tòa trong Cụm; duyệt phiếu hạ tầng do Trưởng Tòa lập.
  * - Cấp 1 (TRUONG_TOA): Quản lý Tòa (A01, H01...); duyệt & phân công phiếu SV trong Tòa; lập phiếu sự cố chung (chờ cấp trên duyệt).
- * - Cấp 0 (NV_THUONG - Kỹ thuật viên): CHỈ XEM phiếu trong Khu / phiếu được gán; cập nhật tiến độ & hoàn thành; TUYỆT ĐỐI KHÔNG PHÂN CÔNG.
+ * - Cấp KTV (NV_KT / Thợ Kỹ thuật): XEM phiếu trong Khu / phiếu được gán; cập nhật tiến độ & nghiệm thu; TUYỆT ĐỐI KHÔNG PHÂN CÔNG / HỦY.
+ * - Chặn 100% (SINH_VIEN, TRUONG_PHONG, KE_TOAN, NV_THUONG khác): Trả về Red Warning Card với vai trò động.
  */
 class MaintenanceController extends Controller
 {
@@ -32,187 +33,279 @@ class MaintenanceController extends Controller
 
         $role = $user['MaVaiTro'] ?? $user['VaiTro'] ?? '';
         $cumQuanLy = trim((string)($user['MaCumQuanLy'] ?? ''));
+        $chucVu = mb_strtolower(trim((string)($user['ChucVu'] ?? '')));
+        $tenDangNhap = trim((string)($user['TenDangNhap'] ?? ''));
 
-        if (empty($role)) {
+        // Xác định tên vai trò hiển thị thân thiện (để hiển thị động trong thông báo từ chối)
+        $userRoleName = 'Người dùng';
+        if ($role === 'SINH_VIEN' || $role === 'TRUONG_PHONG') {
+            $userRoleName = ($role === 'TRUONG_PHONG') ? 'Trưởng phòng Sinh viên' : 'Sinh viên nội trú';
+        } elseif ($role === 'KE_TOAN' || str_contains($chucVu, 'kế toán')) {
+            $userRoleName = 'Nhân viên Kế toán';
+        } elseif ($role === 'NV_LE_TAN' || str_contains($chucVu, 'lễ tân')) {
+            $userRoleName = 'Nhân viên Lễ tân';
+        } elseif (str_contains($chucVu, 'hành chính') || str_contains($chucVu, 'văn phòng')) {
+            $userRoleName = 'Nhân viên Hành chính';
+        } elseif (str_contains($chucVu, 'bảo vệ')) {
+            $userRoleName = 'Nhân viên Bảo vệ';
+        } elseif (!empty($user['ChucVu'])) {
+            $userRoleName = trim($user['ChucVu']);
+        } elseif ($role === 'NV_THUONG') {
+            $userRoleName = 'Nhân viên thường';
+        }
+
+        // Kiểm tra xem có phải Chuyên viên Kỹ thuật hay không
+        $isTechCandidate = str_starts_with($tenDangNhap, 'NV_KT')
+                        || str_contains($chucVu, 'kỹ thuật')
+                        || str_contains($chucVu, 'điện nước')
+                        || str_contains($chucVu, 'bảo trì')
+                        || $role === 'KY_THUAT';
+
+        // 1. CHẶN 100% CÁC VAI TRÒ KHÔNG ĐƯỢC PHÉP TRUY CẬP:
+        // Sinh viên, Trưởng phòng SV, Kế toán, và Nhân viên thường KHÔNG PHẢI KỸ THUẬT
+        $isBlocked = empty($role)
+            || in_array($role, ['SINH_VIEN', 'TRUONG_PHONG', 'KE_TOAN'])
+            || str_contains($chucVu, 'kế toán')
+            || ($role === 'NV_THUONG' && !$isTechCandidate);
+
+        if ($isBlocked) {
             return [
+                'isAllowed' => false,
                 'level' => 'DENIED',
                 'levelNumber' => -1,
-                'role' => '',
-                'title' => 'Chưa xác thực',
+                'role' => $role,
+                'title' => 'Không có quyền truy cập',
                 'badgeClass' => 'badge-danger',
+                'userRoleName' => $userRoleName,
                 'maKhu' => null,
                 'maCum' => null,
                 'maToa' => null,
+                'maToaNha' => null,
                 'canAssign' => false,
                 'canCreateStaffTicket' => false,
                 'canApproveStaffTicket' => false,
                 'canFilterAll' => false,
-                'isTechnician' => false
+                'isTechnician' => false,
+                'availableToas' => [],
+                'availableCums' => [],
+                'availableKhus' => [],
+                'message' => "Từ chối quyền truy cập: Phân hệ Điều phối Sửa chữa & Phiếu Báo Hỏng chỉ dành riêng cho Cán bộ Quản lý KTX (Trưởng Tòa, Trưởng Cụm, Trưởng Khu, Ban Giám đốc KTX) và Nhân viên Kỹ thuật KTX. {$userRoleName} không có quyền thao tác!"
             ];
         }
 
-        // 1. CẤP 4: Quản trị viên hệ thống hoặc Quản lý toàn KTX
-        if ($role === 'ADMIN' || $role === 'NV_QUAN_LY_KTX') {
+        // 2. CẤP 4: Quản trị viên hệ thống hoặc Quản lý toàn KTX (Admin / Ban Giám đốc)
+        if ($role === 'ADMIN' || $role === 'QuanTriVien' || $role === 'NV_QUAN_LY_KTX' || $role === 'BGD' || $role === 'BAN_GIAM_DOC') {
+            $khus = Database::fetchAll("SELECT MaKhu, TenKhu FROM KhuKTX ORDER BY MaKhu ASC");
+            $cums = Database::fetchAll("SELECT MaCum, TenCum, MaKhu FROM CumNha ORDER BY MaKhu ASC, MaCum ASC");
+            $toas = Database::fetchAll("
+                SELECT t.MaToaNha, t.TenToaNha, t.TongSoTang, t.GioiTinhQuyDinh, t.TrangThaiToaNha, c.MaCum, c.TenCum, c.MaKhu, k.TenKhu
+                FROM ToaNha t
+                JOIN CumNha c ON t.MaCum = c.MaCum
+                JOIN KhuKTX k ON c.MaKhu = k.MaKhu
+                ORDER BY c.MaKhu ASC, c.MaCum ASC, t.MaToaNha ASC
+            ");
+
             return [
+                'isAllowed' => true,
                 'level' => 'ALL',
                 'levelNumber' => 4,
                 'role' => $role,
                 'title' => 'Quản trị viên / Quản lý toàn KTX',
                 'badgeClass' => 'badge-primary',
+                'userRoleName' => 'Cán bộ Quản trị',
                 'maKhu' => null,
                 'maCum' => null,
                 'maToa' => null,
+                'maToaNha' => null,
                 'canAssign' => true,
                 'canCreateStaffTicket' => true,
                 'canApproveStaffTicket' => true,
                 'canFilterAll' => true,
-                'isTechnician' => false
+                'isTechnician' => false,
+                'availableToas' => $toas,
+                'availableCums' => $cums,
+                'availableKhus' => $khus,
+                'message' => ''
             ];
         }
 
-        // 2. CẤP 1: Trưởng Tòa nhà (TRUONG_TOA: ví dụ TT001 -> A01, TT002 -> H01, TT003 -> BA1...)
-        $isToaRole = ($role === 'TRUONG_TOA');
-        if (!$isToaRole && !empty($cumQuanLy)) {
-            $toaCheck = Database::fetch("SELECT MaToaNha FROM ToaNha WHERE MaToaNha = :t", ['t' => $cumQuanLy]);
-            if ($toaCheck) {
-                $isToaRole = true;
+        // 3. CẤP KỸ THUẬT VIÊN: Nhân viên kỹ thuật điện nước / bảo trì (Chế độ thi công)
+        if ($isTechCandidate) {
+            $maKhu = 'A';
+            if ($cumQuanLy === 'A' || $cumQuanLy === 'B') {
+                $maKhu = $cumQuanLy;
+            } elseif (!empty($cumQuanLy)) {
+                $cumRow = Database::fetch("SELECT MaKhu FROM CumNha WHERE MaCum = :c", ['c' => $cumQuanLy]);
+                if ($cumRow && !empty($cumRow['MaKhu'])) {
+                    $maKhu = $cumRow['MaKhu'];
+                }
+            } elseif (str_contains($chucVu, 'khu b') || str_contains($tenDangNhap, 'KTB')) {
+                $maKhu = 'B';
             }
-        }
 
-        if ($isToaRole) {
-            $maToa = !empty($cumQuanLy) ? $cumQuanLy : 'A01';
-            $toaRow = Database::fetch("
-                SELECT t.TenToaNha, t.MaCum, c.MaKhu, c.TenCum
+            $khus = Database::fetchAll("SELECT MaKhu, TenKhu FROM KhuKTX WHERE MaKhu = :k", ['k' => $maKhu]);
+            $cums = Database::fetchAll("SELECT MaCum, TenCum, MaKhu FROM CumNha WHERE MaKhu = :k ORDER BY MaCum ASC", ['k' => $maKhu]);
+            $toas = Database::fetchAll("
+                SELECT t.MaToaNha, t.TenToaNha, t.TongSoTang, t.GioiTinhQuyDinh, t.TrangThaiToaNha, c.MaCum, c.TenCum, c.MaKhu, k.TenKhu
                 FROM ToaNha t
                 JOIN CumNha c ON t.MaCum = c.MaCum
-                WHERE t.MaToaNha = :t
-            ", ['t' => $maToa]);
-
-            $tenToa = $toaRow['TenToaNha'] ?? $maToa;
-            $maCum = $toaRow['MaCum'] ?? 'AG';
-            $maKhu = $toaRow['MaKhu'] ?? 'A';
+                JOIN KhuKTX k ON c.MaKhu = k.MaKhu
+                WHERE c.MaKhu = :k
+                ORDER BY c.MaCum ASC, t.MaToaNha ASC
+            ", ['k' => $maKhu]);
 
             return [
-                'level' => 'TOA',
-                'levelNumber' => 1,
-                'role' => $role,
-                'title' => "Trưởng tòa nhà {$tenToa}",
-                'badgeClass' => 'badge-success',
-                'maKhu' => $maKhu,
-                'maCum' => $maCum,
-                'maToa' => $maToa,
-                'tenToa' => $tenToa,
-                'tenCum' => $toaRow['TenCum'] ?? $maCum,
-                'canAssign' => true,               // Duyệt & phân công phiếu Sinh viên trong Tòa
-                'canCreateStaffTicket' => true,     // Được lập phiếu sự cố chung của Tòa
-                'canApproveStaffTicket' => false,   // Phiếu cán bộ phải do cấp trên (Cụm/Khu) duyệt
-                'canFilterAll' => false,
-                'isTechnician' => false
-            ];
-        }
-
-        // 3. CẤP 2: Trưởng Cụm nhà (TRUONG_CUM: ví dụ CUMAG -> AG, CUMAH -> AH, CUMBA -> BA...)
-        if ($role === 'TRUONG_CUM') {
-            $maCum = !empty($cumQuanLy) ? $cumQuanLy : 'AG';
-            $cumRow = Database::fetch("SELECT MaKhu, TenCum FROM CumNha WHERE MaCum = :c", ['c' => $maCum]);
-            $maKhu = $cumRow['MaKhu'] ?? 'A';
-
-            return [
-                'level' => 'CUM',
-                'levelNumber' => 2,
-                'role' => $role,
-                'title' => "Trưởng BQL Cụm nhà " . ($cumRow['TenCum'] ?? $maCum),
-                'badgeClass' => 'badge-warning',
-                'maKhu' => $maKhu,
-                'maCum' => $maCum,
-                'maToa' => null,
-                'tenCum' => $cumRow['TenCum'] ?? $maCum,
-                'canAssign' => true,               // Duyệt phiếu SV trong Cụm + phiếu Tòa lập
-                'canCreateStaffTicket' => true,     // Được lập phiếu sự cố của Cụm
-                'canApproveStaffTicket' => true,    // Duyệt phiếu hạ tầng do Trưởng Tòa lập
-                'canFilterAll' => false,
-                'isTechnician' => false
-            ];
-        }
-
-        // 4. CẤP 0: Kỹ thuật viên (NV_THUONG: ví dụ NV_KTA01, NV_KTA02, NV_KTB01...)
-        $isTech = ($role === 'NV_THUONG') 
-            || str_starts_with($user['TenDangNhap'] ?? '', 'NV_KT') 
-            || str_contains(mb_strtolower($user['ChucVu'] ?? ''), 'kỹ thuật');
-
-        if ($isTech) {
-            $maKhu = in_array($cumQuanLy, ['A', 'B']) ? $cumQuanLy : 'A';
-            return [
+                'isAllowed' => true,
                 'level' => 'NV_KT',
                 'levelNumber' => 0,
                 'role' => $role,
                 'title' => "Nhân viên Kỹ thuật (Khu {$maKhu})",
-                'badgeClass' => 'badge-secondary',
+                'badgeClass' => 'badge-info',
+                'userRoleName' => "Kỹ thuật viên Khu {$maKhu}",
                 'maKhu' => $maKhu,
-                'maCum' => null,
+                'maCum' => !empty($cumQuanLy) ? $cumQuanLy : null,
                 'maToa' => null,
-                'canAssign' => false,              // TUYỆT ĐỐI KHÔNG ĐƯỢC PHÂN CÔNG
-                'canCreateStaffTicket' => false,    // Không có chức năng tạo phiếu
-                'canApproveStaffTicket' => false,
+                'maToaNha' => null,
+                'canAssign' => false,              // TUYỆT ĐỐI KHÔNG PHÂN CÔNG
+                'canCreateStaffTicket' => false,    // Không lập phiếu sự cố
+                'canApproveStaffTicket' => false,   // Không duyệt phiếu
                 'canFilterAll' => false,
-                'isTechnician' => true             // Chế độ dành riêng cho Thợ Kỹ thuật
+                'isTechnician' => true,             // Chế độ dành riêng cho Thợ Kỹ thuật
+                'availableToas' => $toas,
+                'availableCums' => $cums,
+                'availableKhus' => $khus,
+                'message' => ''
             ];
         }
 
-        // 5. CẤP 3: Trưởng khu KTX (TRUONG_KHU: ví dụ TK001 -> Khu A, TK002 -> Khu B)
+        // 4. CẤP 3: Trưởng khu KTX (TRUONG_KHU: ví dụ TK001 -> Khu A, TK002 -> Khu B)
         if ($role === 'TRUONG_KHU' || $cumQuanLy === 'A' || $cumQuanLy === 'B') {
             $maKhu = in_array($cumQuanLy, ['A', 'B']) ? $cumQuanLy : 'A';
+            $khus = Database::fetchAll("SELECT MaKhu, TenKhu FROM KhuKTX WHERE MaKhu = :k", ['k' => $maKhu]);
+            $cums = Database::fetchAll("SELECT MaCum, TenCum, MaKhu FROM CumNha WHERE MaKhu = :k ORDER BY MaCum ASC", ['k' => $maKhu]);
+            $toas = Database::fetchAll("
+                SELECT t.MaToaNha, t.TenToaNha, t.TongSoTang, t.GioiTinhQuyDinh, t.TrangThaiToaNha, c.MaCum, c.TenCum, c.MaKhu, k.TenKhu
+                FROM ToaNha t
+                JOIN CumNha c ON t.MaCum = c.MaCum
+                JOIN KhuKTX k ON c.MaKhu = k.MaKhu
+                WHERE c.MaKhu = :k
+                ORDER BY c.MaCum ASC, t.MaToaNha ASC
+            ", ['k' => $maKhu]);
+
             return [
+                'isAllowed' => true,
                 'level' => 'KHU',
                 'levelNumber' => 3,
                 'role' => $role,
-                'title' => "Trưởng ban Quản lý KTX Khu {$maKhu}",
+                'title' => "Trưởng BQL Khu {$maKhu}",
                 'badgeClass' => 'badge-info',
+                'userRoleName' => "Trưởng BQL Khu {$maKhu}",
                 'maKhu' => $maKhu,
                 'maCum' => null,
                 'maToa' => null,
+                'maToaNha' => null,
                 'canAssign' => true,               // Duyệt toàn bộ phiếu trong Khu
                 'canCreateStaffTicket' => true,     // Được lập phiếu sự cố trong Khu
                 'canApproveStaffTicket' => true,    // Duyệt phiếu do Cụm và Tòa lập
                 'canFilterAll' => false,
-                'isTechnician' => false
+                'isTechnician' => false,
+                'availableToas' => $toas,
+                'availableCums' => $cums,
+                'availableKhus' => $khus,
+                'message' => ''
             ];
         }
 
-        // 6. Kế toán KTX: Chỉ xem thống kê, không có quyền điều phối bảo trì
-        if ($role === 'KE_TOAN' || str_contains(mb_strtolower($user['ChucVu'] ?? ''), 'kế toán')) {
+        // 5. CẤP 2: Trưởng Cụm nhà (TRUONG_CUM: ví dụ CUMAG -> AG...)
+        if ($role === 'TRUONG_CUM') {
+            $maCum = !empty($cumQuanLy) ? $cumQuanLy : 'AG';
+            $cumRow = Database::fetch("SELECT c.MaCum, c.TenCum, c.MaKhu, k.TenKhu FROM CumNha c JOIN KhuKTX k ON c.MaKhu = k.MaKhu WHERE c.MaCum = :c", ['c' => $maCum]);
+            $maKhu = $cumRow['MaKhu'] ?? 'A';
+            $tenCum = $cumRow['TenCum'] ?? $maCum;
+
+            $cleanCum = preg_replace('/^(Ban Quản lý\s*|Cụm\s*nhà\s*)+/ui', '', $tenCum);
+            $cumTitle = "Trưởng BQL Cụm " . (!empty($cleanCum) ? $cleanCum : $tenCum);
+
+            $toas = Database::fetchAll("
+                SELECT t.MaToaNha, t.TenToaNha, t.TongSoTang, t.GioiTinhQuyDinh, t.TrangThaiToaNha, c.MaCum, c.TenCum, c.MaKhu, k.TenKhu
+                FROM ToaNha t
+                JOIN CumNha c ON t.MaCum = c.MaCum
+                JOIN KhuKTX k ON c.MaKhu = k.MaKhu
+                WHERE t.MaCum = :c
+                ORDER BY t.MaToaNha ASC
+            ", ['c' => $maCum]);
+
             return [
-                'level' => 'KE_TOAN',
-                'levelNumber' => 0,
+                'isAllowed' => true,
+                'level' => 'CUM',
+                'levelNumber' => 2,
                 'role' => $role,
-                'title' => 'Kế toán KTX',
-                'badgeClass' => 'badge-secondary',
-                'maKhu' => null,
-                'maCum' => null,
+                'title' => $cumTitle,
+                'badgeClass' => 'badge-warning',
+                'userRoleName' => 'Trưởng BQL Cụm',
+                'maKhu' => $maKhu,
+                'maCum' => $maCum,
                 'maToa' => null,
-                'canAssign' => false,
-                'canCreateStaffTicket' => false,
-                'canApproveStaffTicket' => false,
-                'canFilterAll' => true,
-                'isTechnician' => false
+                'maToaNha' => null,
+                'canAssign' => true,               // Duyệt phiếu SV trong Cụm + phiếu Tòa lập
+                'canCreateStaffTicket' => true,     // Được lập phiếu sự cố của Cụm
+                'canApproveStaffTicket' => true,    // Duyệt phiếu hạ tầng do Trưởng Tòa lập
+                'canFilterAll' => false,
+                'isTechnician' => false,
+                'availableToas' => $toas,
+                'availableCums' => [$cumRow],
+                'availableKhus' => [['MaKhu' => $maKhu, 'TenKhu' => $cumRow['TenKhu'] ?? $maKhu]],
+                'message' => ''
             ];
         }
 
-        // Mặc định an toàn
+        // 6. CẤP 1: Trưởng Tòa nhà (TRUONG_TOA: ví dụ TT001 -> A01...)
+        $maToa = !empty($cumQuanLy) ? $cumQuanLy : 'A01';
+        $toaRow = Database::fetch("
+            SELECT t.MaToaNha, t.TenToaNha, t.TongSoTang, t.GioiTinhQuyDinh, t.TrangThaiToaNha, c.MaCum, c.TenCum, c.MaKhu, k.TenKhu
+            FROM ToaNha t
+            JOIN CumNha c ON t.MaCum = c.MaCum
+            JOIN KhuKTX k ON c.MaKhu = k.MaKhu
+            WHERE t.MaToaNha = :t
+        ", ['t' => $maToa]);
+
+        if (!$toaRow) {
+            $toaRow = Database::fetch("
+                SELECT t.MaToaNha, t.TenToaNha, t.TongSoTang, t.GioiTinhQuyDinh, t.TrangThaiToaNha, c.MaCum, c.TenCum, c.MaKhu, k.TenKhu
+                FROM ToaNha t
+                JOIN CumNha c ON t.MaCum = c.MaCum
+                JOIN KhuKTX k ON c.MaKhu = k.MaKhu
+                ORDER BY t.MaToaNha ASC LIMIT 1
+            ");
+        }
+
+        $maKhu = $toaRow['MaKhu'] ?? 'A';
+        $maCum = $toaRow['MaCum'] ?? 'AG';
+        $maToa = $toaRow['MaToaNha'] ?? 'A01';
+        $tenToa = $toaRow['TenToaNha'] ?? $maToa;
+        $cleanToa = preg_replace('/^Tòa\s*/ui', '', $tenToa);
+
         return [
-            'level' => 'CUM',
-            'levelNumber' => 2,
+            'isAllowed' => true,
+            'level' => 'TOA',
+            'levelNumber' => 1,
             'role' => $role,
-            'title' => "Cán bộ KTX ({$cumQuanLy})",
-            'badgeClass' => 'badge-info',
-            'maKhu' => 'A',
-            'maCum' => !empty($cumQuanLy) ? $cumQuanLy : 'AG',
-            'maToa' => null,
+            'title' => "Trưởng Tòa {$cleanToa}",
+            'badgeClass' => 'badge-success',
+            'userRoleName' => "Trưởng Tòa {$cleanToa}",
+            'maKhu' => $maKhu,
+            'maCum' => $maCum,
+            'maToa' => $maToa,
+            'maToaNha' => $maToa,
             'canAssign' => true,
             'canCreateStaffTicket' => true,
-            'canApproveStaffTicket' => true,
+            'canApproveStaffTicket' => false,
             'canFilterAll' => false,
-            'isTechnician' => false
+            'isTechnician' => false,
+            'availableToas' => [$toaRow],
+            'availableCums' => [['MaCum' => $maCum, 'TenCum' => $toaRow['TenCum'] ?? $maCum, 'MaKhu' => $maKhu]],
+            'availableKhus' => [['MaKhu' => $maKhu, 'TenKhu' => $toaRow['TenKhu'] ?? $maKhu]],
+            'message' => ''
         ];
     }
 
@@ -240,15 +333,7 @@ class MaintenanceController extends Controller
         if ($scope['isTechnician'] && in_array($action, ['assign', 'cancel'])) {
             return [
                 'allowed' => false,
-                'message' => "Từ chối quyền: Kỹ thuật viên chỉ có quyền cập nhật tiến độ và báo cáo hoàn thành sửa chữa, không có quyền điều phối hoặc hủy phiếu!"
-            ];
-        }
-
-        // Kế toán không có quyền phân công hoặc hủy phiếu
-        if (($scope['level'] === 'KE_TOAN' || ($scope['role'] ?? '') === 'KE_TOAN') && in_array($action, ['assign', 'cancel'])) {
-            return [
-                'allowed' => false,
-                'message' => "Từ chối quyền: Nhân viên Kế toán không có quyền phân công hoặc hủy phiếu sự cố bảo trì!"
+                'message' => "Từ chối quyền: Kỹ thuật viên chỉ có quyền tiếp nhận, cập nhật tiến độ và báo cáo hoàn thành sửa chữa, không có quyền điều phối hoặc hủy phiếu!"
             ];
         }
 
@@ -269,7 +354,6 @@ class MaintenanceController extends Controller
                 ];
             }
 
-            // Với phiếu do Cán bộ lập: Muốn Hủy cũng cần cấp trên duyệt!
             if ($action === 'cancel' && $ticket['LoaiSuCo'] === 'HA_TANG') {
                 return [
                     'allowed' => false,
@@ -304,167 +388,186 @@ class MaintenanceController extends Controller
         $user = Auth::user();
         $scope = $this->getStaffScope($user);
 
-        $status = $_GET['status'] ?? 'all';
-        $search = trim($_GET['search'] ?? '');
-
-        // 1. Lấy danh sách Cụm nhà & Khu
-        $clusters = Database::fetchAll("
-            SELECT cn.MaCum, cn.TenCum, cn.MaKhu, k.TenKhu
-            FROM CumNha cn
-            JOIN KhuKTX k ON cn.MaKhu = k.MaKhu
-            ORDER BY cn.MaKhu ASC, cn.MaCum ASC
-        ");
-
-        // 2. Lấy danh sách Tòa nhà trong phạm vi của cán bộ (cho Modal lập phiếu hạ tầng)
-        $toaWhere = "";
-        $toaParams = [];
-        if ($scope['level'] === 'TOA') {
-            $toaWhere = "WHERE tn.MaToaNha = :t_scope";
-            $toaParams['t_scope'] = $scope['maToa'];
-        } elseif ($scope['level'] === 'CUM') {
-            $toaWhere = "WHERE tn.MaCum = :c_scope";
-            $toaParams['c_scope'] = $scope['maCum'];
-        } elseif ($scope['level'] === 'KHU' || $scope['level'] === 'NV_KT') {
-            $toaWhere = "WHERE cn.MaKhu = :k_scope";
-            $toaParams['k_scope'] = $scope['maKhu'];
+        // NẾU TÀI KHOẢN BỊ CHẶN 100% -> HIỂN THỊ RED WARNING CARD
+        if (!$scope['isAllowed']) {
+            $this->view('staff.maintenance', [
+                'user' => $user,
+                'scope' => $scope,
+                'kpis' => ['pending' => 0, 'fixing' => 0, 'infra' => 0, 'completed' => 0, 'cancelled' => 0, 'total' => 0],
+                'pendingTickets' => [],
+                'fixingTickets' => [],
+                'infraTickets' => [],
+                'completedTickets' => [],
+                'cancelledTickets' => [],
+                'technicians' => [],
+                'activeTab' => 'pending',
+                'searchTerm' => '',
+                'selectedType' => 'all',
+                'selectedKhu' => '',
+                'selectedCum' => '',
+                'selectedToa' => '',
+                'selectedTang' => '',
+                'selectedTech' => '',
+                'selectedStatus' => 'all',
+                'flashSuccess' => Session::flash('success'),
+                'flashError' => Session::flash('error'),
+                'flashWarning' => Session::flash('warning')
+            ]);
+            return;
         }
-        $buildings = Database::fetchAll("
-            SELECT tn.MaToaNha, tn.TenToaNha, tn.MaCum, cn.MaKhu
-            FROM ToaNha tn
-            JOIN CumNha cn ON tn.MaCum = cn.MaCum
-            {$toaWhere}
-            ORDER BY tn.MaToaNha ASC
-        ", $toaParams);
 
-        // 3. Xây dựng điều kiện lọc theo phân quyền
-        $whereConditions = [];
-        $params = [];
-        $countWhere = [];
-        $countParams = [];
-        $pendingWhereSql = "";
-        $pendingParams = [];
+        // BỘ LỌC TỪ REQUEST GET
+        $searchTerm = trim($_GET['search'] ?? '');
+        $selectedType = trim($_GET['type'] ?? 'all');
+        $selectedKhu = trim($_GET['khu'] ?? '');
+        $selectedCum = trim($_GET['cum'] ?? '');
+        $selectedToa = trim($_GET['toa'] ?? '');
+        $selectedTang = trim($_GET['tang'] ?? '');
+        $selectedTech = trim($_GET['tech'] ?? '');
+        $selectedStatus = trim($_GET['status'] ?? 'all');
+        $activeTab = trim($_GET['tab'] ?? 'pending');
+
+        $allowedTabs = ['pending', 'fixing', 'infra', 'completed', 'cancelled'];
+        if (!in_array($activeTab, $allowedTabs)) {
+            $activeTab = 'pending';
+        }
+
+        // 1. ÁP DỤNG RÀNG BUỘC PHÂN QUYỀN (RBAC SCOPE)
+        $scopeConditions = [];
+        $scopeParams = [];
 
         if ($scope['level'] === 'TOA') {
-            // Trưởng tòa: CHỈ xem phiếu của Tòa mình phụ trách, tuyệt đối không hiện tòa khác
-            $whereConditions[] = "COALESCE(pb.MaToaNha, p.MaToaNha) = :scope_toa";
-            $params['scope_toa'] = $scope['maToa'];
-
-            $countWhere[] = "COALESCE(pb.MaToaNha, p.MaToaNha) = :count_toa";
-            $countParams['count_toa'] = $scope['maToa'];
-
-            $pendingWhereSql = "AND COALESCE(pb.MaToaNha, p.MaToaNha) = :pending_toa";
-            $pendingParams['pending_toa'] = $scope['maToa'];
-
-            $targetKhu = $scope['maKhu'];
+            $scopeConditions[] = "COALESCE(pb.MaToaNha, p.MaToaNha) = :scope_toa";
+            $scopeParams['scope_toa'] = $scope['maToa'];
+            $selectedToa = $scope['maToa'];
             $selectedCum = $scope['maCum'];
-
+            $selectedKhu = $scope['maKhu'];
         } elseif ($scope['level'] === 'CUM') {
-            // Trưởng cụm: Xem toàn bộ các Tòa trong Cụm
-            $whereConditions[] = "tn.MaCum = :scope_cum";
-            $params['scope_cum'] = $scope['maCum'];
-
-            $countWhere[] = "tn.MaCum = :count_cum";
-            $countParams['count_cum'] = $scope['maCum'];
-
-            $pendingWhereSql = "AND tn.MaCum = :pending_cum";
-            $pendingParams['pending_cum'] = $scope['maCum'];
-
-            $targetKhu = $scope['maKhu'];
+            $scopeConditions[] = "tn.MaCum = :scope_cum";
+            $scopeParams['scope_cum'] = $scope['maCum'];
             $selectedCum = $scope['maCum'];
-
+            $selectedKhu = $scope['maKhu'];
         } elseif ($scope['level'] === 'KHU' || $scope['level'] === 'NV_KT') {
-            // Trưởng khu hoặc kỹ thuật viên: Xem phiếu trong Khu
-            $whereConditions[] = "cn.MaKhu = :scope_khu";
-            $params['scope_khu'] = $scope['maKhu'];
+            $scopeConditions[] = "cn.MaKhu = :scope_khu";
+            $scopeParams['scope_khu'] = $scope['maKhu'];
+            $selectedKhu = $scope['maKhu'];
+        }
 
-            $countWhere[] = "cn.MaKhu = :count_khu";
-            $countParams['count_khu'] = $scope['maKhu'];
+        // 2. TÍNH TOÁN 4 KPI THỐNG KÊ NHANH TRONG PHẠM VI
+        $kpiWhere = !empty($scopeConditions) ? "WHERE " . implode(" AND ", $scopeConditions) : "";
+        $kpiRows = Database::fetchAll("
+            SELECT pb.TrangThaiSua, pb.LoaiSuCo, COUNT(*) as c
+            FROM PhieuBaoHong pb
+            LEFT JOIN Phong p ON pb.MaPhong = p.MaPhong
+            LEFT JOIN ToaNha tn ON COALESCE(pb.MaToaNha, p.MaToaNha) = tn.MaToaNha
+            LEFT JOIN CumNha cn ON tn.MaCum = cn.MaCum
+            {$kpiWhere}
+            GROUP BY pb.TrangThaiSua, pb.LoaiSuCo
+        ", $scopeParams);
 
-            $pendingWhereSql = "AND cn.MaKhu = :pending_khu";
-            $pendingParams['pending_khu'] = $scope['maKhu'];
+        $kpis = [
+            'pending' => 0,
+            'fixing' => 0,
+            'infra' => 0,
+            'completed' => 0,
+            'cancelled' => 0,
+            'total' => 0
+        ];
 
-            $targetKhu = $scope['maKhu'];
-            $selectedCum = $_GET['cum'] ?? 'all';
-
-            // Nếu lọc tiếp theo Cụm trong Khu
-            if (!empty($_GET['cum']) && $_GET['cum'] !== 'all' && $_GET['cum'] !== "khu-{$scope['maKhu']}") {
-                $whereConditions[] = "tn.MaCum = :user_cum_filter";
-                $params['user_cum_filter'] = $_GET['cum'];
-
-                $countWhere[] = "tn.MaCum = :user_count_cum";
-                $countParams['user_count_cum'] = $_GET['cum'];
-
-                $pendingWhereSql .= " AND tn.MaCum = :user_pend_cum";
-                $pendingParams['user_pend_cum'] = $_GET['cum'];
+        foreach ($kpiRows as $kr) {
+            $count = (int)$kr['c'];
+            $kpis['total'] += $count;
+            if ($kr['TrangThaiSua'] === 'Chờ xử lý') {
+                $kpis['pending'] += $count;
+            } elseif ($kr['TrangThaiSua'] === 'Đang sửa chữa') {
+                $kpis['fixing'] += $count;
+            } elseif ($kr['TrangThaiSua'] === 'Đã hoàn thành') {
+                $kpis['completed'] += $count;
+            } elseif ($kr['TrangThaiSua'] === 'Đã hủy') {
+                $kpis['cancelled'] += $count;
             }
-
-        } else {
-            // Quản trị viên (ADMIN) / Toàn KTX
-            $cumFilter = $_GET['cum'] ?? 'all';
-            $selectedCum = $cumFilter;
-            $targetKhu = 'all';
-
-            if ($cumFilter === 'khu-A') {
-                $whereConditions[] = "cn.MaKhu = 'A'";
-                $countWhere[] = "cn.MaKhu = 'A'";
-                $pendingWhereSql = "AND cn.MaKhu = 'A'";
-                $targetKhu = 'A';
-            } elseif ($cumFilter === 'khu-B') {
-                $whereConditions[] = "cn.MaKhu = 'B'";
-                $countWhere[] = "cn.MaKhu = 'B'";
-                $pendingWhereSql = "AND cn.MaKhu = 'B'";
-                $targetKhu = 'B';
-            } elseif ($cumFilter !== 'all') {
-                $whereConditions[] = "tn.MaCum = :admin_cum";
-                $params['admin_cum'] = $cumFilter;
-
-                $countWhere[] = "tn.MaCum = :admin_count_cum";
-                $countParams['admin_count_cum'] = $cumFilter;
-
-                $pendingWhereSql = "AND tn.MaCum = :admin_pend_cum";
-                $pendingParams['admin_pend_cum'] = $cumFilter;
-
-                foreach ($clusters as $c) {
-                    if ($c['MaCum'] === $cumFilter) {
-                        $targetKhu = $c['MaKhu'];
-                        break;
-                    }
-                }
+            if ($kr['LoaiSuCo'] === 'HA_TANG') {
+                $kpis['infra'] += $count;
             }
         }
 
-        // Lọc theo Tab trạng thái
-        if ($status === 'cho-xu-ly') {
-            $whereConditions[] = "pb.TrangThaiSua = 'Chờ xử lý'";
-        } elseif ($status === 'dang-sua') {
-            $whereConditions[] = "pb.TrangThaiSua = 'Đang sửa chữa'";
-        } elseif ($status === 'da-hoan-thanh') {
-            $whereConditions[] = "pb.TrangThaiSua = 'Đã hoàn thành'";
-        } elseif ($status === 'da-huy') {
-            $whereConditions[] = "pb.TrangThaiSua = 'Đã hủy'";
+        // 3. XÂY DỰNG QUERY LỌC CHI TIẾT
+        $queryConditions = $scopeConditions;
+        $queryParams = $scopeParams;
+
+        if ($selectedType !== 'all') {
+            $queryConditions[] = "pb.LoaiSuCo = :filter_type";
+            $queryParams['filter_type'] = $selectedType;
         }
 
-        // Lọc theo từ khóa tìm kiếm
-        if ($search !== '') {
-            $whereConditions[] = "(pb.MaPhieu LIKE :search1 OR pb.MaPhong LIKE :search2 OR tb.TenThietBi LIKE :search3 OR sv.HoVaTen LIKE :search4 OR nvBao.HoVaTen LIKE :search5 OR pb.MoTaHuHong LIKE :search6)";
-            $params['search1'] = "%{$search}%";
-            $params['search2'] = "%{$search}%";
-            $params['search3'] = "%{$search}%";
-            $params['search4'] = "%{$search}%";
-            $params['search5'] = "%{$search}%";
-            $params['search6'] = "%{$search}%";
+        if (!empty($selectedKhu) && $scope['level'] === 'ALL') {
+            $queryConditions[] = "cn.MaKhu = :filter_khu";
+            $queryParams['filter_khu'] = $selectedKhu;
         }
 
-        $whereSql = !empty($whereConditions) ? "WHERE " . implode(" AND ", $whereConditions) : "";
+        if (!empty($selectedCum) && ($scope['level'] === 'ALL' || $scope['level'] === 'KHU')) {
+            $queryConditions[] = "tn.MaCum = :filter_cum";
+            $queryParams['filter_cum'] = $selectedCum;
+        }
 
-        // 4. Truy vấn danh sách phiếu báo hỏng
-        $ticketsSql = "
+        if (!empty($selectedToa) && $scope['level'] !== 'TOA') {
+            $queryConditions[] = "COALESCE(pb.MaToaNha, p.MaToaNha) = :filter_toa";
+            $queryParams['filter_toa'] = $selectedToa;
+        }
+
+        if (!empty($selectedTang)) {
+            $queryConditions[] = "p.Tang = :filter_tang";
+            $queryParams['filter_tang'] = $selectedTang;
+        }
+
+        if (!empty($selectedTech)) {
+            if ($selectedTech === 'none') {
+                $queryConditions[] = "pb.NhanVienKyThuat IS NULL";
+            } else {
+                $queryConditions[] = "pb.NhanVienKyThuat = :filter_tech";
+                $queryParams['filter_tech'] = (int)$selectedTech;
+            }
+        }
+
+        if ($selectedStatus !== 'all') {
+            $queryConditions[] = "pb.TrangThaiSua = :filter_status";
+            $queryParams['filter_status'] = $selectedStatus;
+        }
+
+        if (!empty($searchTerm)) {
+            $queryConditions[] = "(
+                pb.MaPhieu LIKE :kw1 
+                OR pb.MaPhong LIKE :kw2 
+                OR p.SoPhong LIKE :kw3
+                OR tb.TenThietBi LIKE :kw4 
+                OR sv.HoVaTen LIKE :kw5 
+                OR sv.MSSVTaiTruong LIKE :kw6
+                OR nvBao.HoVaTen LIKE :kw7 
+                OR nvTho.HoVaTen LIKE :kw8 
+                OR pb.MoTaHuHong LIKE :kw9
+            )";
+            $queryParams['kw1'] = "%{$searchTerm}%";
+            $queryParams['kw2'] = "%{$searchTerm}%";
+            $queryParams['kw3'] = "%{$searchTerm}%";
+            $queryParams['kw4'] = "%{$searchTerm}%";
+            $queryParams['kw5'] = "%{$searchTerm}%";
+            $queryParams['kw6'] = "%{$searchTerm}%";
+            $queryParams['kw7'] = "%{$searchTerm}%";
+            $queryParams['kw8'] = "%{$searchTerm}%";
+            $queryParams['kw9'] = "%{$searchTerm}%";
+        }
+
+        $whereClause = !empty($queryConditions) ? "WHERE " . implode(" AND ", $queryConditions) : "";
+
+        // 4. TRUY VẤN TOÀN BỘ PHIẾU THEO BỘ LỌC
+        $sql = "
             SELECT pb.MaPhieu, pb.MaPhong, pb.MaToaNha, pb.MaThietBi, pb.MaSinhVienBao, pb.MaNhanVienBao, pb.LoaiSuCo,
                    pb.MoTaHuHong, pb.GhiChuTienDo, pb.HinhAnh, pb.NhanVienKyThuat, pb.NguoiDuyet, pb.TrangThaiSua, pb.NgayBao,
                    COALESCE(pb.MaToaNha, p.MaToaNha) AS FinalToaNha,
+                   p.SoPhong, p.Tang,
                    tn.TenToaNha, tn.MaCum, cn.TenCum, cn.MaKhu,
                    tb.TenThietBi, tb.LoaiThietBi, tb.MaSoThietBi, tb.TinhTrangThietBi,
-                   sv.HoVaTen AS TenSinhVien, sv.SoDienThoai AS SdtSinhVien,
+                   sv.HoVaTen AS TenSinhVien, sv.MSSVTaiTruong, sv.SoDienThoai AS SdtSinhVien,
                    nvBao.HoVaTen AS TenNhanVienBao, nvBao.ChucVu AS ChucVuNhanVienBao,
                    nvTho.HoVaTen AS TenTho, nvTho.ChucVu AS ChucVuTho, nvTho.SoDienThoai AS SdtTho,
                    tkTho.MaCumQuanLy AS TechKhu,
@@ -480,94 +583,270 @@ class MaintenanceController extends Controller
             LEFT JOIN NhanVien nvTho ON tkTho.MaTaiKhoan = nvTho.MaTaiKhoan
             LEFT JOIN TaiKhoan tkDuyet ON pb.NguoiDuyet = tkDuyet.MaTaiKhoan
             LEFT JOIN NhanVien nvDuyet ON tkDuyet.MaTaiKhoan = nvDuyet.MaTaiKhoan
-            {$whereSql}
+            {$whereClause}
             ORDER BY pb.NgayBao DESC
         ";
-        $tickets = Database::fetchAll($ticketsSql, $params);
 
-        // 5. Đếm số lượng phiếu theo trạng thái
-        $countWhereSql = !empty($countWhere) ? "WHERE " . implode(" AND ", $countWhere) : "";
+        $allTickets = Database::fetchAll($sql, $queryParams);
 
-        $countsRaw = Database::fetchAll("
-            SELECT pb.TrangThaiSua, COUNT(*) AS total
-            FROM PhieuBaoHong pb
-            LEFT JOIN Phong p ON pb.MaPhong = p.MaPhong
-            LEFT JOIN ToaNha tn ON COALESCE(pb.MaToaNha, p.MaToaNha) = tn.MaToaNha
-            LEFT JOIN CumNha cn ON tn.MaCum = cn.MaCum
-            {$countWhereSql}
-            GROUP BY pb.TrangThaiSua
-        ", $countParams);
+        // 5. PHÂN LOẠI DANH SÁCH THEO 5 TABS
+        $pendingTickets = [];
+        $fixingTickets = [];
+        $infraTickets = [];
+        $completedTickets = [];
+        $cancelledTickets = [];
 
-        $counts = [
-            'all' => 0,
-            'cho_xu_ly' => 0,
-            'dang_sua' => 0,
-            'da_hoan_thanh' => 0,
-            'da_huy' => 0
-        ];
+        foreach ($allTickets as $t) {
+            $status = $t['TrangThaiSua'] ?? '';
+            $isInfra = ($t['LoaiSuCo'] === 'HA_TANG');
 
-        foreach ($countsRaw as $row) {
-            $counts['all'] += (int)$row['total'];
-            if ($row['TrangThaiSua'] === 'Chờ xử lý') {
-                $counts['cho_xu_ly'] = (int)$row['total'];
-            } elseif ($row['TrangThaiSua'] === 'Đang sửa chữa') {
-                $counts['dang_sua'] = (int)$row['total'];
-            } elseif ($row['TrangThaiSua'] === 'Đã hoàn thành') {
-                $counts['da_hoan_thanh'] = (int)$row['total'];
-            } elseif ($row['TrangThaiSua'] === 'Đã hủy') {
-                $counts['da_huy'] = (int)$row['total'];
+            if ($status === 'Chờ xử lý') {
+                $pendingTickets[] = $t;
+            } elseif ($status === 'Đang sửa chữa') {
+                $fixingTickets[] = $t;
+            } elseif ($status === 'Đã hoàn thành') {
+                $completedTickets[] = $t;
+            } elseif ($status === 'Đã hủy') {
+                $cancelledTickets[] = $t;
+            }
+
+            if ($isInfra) {
+                $infraTickets[] = $t;
             }
         }
 
-        // 6. Lấy danh sách kỹ thuật viên lọc theo Khu
+        // 6. LẤY DANH SÁCH KỸ THUẬT VIÊN (cho Modal phân công & dropdown lọc)
         $techWhere = "WHERE tk.DangHoatDong = 1 AND (nv.ChucVu LIKE '%kỹ thuật%' OR tk.TenDangNhap LIKE 'NV_KT%')";
         $techParams = [];
+        $targetKhu = $scope['maKhu'] ?? $selectedKhu;
         if (!empty($targetKhu) && in_array($targetKhu, ['A', 'B'])) {
-            $techWhere .= " AND tk.MaCumQuanLy = :tech_khu";
+            $techWhere .= " AND (tk.MaCumQuanLy = :tech_khu OR cn.MaKhu = :tech_khu2)";
             $techParams['tech_khu'] = $targetKhu;
+            $techParams['tech_khu2'] = $targetKhu;
         }
 
         $technicians = Database::fetchAll("
-            SELECT tk.MaTaiKhoan, tk.TenDangNhap, tk.MaVaiTro, tk.MaCumQuanLy AS MaKhu, nv.MaNhanVien, nv.HoVaTen, nv.ChucVu, nv.SoDienThoai
+            SELECT tk.MaTaiKhoan, tk.TenDangNhap, tk.MaVaiTro, tk.MaCumQuanLy, cn.MaKhu, nv.MaNhanVien, nv.HoVaTen, nv.ChucVu, nv.SoDienThoai
             FROM TaiKhoan tk
             JOIN NhanVien nv ON tk.MaTaiKhoan = nv.MaTaiKhoan
+            LEFT JOIN CumNha cn ON tk.MaCumQuanLy = cn.MaCum
             {$techWhere}
-            ORDER BY tk.MaCumQuanLy ASC, nv.HoVaTen ASC
+            ORDER BY nv.HoVaTen ASC
         ", $techParams);
 
-        // 7. Lấy danh sách các phiếu chưa hoàn thành để nạp vào form phân công nhanh
-        $pendingTicketsSql = "
-            SELECT pb.MaPhieu, pb.MaPhong, pb.MaToaNha, pb.LoaiSuCo, pb.MoTaHuHong, tb.TenThietBi, pb.NhanVienKyThuat,
+        $this->view('staff.maintenance', [
+            'user' => $user,
+            'scope' => $scope,
+            'kpis' => $kpis,
+            'pendingTickets' => $pendingTickets,
+            'fixingTickets' => $fixingTickets,
+            'infraTickets' => $infraTickets,
+            'completedTickets' => $completedTickets,
+            'cancelledTickets' => $cancelledTickets,
+            'technicians' => $technicians,
+            'activeTab' => $activeTab,
+            'searchTerm' => $searchTerm,
+            'selectedType' => $selectedType,
+            'selectedKhu' => $selectedKhu,
+            'selectedCum' => $selectedCum,
+            'selectedToa' => $selectedToa,
+            'selectedTang' => $selectedTang,
+            'selectedTech' => $selectedTech,
+            'selectedStatus' => $selectedStatus,
+            'flashSuccess' => Session::flash('success'),
+            'flashError' => Session::flash('error'),
+            'flashWarning' => Session::flash('warning')
+        ]);
+    }
+
+    /**
+     * Xuất danh sách sự cố bảo trì ra file Excel / CSV có UTF-8 BOM
+     */
+    public function exportMaintenance(): void
+    {
+        $user = Auth::user();
+        $scope = $this->getStaffScope($user);
+
+        if (!$scope['isAllowed']) {
+            Session::flash('error', 'Bạn không có quyền xuất dữ liệu bảo trì!');
+            $this->redirect('staff/maintenance');
+            return;
+        }
+
+        $activeTab = trim($_GET['tab'] ?? 'pending');
+        $searchTerm = trim($_GET['search'] ?? '');
+        $selectedType = trim($_GET['type'] ?? 'all');
+        $selectedKhu = trim($_GET['khu'] ?? '');
+        $selectedCum = trim($_GET['cum'] ?? '');
+        $selectedToa = trim($_GET['toa'] ?? '');
+        $selectedTang = trim($_GET['tang'] ?? '');
+        $selectedTech = trim($_GET['tech'] ?? '');
+        $selectedStatus = trim($_GET['status'] ?? 'all');
+
+        $queryConditions = [];
+        $queryParams = [];
+
+        // Áp dụng phạm vi cán bộ
+        if ($scope['level'] === 'TOA') {
+            $queryConditions[] = "COALESCE(pb.MaToaNha, p.MaToaNha) = :scope_toa";
+            $queryParams['scope_toa'] = $scope['maToa'];
+        } elseif ($scope['level'] === 'CUM') {
+            $queryConditions[] = "tn.MaCum = :scope_cum";
+            $queryParams['scope_cum'] = $scope['maCum'];
+        } elseif ($scope['level'] === 'KHU' || $scope['level'] === 'NV_KT') {
+            $queryConditions[] = "cn.MaKhu = :scope_khu";
+            $queryParams['scope_khu'] = $scope['maKhu'];
+        }
+
+        // Lọc theo Tab đang chọn
+        if ($activeTab === 'pending') {
+            $queryConditions[] = "pb.TrangThaiSua = 'Chờ xử lý'";
+        } elseif ($activeTab === 'fixing') {
+            $queryConditions[] = "pb.TrangThaiSua = 'Đang sửa chữa'";
+        } elseif ($activeTab === 'infra') {
+            $queryConditions[] = "pb.LoaiSuCo = 'HA_TANG'";
+        } elseif ($activeTab === 'completed') {
+            $queryConditions[] = "pb.TrangThaiSua = 'Đã hoàn thành'";
+        } elseif ($activeTab === 'cancelled') {
+            $queryConditions[] = "pb.TrangThaiSua = 'Đã hủy'";
+        }
+
+        if ($selectedType !== 'all') {
+            $queryConditions[] = "pb.LoaiSuCo = :filter_type";
+            $queryParams['filter_type'] = $selectedType;
+        }
+
+        if (!empty($selectedKhu) && $scope['level'] === 'ALL') {
+            $queryConditions[] = "cn.MaKhu = :filter_khu";
+            $queryParams['filter_khu'] = $selectedKhu;
+        }
+
+        if (!empty($selectedCum) && ($scope['level'] === 'ALL' || $scope['level'] === 'KHU')) {
+            $queryConditions[] = "tn.MaCum = :filter_cum";
+            $queryParams['filter_cum'] = $selectedCum;
+        }
+
+        if (!empty($selectedToa) && $scope['level'] !== 'TOA') {
+            $queryConditions[] = "COALESCE(pb.MaToaNha, p.MaToaNha) = :filter_toa";
+            $queryParams['filter_toa'] = $selectedToa;
+        }
+
+        if (!empty($selectedTang)) {
+            $queryConditions[] = "p.Tang = :filter_tang";
+            $queryParams['filter_tang'] = $selectedTang;
+        }
+
+        if (!empty($selectedTech)) {
+            if ($selectedTech === 'none') {
+                $queryConditions[] = "pb.NhanVienKyThuat IS NULL";
+            } else {
+                $queryConditions[] = "pb.NhanVienKyThuat = :filter_tech";
+                $queryParams['filter_tech'] = (int)$selectedTech;
+            }
+        }
+
+        if (!empty($searchTerm)) {
+            $queryConditions[] = "(pb.MaPhieu LIKE :kw1 OR pb.MaPhong LIKE :kw2 OR p.SoPhong LIKE :kw3 OR tb.TenThietBi LIKE :kw4 OR sv.HoVaTen LIKE :kw5 OR sv.MSSVTaiTruong LIKE :kw6 OR nvBao.HoVaTen LIKE :kw7 OR nvTho.HoVaTen LIKE :kw8 OR pb.MoTaHuHong LIKE :kw9)";
+            $queryParams['kw1'] = "%{$searchTerm}%";
+            $queryParams['kw2'] = "%{$searchTerm}%";
+            $queryParams['kw3'] = "%{$searchTerm}%";
+            $queryParams['kw4'] = "%{$searchTerm}%";
+            $queryParams['kw5'] = "%{$searchTerm}%";
+            $queryParams['kw6'] = "%{$searchTerm}%";
+            $queryParams['kw7'] = "%{$searchTerm}%";
+            $queryParams['kw8'] = "%{$searchTerm}%";
+            $queryParams['kw9'] = "%{$searchTerm}%";
+        }
+
+        $whereClause = !empty($queryConditions) ? "WHERE " . implode(" AND ", $queryConditions) : "";
+
+        $sql = "
+            SELECT pb.MaPhieu, pb.MaPhong, pb.MaToaNha, pb.LoaiSuCo, pb.MoTaHuHong, pb.GhiChuTienDo,
+                   pb.TrangThaiSua, pb.NgayBao,
                    COALESCE(pb.MaToaNha, p.MaToaNha) AS FinalToaNha,
-                   tn.MaCum, cn.MaKhu, cn.TenCum
+                   p.SoPhong, p.Tang,
+                   tn.TenToaNha, tn.MaCum, cn.TenCum, cn.MaKhu,
+                   tb.TenThietBi, tb.MaSoThietBi,
+                   sv.HoVaTen AS TenSinhVien, sv.MSSVTaiTruong, sv.SoDienThoai AS SdtSinhVien,
+                   nvBao.HoVaTen AS TenNhanVienBao,
+                   nvTho.HoVaTen AS TenTho, nvTho.SoDienThoai AS SdtTho
             FROM PhieuBaoHong pb
             LEFT JOIN Phong p ON pb.MaPhong = p.MaPhong
             LEFT JOIN ToaNha tn ON COALESCE(pb.MaToaNha, p.MaToaNha) = tn.MaToaNha
             LEFT JOIN CumNha cn ON tn.MaCum = cn.MaCum
             LEFT JOIN ThietBiPhong tb ON pb.MaThietBi = tb.MaThietBi
-            WHERE pb.TrangThaiSua IN ('Chờ xử lý', 'Đang sửa chữa')
-            {$pendingWhereSql}
+            LEFT JOIN SinhVien sv ON pb.MaSinhVienBao = sv.MaSinhVien
+            LEFT JOIN NhanVien nvBao ON pb.MaNhanVienBao = nvBao.MaNhanVien
+            LEFT JOIN TaiKhoan tkTho ON pb.NhanVienKyThuat = tkTho.MaTaiKhoan
+            LEFT JOIN NhanVien nvTho ON tkTho.MaTaiKhoan = nvTho.MaTaiKhoan
+            {$whereClause}
             ORDER BY pb.NgayBao DESC
         ";
-        $pendingTickets = Database::fetchAll($pendingTicketsSql, $pendingParams);
 
-        $this->view('staff.maintenance', [
-            'user' => $user,
-            'scope' => $scope,
-            'maCum' => $selectedCum,
-            'currentKhu' => $targetKhu,
-            'clusters' => $clusters,
-            'buildings' => $buildings,
-            'tickets' => $tickets,
-            'counts' => $counts,
-            'technicians' => $technicians,
-            'pendingTickets' => $pendingTickets,
-            'currentStatus' => $status,
-            'currentSearch' => $search,
-            'flashSuccess' => Session::flash('success'),
-            'flashError' => Session::flash('error'),
-            'flashWarning' => Session::flash('warning')
+        $records = Database::fetchAll($sql, $queryParams);
+
+        $filename = "bao_tri_KTX_" . $activeTab . "_" . date('Ymd_His') . ".csv";
+
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        // Ghi UTF-8 BOM
+        echo "\xEF\xBB\xBF";
+
+        $output = fopen('php://output', 'w');
+
+        fputcsv($output, [
+            'Mã Phiếu',
+            'Loại Sự Cố',
+            'Vị Trí Phòng / Tòa Nhà',
+            'Khu / Cụm',
+            'Hạng Mục / Thiết Bị',
+            'Người Báo Hỏng',
+            'MSSV / Mã Cán Bộ',
+            'SĐT Liên Hệ',
+            'Kỹ Thuật Phụ Trách',
+            'SĐT Kỹ Thuật',
+            'Trạng Thái',
+            'Ngày Báo',
+            'Nội Dung Mô Tả Sự Cố',
+            'Ghi Chú Tiến Độ / Nghiệm Thu'
         ]);
+
+        foreach ($records as $r) {
+            $isInfra = ($r['LoaiSuCo'] === 'HA_TANG');
+            $loaiText = $isInfra ? 'Hạ tầng chung' : 'Phòng sinh viên';
+            $viTri = !empty($r['SoPhong']) 
+                ? "P.{$r['SoPhong']} ({$r['TenToaNha']})" 
+                : "{$r['TenToaNha']} ({$r['FinalToaNha']})";
+            $khuCum = "Khu {$r['MaKhu']} - Cụm {$r['MaCum']}";
+            $nguoiBao = !empty($r['TenSinhVien']) ? $r['TenSinhVien'] : ($r['TenNhanVienBao'] ?? 'Cán bộ KTX');
+            $maNguoiBao = !empty($r['MSSVTaiTruong']) ? $r['MSSVTaiTruong'] : '---';
+            $sdtNguoiBao = !empty($r['SdtSinhVien']) ? $r['SdtSinhVien'] : '---';
+            $tenTho = !empty($r['TenTho']) ? $r['TenTho'] : 'Chưa phân công';
+            $sdtTho = !empty($r['SdtTho']) ? $r['SdtTho'] : '---';
+
+            fputcsv($output, [
+                $r['MaPhieu'],
+                $loaiText,
+                $viTri,
+                $khuCum,
+                $r['TenThietBi'] ?? 'Cơ sở vật chất',
+                $nguoiBao,
+                $maNguoiBao,
+                $sdtNguoiBao,
+                $tenTho,
+                $sdtTho,
+                $r['TrangThaiSua'],
+                !empty($r['NgayBao']) ? date('d/m/Y H:i', strtotime($r['NgayBao'])) : '',
+                $r['MoTaHuHong'],
+                $r['GhiChuTienDo'] ?? ''
+            ]);
+        }
+
+        fclose($output);
+        exit;
     }
 
     /**
@@ -649,7 +928,6 @@ class MaintenanceController extends Controller
         if (isset($_FILES['hinhAnhFile']) && $_FILES['hinhAnhFile']['error'] === UPLOAD_ERR_OK) {
             $file = $_FILES['hinhAnhFile'];
 
-            // 1. Kiểm tra dung lượng tối đa (5MB)
             $maxSize = 5 * 1024 * 1024;
             if ($file['size'] > $maxSize) {
                 Session::flash('error', 'Dung lượng ảnh hiện trường vượt quá 5MB. Vui lòng nén hoặc chọn ảnh nhỏ hơn.');
@@ -657,7 +935,6 @@ class MaintenanceController extends Controller
                 return;
             }
 
-            // 2. Kiểm tra phần mở rộng tệp
             $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
             $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
             if (!in_array($ext, $allowedExts, true)) {
@@ -666,7 +943,6 @@ class MaintenanceController extends Controller
                 return;
             }
 
-            // 3. Kiểm tra MIME Type thực tế
             $mime = '';
             if (function_exists('mime_content_type')) {
                 $mime = mime_content_type($file['tmp_name']);
@@ -678,7 +954,6 @@ class MaintenanceController extends Controller
                 return;
             }
 
-            // 4. Tạo thư mục public/uploads/maintenance/ nếu chưa có
             $uploadDir = dirname(__DIR__, 2) . '/public/uploads/maintenance/';
             if (!is_dir($uploadDir)) {
                 if (!mkdir($uploadDir, 0777, true) && !is_dir($uploadDir)) {
@@ -688,7 +963,6 @@ class MaintenanceController extends Controller
                 }
             }
 
-            // 5. Đặt tên tệp duy nhất, an toàn chống tấn công path traversal
             $safeFileName = 'scene_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
             $targetPath = $uploadDir . $safeFileName;
 
@@ -709,6 +983,7 @@ class MaintenanceController extends Controller
         if (!$maNhanVien) {
             $maNhanVien = 'CUMAG';
         }
+
         $result = MaintenanceService::createStaffInfrastructureTicket(
             $maNhanVien,
             $maToaNha,
@@ -727,7 +1002,7 @@ class MaintenanceController extends Controller
     }
 
     /**
-     * Kỹ thuật viên cập nhật tiến độ sửa chữa
+     * Kỹ thuật viên hoặc Cán bộ cập nhật tiến độ sửa chữa
      */
     public function updateProgress(): void
     {

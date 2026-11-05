@@ -1,1054 +1,1125 @@
 <?php
 ob_start();
+
+$isAllowed = $scope['isAllowed'] ?? false;
+$activeTab = $activeTab ?? 'pending';
+$kpiData = $kpis ?? ['pending' => 0, 'fixing' => 0, 'infra' => 0, 'completed' => 0, 'cancelled' => 0, 'total' => 0];
+
+// Helper làm sạch tên tòa: tránh lặp "Tòa Tòa A01"
+$formatTenToa = function (?string $rawName, ?string $code = ''): string {
+    if (!$rawName) return $code ?: '---';
+    $clean = preg_replace('/^(tòa\s*|toà\s*)+/ui', '', trim($rawName));
+    return 'Tòa ' . (!empty($clean) ? $clean : $rawName);
+};
+
+// Helper render lý do / ghi chú tiến độ
+function renderMaintenanceNote(?string $note): void
+{
+    if (empty($note)) {
+        echo "<span style='color: var(--text-muted); font-size: 0.8rem;'>Chưa có ghi chú tiến độ</span>";
+        return;
+    }
+    if (str_contains($note, 'Lý do hủy:')) {
+        $parts = explode('Lý do hủy:', $note);
+        $reason = trim($parts[1] ?? $note);
+        echo "<div style='font-size: 0.8rem; color: #991b1b; font-weight: 600; background: #fef2f2; padding: 3px 8px; border-radius: 4px; display: inline-block;'>🛑 Lý do hủy: " . htmlspecialchars($reason) . "</div>";
+    } else {
+        echo "<div style='font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4;'>" . nl2br(htmlspecialchars($note)) . "</div>";
+    }
+}
 ?>
 
-<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px 15px;">
-    <!-- Breadcrumb & Header -->
+<div class="container">
+
+    <!-- BREADCRUMB & HEADER (ĐỒNG BỘ CHUẨN ZONES, ROOMS, UTILITIES, REQUESTS) -->
     <div style="margin-bottom: 20px;">
-        <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted, #64748b); margin-bottom: 8px;">
-            <a href="<?= url('staff/dashboard') ?>" style="color: var(--text-muted, #64748b); text-decoration: none;">BQL Ký túc xá</a>
+        <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
+            <a href="<?= url('staff/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">BQL KTX</a>
             <span>/</span>
-            <span style="color: var(--text-primary, #1e293b); font-weight: 500;">Điều phối Sửa chữa & Phiếu Báo Hỏng</span>
+            <span style="color: var(--text-muted);">Cơ sở vật chất & Hạ tầng</span>
+            <span>/</span>
+            <span style="color: var(--text-primary); font-weight: 500;">Điều phối Sửa chữa & Phiếu Báo Hỏng</span>
         </div>
 
-        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div class="page-header" style="align-items: center; flex-wrap: wrap; gap: 12px; display: flex; justify-content: space-between;">
             <div>
-                <h1 class="page-title" style="margin: 0; font-size: 1.6rem; color: var(--text-primary, #1e293b);">
-                    Điều phối Sửa chữa & Phiếu Báo Hỏng
-                </h1>
+                <h1 class="page-title">Điều phối Sửa chữa & Phiếu Báo Hỏng</h1>
+                <p class="page-subtitle" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+                    <span>Phạm vi cán bộ:</span>
+                    <span class="badge <?= htmlspecialchars($scope['badgeClass'] ?? 'badge-primary') ?>" style="font-size: 0.8rem; padding: 4px 10px;">
+                        <i class="fa-solid <?= $scope['isTechnician'] ? 'fa-wrench' : 'fa-building-user' ?>" style="margin-right: 6px;"></i> <?= htmlspecialchars($scope['title'] ?? 'Cán bộ Quản lý') ?>
+                    </span>
+                    <?php if (!empty($scope['isTechnician'])): ?>
+                        <span class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 0.75rem; padding: 3px 8px;">
+                            <i class="fa-solid fa-screwdriver-wrench"></i> Chế độ Kỹ thuật viên (Thi công & Nghiệm thu)
+                        </span>
+                    <?php endif; ?>
+                </p>
             </div>
-            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <?php if ($scope['canCreateStaffTicket']): ?>
-                    <button type="button" class="btn btn-primary" onclick="openStaffTicketModal()" style="border-radius: 8px; padding: 8px 16px; font-size: 0.88rem; background: #059669; border: none; color: #fff; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
-                        Lập phiếu sự cố hạ tầng chung
+
+            <!-- CÁC NÚT THAO TÁC HEADER (ĐỒNG BỘ ADMIN & ROOMS) -->
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <?php if (!empty($scope['canCreateStaffTicket'])): ?>
+                    <button type="button" class="btn btn-primary" onclick="openStaffTicketModal()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;">
+                        <i class="fa-solid fa-plus"></i> Lập phiếu sự cố hạ tầng
                     </button>
                 <?php endif; ?>
-                <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline" style="border-radius: 8px; text-decoration: none; padding: 8px 16px; border: 1px solid #cbd5e1; color: #334155;">
-                    &larr; Về Dashboard
+
+                <?php if (!empty($isAllowed)): ?>
+                    <button type="button" class="btn btn-outline" onclick="exportMaintenance()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; color: #15803d; border-color: #86efac; background: #f0fdf4; cursor: pointer;" title="Xuất dữ liệu theo tab đang xem ra Excel/CSV">
+                        <i class="fa-solid fa-file-excel" style="color: #16a34a;"></i> <span id="btnExportText">Xuất Excel (<?= count($pendingTickets ?? []) ?>)</span>
+                    </button>
+                <?php endif; ?>
+
+                <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 6px 14px;">
+                    <i class="fa-solid fa-arrow-left" style="margin-right: 6px;"></i> Về Dashboard
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- HỘP THÔNG TIN VAI TRÒ & PHÂN QUYỀN ĐANG ĐĂNG NHẬP -->
-    <div class="card" style="margin-bottom: 20px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 1.4rem;">
-                <?= $scope['isTechnician'] ? '🔧' : '🛡️' ?>
-            </span>
-            <div>
-                <div style="font-size: 0.88rem; color: #1e293b; font-weight: 600;">
-                    Tài khoản: <strong><?= htmlspecialchars($user['HoVaTen'] ?? $user['TenDangNhap']) ?></strong> (<code><?= htmlspecialchars($user['TenDangNhap']) ?></code>)
-                </div>
-                <div style="font-size: 0.82rem; color: #64748b; margin-top: 2px;">
-                    Vai trò: <strong style="color: #2563eb;"><?= htmlspecialchars($scope['title']) ?></strong>
-                    <?php if ($scope['isTechnician']): ?>
-                        &bull; <span style="color: #0284c7; font-weight: 600;">Chế độ Kỹ thuật viên: Xem phiếu, cập nhật tiến độ & nghiệm thu hoàn thành (Không phân công).</span>
-                    <?php elseif ($scope['level'] === 'TOA'): ?>
-                        &bull; <span style="color: #059669; font-weight: 600;">Chỉ xử lý phiếu Tòa <?= htmlspecialchars($scope['maToa']) ?>; được lập phiếu sự cố Tòa (cần cấp trên duyệt).</span>
-                    <?php elseif ($scope['level'] === 'CUM'): ?>
-                        &bull; <span style="color: #059669; font-weight: 600;">Quản lý Cụm <?= htmlspecialchars($scope['maCum']) ?>; duyệt phiếu SV & duyệt phiếu hạ tầng do Trưởng Tòa lập.</span>
-                    <?php elseif ($scope['level'] === 'KHU'): ?>
-                        &bull; <span style="color: #059669; font-weight: 600;">Quản lý toàn bộ Khu <?= htmlspecialchars($scope['maKhu']) ?>; duyệt mọi phiếu trong Khu.</span>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-        <span class="badge" style="background: <?= $scope['isTechnician'] ? '#f1f5f9' : '#e0f2fe' ?>; color: <?= $scope['isTechnician'] ? '#475569' : '#0284c7' ?>; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.8rem;">
-            <?= htmlspecialchars($scope['title']) ?>
-        </span>
-    </div>
-
-    <!-- THÔNG BÁO FLASH MESSAGE -->
+    <!-- FLASH MESSAGES -->
     <?php if (!empty($flashSuccess)): ?>
-        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 1.2rem;">✅</span>
-                <span><?= htmlspecialchars($flashSuccess) ?></span>
-            </div>
-            <button type="button" onclick="this.parentElement.style.display='none'" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #166534;">&times;</button>
+        <div class="alert alert-success" style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
+            <i class="fa-solid fa-circle-check" style="margin-right: 6px;"></i> <b>Thành công:</b> <?= htmlspecialchars($flashSuccess) ?>
         </div>
     <?php endif; ?>
 
     <?php if (!empty($flashError)): ?>
-        <div style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 1.2rem;">❌</span>
-                <span><?= htmlspecialchars($flashError) ?></span>
-            </div>
-            <button type="button" onclick="this.parentElement.style.display='none'" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #991b1b;">&times;</button>
+        <div class="alert alert-danger" style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
+            <i class="fa-solid fa-circle-xmark" style="margin-right: 6px;"></i> <b>Lỗi:</b> <?= htmlspecialchars($flashError) ?>
         </div>
     <?php endif; ?>
 
     <?php if (!empty($flashWarning)): ?>
-        <div style="background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 1.2rem;">⚠️</span>
-                <span><?= htmlspecialchars($flashWarning) ?></span>
-            </div>
-            <button type="button" onclick="this.parentElement.style.display='none'" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #92400e;">&times;</button>
+        <div class="alert alert-warning" style="background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
+            <i class="fa-solid fa-triangle-exclamation" style="margin-right: 6px;"></i> <b>Cảnh báo:</b> <?= htmlspecialchars($flashWarning) ?>
         </div>
     <?php endif; ?>
 
-    <!-- KHỐI 1: FORM ĐIỀU PHỐI & PHÂN CÔNG (CHỈ DÀNH CHO CÁN BỘ QUẢN LÝ, ẨN HOÀN TOÀN VỚI KỸ THUẬT VIÊN) -->
-    <?php if ($scope['canAssign']): ?>
-        <div class="card" style="margin-bottom: 24px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
-                <div style="font-size: 1.05rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                    <span>🛠️ Biểu mẫu Duyệt & Điều phối Kỹ thuật viên</span>
-                    <span id="badgeCurrentKhuScope" class="badge" style="background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">
-                        <?= ($currentKhu !== 'all') ? "Phạm vi: Khu {$currentKhu}" : "Toàn hệ thống KTX" ?>
-                    </span>
+    <!-- ========================================================================= -->
+    <!-- TRƯỜNG HỢP 1: TỪ CHỐI TRUY CẬP (RED WARNING CARD) CHO NON-STAFF           -->
+    <!-- ========================================================================= -->
+    <?php if (!$isAllowed): ?>
+        <div class="card" style="border: 2px solid #ef4444; background: #fef2f2; border-radius: 12px; padding: 40px 30px; text-align: center; margin-top: 24px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.12);">
+            <div style="width: 76px; height: 76px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; color: #dc2626; font-size: 2.2rem; border: 2px solid #fca5a5;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h2 style="font-size: 1.4rem; font-weight: 700; color: #991b1b; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+                Từ chối quyền truy cập
+            </h2>
+            <div style="max-width: 840px; margin: 0 auto 24px auto; font-size: 1.05rem; color: #b91c1c; line-height: 1.6; font-weight: 600;">
+                <?= htmlspecialchars($scope['message'] ?? 'Từ chối quyền truy cập: Bạn không có quyền thao tác trên phân hệ này!') ?>
+            </div>
+            <div style="max-width: 600px; margin: 0 auto 24px auto; background: #ffffff; border: 1px solid #fecaca; border-radius: 8px; padding: 14px 20px; text-align: left; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="color: #64748b;">Tài khoản hiện tại:</span>
+                    <strong style="color: #0f172a;"><?= htmlspecialchars($user['HoVaTen'] ?? $user['TenDangNhap'] ?? 'Cán bộ') ?></strong>
                 </div>
-                <span style="font-size: 0.8rem; color: #64748b;">
-                    Duyệt phiếu & bắt buộc phân công Thợ đúng Khu phụ trách
-                </span>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="color: #64748b;">Vai trò / Chức danh:</span>
+                    <span class="badge badge-danger" style="font-weight: 600;"><?= htmlspecialchars($scope['userRoleName'] ?? 'Nhân viên') ?></span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #64748b;">Trạng thái hệ thống:</span>
+                    <span style="color: #dc2626; font-weight: 700;">ĐÃ CHẶN 100% - KHÔNG CÓ QUYỀN THAO TÁC</span>
+                </div>
             </div>
 
-            <form action="<?= url('staff/maintenance/assign') ?>" method="POST" id="formAssign">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 16px;">
-                    <div>
-                        <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 6px;">
-                            Phiếu sự cố chờ xử lý (trong phạm vi phân quyền): <span style="color: #dc2626;">*</span>
-                        </label>
-                        <select name="maPhieu" id="selectMaPhieu" required onchange="onTicketChange()" style="width: 100%; padding: 9px 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #cbd5e1; background: #fff;">
-                            <option value="">-- Chọn phiếu báo hỏng cần xử lý --</option>
-                            <?php if (!empty($pendingTickets)): ?>
-                                <?php foreach ($pendingTickets as $pt): ?>
-                                    <?php
-                                    $isHaTang = ($pt['LoaiSuCo'] === 'HA_TANG');
-                                    $typeTag = $isHaTang ? '[Hạ tầng chung]' : '[Phòng SV]';
-                                    ?>
-                                    <option value="<?= htmlspecialchars($pt['MaPhieu']) ?>" data-khu="<?= htmlspecialchars($pt['MaKhu'] ?? '') ?>" data-nv="<?= (int)($pt['NhanVienKyThuat'] ?? 0) ?>" data-type="<?= htmlspecialchars($pt['LoaiSuCo']) ?>">
-                                        <?= $typeTag ?> [Tòa <?= htmlspecialchars($pt['FinalToaNha']) ?> &bull; Khu <?= htmlspecialchars($pt['MaKhu'] ?? 'A') ?>] <?= htmlspecialchars($pt['MaPhieu']) ?> - <?= htmlspecialchars($pt['TenThietBi'] ?? 'Hạng mục chung') ?> (<?= htmlspecialchars(mb_strimwidth($pt['MoTaHuHong'], 0, 28, '...')) ?>)
-                                    </option>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <option value="" disabled>(Hiện không có phiếu chờ xử lý trong phạm vi quản lý của bạn)</option>
-                            <?php endif; ?>
-                        </select>
-                    </div>
+            <div style="display: flex; justify-content: center; gap: 14px;">
+                <a href="<?= url('staff/dashboard') ?>" class="btn btn-primary" style="border-radius: 8px; padding: 10px 24px; font-weight: 600;">
+                    <i class="fa-solid fa-house" style="margin-right: 6px;"></i> Về Trang chủ BQL
+                </a>
+            </div>
+        </div>
 
-                    <div>
-                        <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 6px;">
-                            Kỹ thuật viên phụ trách: <span style="color: #dc2626;">*</span>
-                            <span id="techKhuNote" style="font-size: 0.75rem; font-weight: normal; color: #0284c7; margin-left: 4px;"></span>
-                        </label>
-                        <select name="maNhanVien" id="selectMaNhanVien" required style="width: 100%; padding: 9px 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #cbd5e1; background: #fff;">
-                            <!-- Đổ tự động bằng JavaScript lọc theo Khu của phiếu -->
-                        </select>
-                    </div>
+    <?php else: ?>
 
-                    <div>
-                        <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 6px;">
-                            Trạng thái điều phối:
-                        </label>
-                        <select name="trangThai" id="selectTrangThai" style="width: 100%; padding: 9px 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #cbd5e1; background: #fff;">
-                            <option value="Đang sửa chữa" selected>Đang sửa chữa (Đồng bộ TB sang 'Đang bảo trì')</option>
-                            <option value="Chờ xử lý">Chờ xử lý</option>
-                            <option value="Đã hoàn thành">Đã hoàn thành (Hoàn nguyên TB về 'Tốt')</option>
-                        </select>
-                    </div>
+        <!-- ========================================================================= -->
+        <!-- TRƯỜNG HỢP 2: CÁN BỘ & KỸ THUẬT VIÊN ĐƯỢC PHÉP TRUY CẬP                   -->
+        <!-- ========================================================================= -->
+
+        <!-- 4 THẺ KPI THỐNG KÊ NHANH (QUICK STATS CARDS CHUẨN TỶ LỆ ROOMS & UTILITIES) -->
+        <div class="grid grid-cols-4" style="gap: 16px; margin-bottom: 24px;">
+            <!-- Thẻ 1: Chờ xử lý & Điều phối -->
+            <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Chờ xử lý & Điều phối</span>
+                    <span style="background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">Hạn 24h</span>
                 </div>
+                <div style="font-size: 1.8rem; font-weight: 700; color: #dc2626; margin: 4px 0;">
+                    <?= number_format($kpiData['pending'] ?? 0) ?> <span style="font-size: 0.95rem; font-weight: 500;">phiếu</span>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">Cần cán bộ điều phối phân công thợ</div>
+            </div>
 
-                <div style="display: flex; justify-content: flex-end; align-items: center; gap: 12px;">
-                    <button type="submit" class="btn btn-primary" style="background: #2563eb; color: #fff; padding: 9px 20px; border-radius: 6px; border: none; font-size: 0.88rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        Phê duyệt & Gán thợ kỹ thuật
+            <!-- Thẻ 2: Đang sửa chữa -->
+            <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Đang sửa chữa</span>
+                    <span style="background: #dbeafe; color: #1e40af; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">Đang thi công</span>
+                </div>
+                <div style="font-size: 1.8rem; font-weight: 700; color: #1e40af; margin: 4px 0;">
+                    <?= number_format($kpiData['fixing'] ?? 0) ?> <span style="font-size: 0.95rem; font-weight: 500;">phiếu</span>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">Kỹ thuật viên đang khắc phục tại chỗ</div>
+            </div>
+
+            <!-- Thẻ 3: Sự cố Hạ tầng chung -->
+            <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Sự cố Hạ tầng chung</span>
+                    <span style="background: #f3e8ff; color: #7e22ce; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">Công cộng</span>
+                </div>
+                <div style="font-size: 1.8rem; font-weight: 700; color: #7e22ce; margin: 4px 0;">
+                    <?= number_format($kpiData['infra'] ?? 0) ?> <span style="font-size: 0.95rem; font-weight: 500;">phiếu</span>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">Hành lang, thang máy & khuôn viên</div>
+            </div>
+
+            <!-- Thẻ 4: Đã hoàn tất & Nghiệm thu -->
+            <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Đã hoàn tất</span>
+                    <span style="background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">Nghiệm thu</span>
+                </div>
+                <div style="font-size: 1.8rem; font-weight: 700; color: #166534; margin: 4px 0;">
+                    <?= number_format($kpiData['completed'] ?? 0) ?> <span style="font-size: 0.95rem; font-weight: 500;">/ <?= (int)($kpiData['total'] ?? 0) ?></span>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">Thiết bị đã hoàn nguyên về trạng thái tốt</div>
+            </div>
+        </div>
+
+        <!-- KHỐI BỘ LỌC ĐA TẦNG CASCADING (ĐỒNG BỘ BACKGROUND #f8fafc & PADDING CHUẨN ROOMS/ADMIN) -->
+        <div class="card" style="margin-bottom: 24px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); background: #f8fafc;">
+            <form method="GET" action="<?= url('staff/maintenance') ?>" id="filterFormMaintenance" style="margin: 0;">
+                <input type="hidden" name="tab" id="currentActiveTab" value="<?= htmlspecialchars($activeTab ?? 'pending') ?>">
+
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <!-- 1. Ô tìm kiếm tức thời -->
+                    <div style="position: relative; flex: 1; min-width: 240px; max-width: 320px;">
+                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem;"></i>
+                        <input type="text" name="search" id="inputSearch" class="btn-outline"
+                            placeholder="Tìm mã phiếu, phòng, thiết bị, tên SV, thợ..."
+                            value="<?= htmlspecialchars($searchTerm ?? '') ?>"
+                            style="width: 100%; padding: 8px 12px 8px 36px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;">
+                    </div>
+
+                    <!-- 2. Dropdown Loại sự cố -->
+                    <select name="type" class="btn-outline" style="min-width: 165px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormMaintenance').submit()">
+                        <option value="all" <?= ($selectedType === 'all') ? 'selected' : '' ?>>-- Tất cả loại sự cố --</option>
+                        <option value="PHONG" <?= ($selectedType === 'PHONG') ? 'selected' : '' ?>>Phòng sinh viên</option>
+                        <option value="HA_TANG" <?= ($selectedType === 'HA_TANG') ? 'selected' : '' ?>>Hạ tầng công cộng</option>
+                    </select>
+
+                    <!-- 3. Dropdown Khu (cho Admin) -->
+                    <?php if ($scope['level'] === 'ALL'): ?>
+                        <select name="khu" id="filterKhuSelect" class="btn-outline" style="min-width: 130px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="onKhuChange(this.value)">
+                            <option value="">-- Tất cả Khu --</option>
+                            <?php foreach ($scope['availableKhus'] ?? [] as $k): ?>
+                                <option value="<?= htmlspecialchars($k['MaKhu']) ?>" <?= ($selectedKhu === $k['MaKhu']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($k['TenKhu'] ?? ('Khu ' . $k['MaKhu'])) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    <?php endif; ?>
+
+                    <!-- 4. Dropdown Cụm (cho Admin / Khu) -->
+                    <?php if ($scope['level'] === 'ALL' || $scope['level'] === 'KHU'): ?>
+                        <select name="cum" id="filterCumSelect" class="btn-outline" style="min-width: 140px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="onCumChange(this.value)">
+                            <option value="">-- Tất cả Cụm --</option>
+                            <?php foreach ($scope['availableCums'] ?? [] as $c): ?>
+                                <?php if (empty($selectedKhu) || ($c['MaKhu'] ?? '') === $selectedKhu): ?>
+                                    <option value="<?= htmlspecialchars($c['MaCum']) ?>" <?= ($selectedCum === $c['MaCum']) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($c['TenCum'] ?? ('Cụm ' . $c['MaCum'])) ?>
+                                    </option>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </select>
+                    <?php endif; ?>
+
+                    <!-- 5. Dropdown Tòa (Khử lặp nhãn "Tòa Tòa") -->
+                    <?php if ($scope['level'] !== 'TOA'): ?>
+                        <select name="toa" id="filterToaSelect" class="btn-outline" style="min-width: 160px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormMaintenance').submit()">
+                            <option value="">-- Tất cả Tòa nhà --</option>
+                            <?php foreach ($scope['availableToas'] ?? [] as $t): ?>
+                                <?php
+                                $matchCum = empty($selectedCum) || ($t['MaCum'] ?? '') === $selectedCum;
+                                $matchKhu = empty($selectedKhu) || ($t['MaKhu'] ?? '') === $selectedKhu;
+                                ?>
+                                <?php if ($matchCum && $matchKhu): ?>
+                                    <option value="<?= htmlspecialchars($t['MaToaNha']) ?>" <?= ($selectedToa === $t['MaToaNha']) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($formatTenToa($t['TenToaNha'] ?? $t['MaToaNha'], $t['MaToaNha'])) ?> (<?= htmlspecialchars($t['MaToaNha']) ?>)
+                                    </option>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </select>
+                    <?php endif; ?>
+
+                    <!-- 6. Dropdown Tầng -->
+                    <select name="tang" class="btn-outline" style="min-width: 125px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormMaintenance').submit()">
+                        <option value="">-- Tất cả tầng --</option>
+                        <?php for ($t = 1; $t <= 12; $t++): ?>
+                            <option value="<?= $t ?>" <?= ((string)$selectedTang === (string)$t) ? 'selected' : '' ?>>Tầng <?= $t ?></option>
+                        <?php endfor; ?>
+                    </select>
+
+                    <!-- 7. Dropdown Kỹ thuật viên phụ trách -->
+                    <select name="tech" class="btn-outline" style="min-width: 160px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormMaintenance').submit()">
+                        <option value="">-- Kỹ thuật viên --</option>
+                        <option value="none" <?= ($selectedTech === 'none') ? 'selected' : '' ?>>⚠️ Chưa phân công</option>
+                        <?php foreach ($technicians ?? [] as $tc): ?>
+                            <option value="<?= htmlspecialchars($tc['MaTaiKhoan']) ?>" <?= ((string)$selectedTech === (string)$tc['MaTaiKhoan']) ? 'selected' : '' ?>>
+                                👨‍🔧 <?= htmlspecialchars($tc['HoVaTen']) ?> (Khu <?= htmlspecialchars($tc['MaCumQuanLy'] ?? 'A') ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+
+                    <!-- 8. Dropdown Trạng thái -->
+                    <select name="status" class="btn-outline" style="min-width: 145px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormMaintenance').submit()">
+                        <option value="all" <?= ($selectedStatus === 'all') ? 'selected' : '' ?>>-- Tất cả trạng thái --</option>
+                        <option value="Chờ xử lý" <?= ($selectedStatus === 'Chờ xử lý') ? 'selected' : '' ?>>⏳ Chờ xử lý</option>
+                        <option value="Đang sửa chữa" <?= ($selectedStatus === 'Đang sửa chữa') ? 'selected' : '' ?>>🛠️ Đang sửa chữa</option>
+                        <option value="Đã hoàn thành" <?= ($selectedStatus === 'Đã hoàn thành') ? 'selected' : '' ?>>✓ Đã hoàn thành</option>
+                        <option value="Đã hủy" <?= ($selectedStatus === 'Đã hủy') ? 'selected' : '' ?>>✕ Đã hủy</option>
+                    </select>
+
+                    <!-- Nút Lọc & Nút Xóa bộ lọc -->
+                    <button type="submit" class="btn btn-primary btn-sm" style="border-radius: 6px; height: 38px; padding: 0 16px; font-weight: 600;">
+                        Lọc
                     </button>
+                    <?php if (!empty($searchTerm) || $selectedType !== 'all' || $selectedStatus !== 'all' || !empty($selectedKhu) || !empty($selectedCum) || !empty($selectedToa) || !empty($selectedTang) || !empty($selectedTech)): ?>
+                        <a href="<?= url('staff/maintenance?tab=' . urlencode($activeTab)) ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; height: 38px; padding: 0 14px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; color: #dc2626; border-color: #fca5a5; background: #fff5f5; font-weight: 600;" title="Xóa toàn bộ bộ lọc và trở về mặc định">
+                            <i class="fa-solid fa-filter-circle-xmark"></i> Xóa lọc
+                        </a>
+                    <?php endif; ?>
                 </div>
             </form>
         </div>
-    <?php endif; ?>
 
-    <!-- KHỐI BỘ LỌC PHẠM VI & TÌM KIẾM -->
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
-        <!-- Lọc theo Khu & Cụm nhà (Tùy theo phân quyền) -->
-        <div>
-            <?php if ($scope['level'] === 'TOA'): ?>
-                <div style="font-size: 0.85rem; font-weight: 600; color: #1e40af; background: #dbeafe; padding: 7px 14px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;">
-                    <span>🏢</span> Phạm vi hiển thị: <strong><?= htmlspecialchars($scope['title']) ?></strong> (Khu <?= htmlspecialchars($scope['maKhu']) ?>)
-                </div>
-            <?php elseif ($scope['level'] === 'CUM'): ?>
-                <div style="font-size: 0.85rem; font-weight: 600; color: #92400e; background: #fef3c7; padding: 7px 14px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;">
-                    <span>🏘️</span> Phạm vi hiển thị: <strong><?= htmlspecialchars($scope['title']) ?></strong>
-                </div>
-            <?php elseif ($scope['isTechnician']): ?>
-                <div style="font-size: 0.85rem; font-weight: 600; color: #475569; background: #f1f5f9; padding: 7px 14px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;">
-                    <span>🔧</span> Địa bàn kỹ thuật phụ trách: <strong>Khu <?= htmlspecialchars($scope['maKhu']) ?></strong>
-                </div>
-            <?php else: ?>
-                <!-- Trưởng khu hoặc Quản trị viên: Có bộ lọc -->
-                <form action="<?= url('staff/maintenance') ?>" method="GET" style="display: flex; align-items: center; gap: 10px; margin: 0; flex-wrap: wrap;">
-                    <input type="hidden" name="status" value="<?= htmlspecialchars($currentStatus) ?>">
-                    <label style="font-size: 0.85rem; font-weight: 600; color: #475569; white-space: nowrap;">Lọc theo:</label>
-                    <select name="cum" onchange="this.form.submit()" style="padding: 7px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.85rem; background: #fff;">
-                        <?php if ($scope['canFilterAll']): ?>
-                            <option value="all" <?= ($maCum === 'all') ? 'selected' : '' ?>>🏢 Tất cả các Khu / Cụm KTX</option>
-                        <?php endif; ?>
-
-                        <?php if ($scope['canFilterAll'] || $scope['maKhu'] === 'A'): ?>
-                            <optgroup label="── KHU A (KTX Khu A) ──">
-                                <option value="khu-A" <?= ($maCum === 'khu-A') ? 'selected' : '' ?>>📍 Toàn bộ KTX Khu A (Cụm AG, AH)</option>
-                                <?php foreach ($clusters as $c): ?>
-                                    <?php if ($c['MaKhu'] === 'A'): ?>
-                                        <option value="<?= htmlspecialchars($c['MaCum']) ?>" <?= ($maCum === $c['MaCum']) ? 'selected' : '' ?>>
-                                            &nbsp;&nbsp;&bull; Cụm <?= htmlspecialchars($c['MaCum']) ?> - <?= htmlspecialchars($c['TenCum']) ?>
-                                        </option>
-                                    <?php endif; ?>
-                                <?php endforeach; ?>
-                            </optgroup>
-                        <?php endif; ?>
-
-                        <?php if ($scope['canFilterAll'] || $scope['maKhu'] === 'B'): ?>
-                            <optgroup label="── KHU B (KTX Khu B) ──">
-                                <option value="khu-B" <?= ($maCum === 'khu-B') ? 'selected' : '' ?>>📍 Toàn bộ KTX Khu B (Cụm BA, BB, BC, BD, BE)</option>
-                                <?php foreach ($clusters as $c): ?>
-                                    <?php if ($c['MaKhu'] === 'B'): ?>
-                                        <option value="<?= htmlspecialchars($c['MaCum']) ?>" <?= ($maCum === $c['MaCum']) ? 'selected' : '' ?>>
-                                            &nbsp;&nbsp;&bull; Cụm <?= htmlspecialchars($c['MaCum']) ?> - <?= htmlspecialchars($c['TenCum']) ?>
-                                        </option>
-                                    <?php endif; ?>
-                                <?php endforeach; ?>
-                            </optgroup>
-                        <?php endif; ?>
-                    </select>
-                    <?php if (!empty($currentSearch)): ?>
-                        <input type="hidden" name="search" value="<?= htmlspecialchars($currentSearch) ?>">
-                    <?php endif; ?>
-                </form>
-            <?php endif; ?>
-        </div>
-
-        <!-- Ô Tìm kiếm nhanh -->
-        <form action="<?= url('staff/maintenance') ?>" method="GET" style="display: flex; align-items: center; gap: 8px; margin: 0;">
-            <input type="hidden" name="cum" value="<?= htmlspecialchars($maCum) ?>">
-            <input type="hidden" name="status" value="<?= htmlspecialchars($currentStatus) ?>">
-            <input type="text" name="search" value="<?= htmlspecialchars($currentSearch) ?>" placeholder="Tìm mã phiếu, phòng, thiết bị, tên..." style="padding: 7px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.85rem; width: 260px; background: #fff;">
-            <button type="submit" class="btn btn-outline" style="padding: 7px 14px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.85rem; background: #f8fafc; cursor: pointer;">
-                🔍 Tìm
+        <!-- 5 SUB-TABS ĐIỀU HƯỚNG (ĐỒNG BỘ CHUẨN APPLICATIONS VỚI PILL BADGES) -->
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; flex-wrap: wrap;">
+            <button type="button" class="tab-btn <?= ($activeTab === 'pending') ? 'active' : '' ?>" id="tabBtnPending" onclick="switchMaintenanceTab('pending')"
+                style="background: <?= ($activeTab === 'pending') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'pending') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'pending') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
+                <i class="fa-solid fa-clock" style="margin-right: 6px;"></i> 1. Chờ xử lý & Điều phối
+                <span class="badge" style="font-size: 0.75rem; margin-left: 6px; padding: 3px 8px; background: #fee2e2; color: #991b1b; border: none; font-weight: 700;"><?= count($pendingTickets ?? []) ?></span>
             </button>
-            <?php if (!empty($currentSearch)): ?>
-                <a href="<?= url('staff/maintenance?cum=' . urlencode($maCum) . '&status=' . urlencode($currentStatus)) ?>" style="font-size: 0.82rem; color: #ef4444; text-decoration: none;">Xóa lọc</a>
-            <?php endif; ?>
-        </form>
-    </div>
 
-    <!-- KHỐI 2: THANH TABS TRẠNG THÁI & DANH SÁCH PHIẾU BÁO HỎNG -->
-    <div class="card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 24px;">
-        <!-- Thanh Tabs -->
-        <div style="display: flex; gap: 8px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 18px; flex-wrap: wrap;">
-            <?php
-            $tabAllUrl = url('staff/maintenance?cum=' . urlencode($maCum) . '&status=all' . ($currentSearch ? '&search=' . urlencode($currentSearch) : ''));
-            $tabChoUrl = url('staff/maintenance?cum=' . urlencode($maCum) . '&status=cho-xu-ly' . ($currentSearch ? '&search=' . urlencode($currentSearch) : ''));
-            $tabDangUrl = url('staff/maintenance?cum=' . urlencode($maCum) . '&status=dang-sua' . ($currentSearch ? '&search=' . urlencode($currentSearch) : ''));
-            $tabXongUrl = url('staff/maintenance?cum=' . urlencode($maCum) . '&status=da-hoan-thanh' . ($currentSearch ? '&search=' . urlencode($currentSearch) : ''));
-            $tabHuyUrl = url('staff/maintenance?cum=' . urlencode($maCum) . '&status=da-huy' . ($currentSearch ? '&search=' . urlencode($currentSearch) : ''));
-            ?>
-            <a href="<?= $tabAllUrl ?>" style="padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; <?= ($currentStatus === 'all') ? 'background: #2563eb; color: #fff;' : 'background: #f1f5f9; color: #475569;' ?>">
-                <span>Tất cả</span>
-                <span style="background: <?= ($currentStatus === 'all') ? '#1d4ed8' : '#e2e8f0' ?>; color: <?= ($currentStatus === 'all') ? '#fff' : '#1e293b' ?>; padding: 2px 7px; border-radius: 10px; font-size: 0.75rem;"><?= $counts['all'] ?></span>
-            </a>
+            <button type="button" class="tab-btn <?= ($activeTab === 'fixing') ? 'active' : '' ?>" id="tabBtnFixing" onclick="switchMaintenanceTab('fixing')"
+                style="background: <?= ($activeTab === 'fixing') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'fixing') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'fixing') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
+                <i class="fa-solid fa-screwdriver-wrench" style="margin-right: 6px;"></i> 2. Đang sửa chữa
+                <span class="badge" style="font-size: 0.75rem; margin-left: 6px; padding: 3px 8px; background: #dbeafe; color: #1e40af; border: none; font-weight: 700;"><?= count($fixingTickets ?? []) ?></span>
+            </button>
 
-            <a href="<?= $tabChoUrl ?>" style="padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; <?= ($currentStatus === 'cho-xu-ly') ? 'background: #dc2626; color: #fff;' : 'background: #f1f5f9; color: #475569;' ?>">
-                <span>⏳ Chờ xử lý</span>
-                <span style="background: <?= ($currentStatus === 'cho-xu-ly') ? '#b91c1c' : '#fee2e2' ?>; color: <?= ($currentStatus === 'cho-xu-ly') ? '#fff' : '#991b1b' ?>; padding: 2px 7px; border-radius: 10px; font-size: 0.75rem;"><?= $counts['cho_xu_ly'] ?></span>
-            </a>
+            <button type="button" class="tab-btn <?= ($activeTab === 'infra') ? 'active' : '' ?>" id="tabBtnInfra" onclick="switchMaintenanceTab('infra')"
+                style="background: <?= ($activeTab === 'infra') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'infra') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'infra') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
+                <i class="fa-solid fa-building" style="margin-right: 6px;"></i> 3. Sự cố Hạ tầng chung
+                <span class="badge" style="font-size: 0.75rem; margin-left: 6px; padding: 3px 8px; background: #f3e8ff; color: #7e22ce; border: none; font-weight: 700;"><?= count($infraTickets ?? []) ?></span>
+            </button>
 
-            <a href="<?= $tabDangUrl ?>" style="padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; <?= ($currentStatus === 'dang-sua') ? 'background: #d97706; color: #fff;' : 'background: #f1f5f9; color: #475569;' ?>">
-                <span>🛠️ Đang sửa chữa</span>
-                <span style="background: <?= ($currentStatus === 'dang-sua') ? '#b45309' : '#fef3c7' ?>; color: <?= ($currentStatus === 'dang-sua') ? '#fff' : '#92400e' ?>; padding: 2px 7px; border-radius: 10px; font-size: 0.75rem;"><?= $counts['dang_sua'] ?></span>
-            </a>
+            <button type="button" class="tab-btn <?= ($activeTab === 'completed') ? 'active' : '' ?>" id="tabBtnCompleted" onclick="switchMaintenanceTab('completed')"
+                style="background: <?= ($activeTab === 'completed') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'completed') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'completed') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
+                <i class="fa-solid fa-circle-check" style="margin-right: 6px;"></i> 4. Đã hoàn tất & Nghiệm thu
+                <span class="badge" style="font-size: 0.75rem; margin-left: 6px; padding: 3px 8px; background: #dcfce7; color: #166534; border: none; font-weight: 700;"><?= count($completedTickets ?? []) ?></span>
+            </button>
 
-            <a href="<?= $tabXongUrl ?>" style="padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; <?= ($currentStatus === 'da-hoan-thanh') ? 'background: #16a34a; color: #fff;' : 'background: #f1f5f9; color: #475569;' ?>">
-                <span>✓ Đã hoàn thành</span>
-                <span style="background: <?= ($currentStatus === 'da-hoan-thanh') ? '#15803d' : '#dcfce7' ?>; color: <?= ($currentStatus === 'da-hoan-thanh') ? '#fff' : '#166534' ?>; padding: 2px 7px; border-radius: 10px; font-size: 0.75rem;"><?= $counts['da_hoan_thanh'] ?></span>
-            </a>
-
-            <a href="<?= $tabHuyUrl ?>" style="padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; <?= ($currentStatus === 'da-huy') ? 'background: #64748b; color: #fff;' : 'background: #f1f5f9; color: #475569;' ?>">
-                <span>✕ Đã hủy</span>
-                <span style="background: <?= ($currentStatus === 'da-huy') ? '#475569' : '#e2e8f0' ?>; color: <?= ($currentStatus === 'da-huy') ? '#fff' : '#334155' ?>; padding: 2px 7px; border-radius: 10px; font-size: 0.75rem;"><?= $counts['da_huy'] ?></span>
-            </a>
+            <button type="button" class="tab-btn <?= ($activeTab === 'cancelled') ? 'active' : '' ?>" id="tabBtnCancelled" onclick="switchMaintenanceTab('cancelled')"
+                style="background: <?= ($activeTab === 'cancelled') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'cancelled') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'cancelled') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
+                <i class="fa-solid fa-ban" style="margin-right: 6px;"></i> 5. Đã hủy / Đóng
+                <span class="badge" style="font-size: 0.75rem; margin-left: 6px; padding: 3px 8px; background: #f1f5f9; color: #475569; border: none; font-weight: 700;"><?= count($cancelledTickets ?? []) ?></span>
+            </button>
         </div>
 
-        <!-- Bảng danh sách phiếu báo hỏng -->
-        <div class="table-responsive" style="overflow-x: auto;">
-            <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 0.86rem;">
-                <thead>
-                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left; color: #475569;">
-                        <th style="padding: 12px 10px;">Mã Phiếu & Loại</th>
-                        <th style="padding: 12px 10px;">Vị trí & Khu</th>
-                        <th style="padding: 12px 10px;">Hạng mục / Thiết bị</th>
-                        <th style="padding: 12px 10px;">Nội dung sự cố & Người báo</th>
-                        <th style="padding: 12px 10px;">Kỹ thuật phụ trách</th>
-                        <th style="padding: 12px 10px;">Trạng thái</th>
-                        <th style="padding: 12px 10px; text-align: right;">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (!empty($tickets)): ?>
-                        <?php foreach ($tickets as $t): ?>
-                            <?php
-                            $rowBg = '#ffffff';
-                            if ($t['TrangThaiSua'] === 'Đã hoàn thành') {
-                                $rowBg = '#f0fdf4';
-                            } elseif ($t['TrangThaiSua'] === 'Đã hủy') {
-                                $rowBg = '#f8fafc';
-                            }
-                            $ticketKhu = $t['MaKhu'] ?? 'A';
-                            $isHaTang = ($t['LoaiSuCo'] === 'HA_TANG');
-                            $canManagerApproveThis = $scope['canAssign'] && (!$isHaTang || $scope['canApproveStaffTicket']);
-                            ?>
-                            <tr style="background: <?= $rowBg ?>; border-bottom: 1px solid #f1f5f9;">
-                                <!-- Cột 1: Mã phiếu & Loại sự cố -->
-                                <td style="padding: 12px 10px; vertical-align: top;">
-                                    <strong style="color: #1e293b; font-family: monospace; font-size: 0.95rem;"><?= htmlspecialchars($t['MaPhieu']) ?></strong>
-                                    <div style="margin-top: 4px;">
-                                        <?php if ($isHaTang): ?>
-                                            <span class="badge" style="background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: 700;">
-                                                🏢 Hạ tầng chung
-                                            </span>
-                                        <?php else: ?>
-                                            <span class="badge" style="background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: 700;">
-                                                👤 Sinh viên báo
-                                            </span>
-                                        <?php endif; ?>
-                                    </div>
-                                    <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">
-                                        <?= date('d/m/Y H:i', strtotime($t['NgayBao'])) ?>
-                                    </div>
-                                </td>
+        <?php
+        // Danh sách cấu hình hiển thị 5 Tabs
+        $tabConfigs = [
+            'pending' => ['title' => 'Danh sách Sự cố Chờ xử lý & Điều phối phân công', 'list' => $pendingTickets ?? []],
+            'fixing' => ['title' => 'Danh sách Sự cố Đang sửa chữa (Đang thi công khắc phục)', 'list' => $fixingTickets ?? []],
+            'infra' => ['title' => 'Danh sách Sự cố Hạ tầng công cộng & Khuôn viên KTX', 'list' => $infraTickets ?? []],
+            'completed' => ['title' => 'Lịch sử Sự cố Đã hoàn tất & Nghiệm thu thành công', 'list' => $completedTickets ?? []],
+            'cancelled' => ['title' => 'Lịch sử Sự cố Đã hủy / Đóng phiếu', 'list' => $cancelledTickets ?? []]
+        ];
+        ?>
 
-                                <!-- Cột 2: Vị trí & Khu -->
-                                <td style="padding: 12px 10px; vertical-align: top;">
-                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                        <?php if (!empty($t['MaPhong'])): ?>
-                                            <strong style="color: #2563eb; font-size: 0.95rem;">P.<?= htmlspecialchars($t['MaPhong']) ?></strong>
-                                        <?php else: ?>
-                                            <strong style="color: #d97706; font-size: 0.88rem;">Khu vực chung</strong>
-                                        <?php endif; ?>
-                                        <span class="badge" style="background: <?= ($ticketKhu === 'A') ? '#dbeafe' : '#fef3c7' ?>; color: <?= ($ticketKhu === 'A') ? '#1e40af' : '#92400e' ?>; padding: 1px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: 700;">
-                                            Khu <?= htmlspecialchars($ticketKhu) ?>
-                                        </span>
-                                    </div>
-                                    <div style="font-size: 0.8rem; color: #475569; margin-top: 2px;">
-                                        Tòa <strong><?= htmlspecialchars($t['FinalToaNha']) ?></strong> &bull; Cụm <?= htmlspecialchars($t['MaCum'] ?? 'N/A') ?>
-                                    </div>
-                                </td>
+        <?php foreach ($tabConfigs as $tabKey => $cfg): ?>
+            <div id="tabContent_<?= $tabKey ?>" style="display: <?= ($activeTab === $tabKey) ? 'block' : 'none' ?>;">
+                <div class="card" style="margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                    <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span><?= htmlspecialchars($cfg['title']) ?></span>
+                            <span class="badge badge-info"><?= count($cfg['list']) ?> phiếu</span>
+                        </div>
+                    </div>
 
-                                <!-- Cột 3: Hạng mục / Thiết bị -->
-                                <td style="padding: 12px 10px; vertical-align: top;">
-                                    <?php if (!empty($t['TenThietBi'])): ?>
-                                        <div style="font-weight: 600; color: #1e293b;">
-                                            <?= htmlspecialchars($t['TenThietBi']) ?>
-                                        </div>
-                                        <?php if (!empty($t['MaSoThietBi'])): ?>
-                                            <div style="font-size: 0.75rem; color: #64748b;">
-                                                Tem: <code><?= htmlspecialchars($t['MaSoThietBi']) ?></code>
-                                            </div>
-                                        <?php endif; ?>
-                                        <div style="margin-top: 4px;">
-                                            <?php
-                                            $tbStatusColor = '#16a34a';
-                                            if ($t['TinhTrangThietBi'] === 'Đang báo hỏng') $tbStatusColor = '#dc2626';
-                                            elseif ($t['TinhTrangThietBi'] === 'Đang bảo trì') $tbStatusColor = '#d97706';
-                                            elseif ($t['TinhTrangThietBi'] === 'Hỏng') $tbStatusColor = '#7f1d1d';
-                                            ?>
-                                            <span style="font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; background: #f1f5f9; color: <?= $tbStatusColor ?>; font-weight: 600;">
-                                                TB: <?= htmlspecialchars($t['TinhTrangThietBi'] ?? 'Tốt') ?>
-                                            </span>
-                                        </div>
-                                    <?php else: ?>
-                                        <div style="font-weight: 600; color: #334155;">Hạ tầng công cộng</div>
-                                        <div style="font-size: 0.75rem; color: #64748b;">(Tường, cây xanh, điện chiếu sáng...)</div>
-                                    <?php endif; ?>
-                                </td>
+                    <div class="table-responsive">
+                        <table class="data-table" id="table_<?= $tabKey ?>">
+                            <thead>
+                                <tr>
+                                    <th style="width: 120px;">Mã Phiếu & Loại</th>
+                                    <th>Vị Trí & Khu Vực</th>
+                                    <th>Hạng Mục / Thiết Bị</th>
+                                    <th>Nội Dung Sự Cố & Người Báo</th>
+                                    <th>Kỹ Thuật Phụ Trách</th>
+                                    <th>Trạng Thái</th>
+                                    <th style="text-align: right; width: 195px; min-width: 195px; white-space: nowrap;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody_<?= $tabKey ?>">
+                                <?php if (empty($cfg['list'])): ?>
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; padding: 40px 16px; color: var(--text-muted);">
+                                            <div style="font-size: 2.2rem; margin-bottom: 6px;">📂</div>
+                                            <div style="font-weight: 600; color: var(--text-secondary);">Không có phiếu sự cố bảo trì nào trong mục này.</div>
+                                        </td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($cfg['list'] as $t): ?>
+                                        <?php
+                                        $status = $t['TrangThaiSua'] ?? '';
+                                        $isPending = ($status === 'Chờ xử lý');
+                                        $isFixing = ($status === 'Đang sửa chữa');
+                                        $isCompleted = ($status === 'Đã hoàn thành');
+                                        $isCancelled = ($status === 'Đã hủy');
+                                        $isInfra = ($t['LoaiSuCo'] === 'HA_TANG');
 
-                                <!-- Cột 4: Nội dung sự cố & Người báo & Tiến độ -->
-                                <td style="padding: 12px 10px; vertical-align: top; max-width: 320px;">
-                                    <div style="color: #1e293b; line-height: 1.4; margin-bottom: 6px; font-weight: 500;">
-                                        <?= nl2br(htmlspecialchars($t['MoTaHuHong'])) ?>
-                                    </div>
+                                        // Kiểm tra thẩm quyền thao tác trên phiếu cụ thể
+                                        $canManagerAct = !empty($scope['canAssign']) && (!$isInfra || !empty($scope['canApproveStaffTicket']) || $scope['level'] !== 'TOA');
+                                        $canTechAct = !empty($scope['isTechnician']);
+                                        ?>
+                                        <tr class="<?= $tabKey ?>-row">
+                                            <!-- 1. Mã Phiếu & Loại -->
+                                            <td>
+                                                <b style="font-family: monospace; color: var(--primary); font-size: 0.95rem;">
+                                                    <?= htmlspecialchars($t['MaPhieu']) ?>
+                                                </b>
+                                                <div style="margin-top: 4px;">
+                                                    <?php if ($isInfra): ?>
+                                                        <span class="badge" style="background: #f3e8ff; color: #7e22ce; border: none; font-size: 0.72rem; font-weight: 700; padding: 2px 6px;">
+                                                            🏢 Hạ tầng chung
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <span class="badge" style="background: #e0f2fe; color: #0369a1; border: none; font-size: 0.72rem; font-weight: 700; padding: 2px 6px;">
+                                                            🛏️ Phòng SV
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+                                                    <?= !empty($t['NgayBao']) ? date('d/m/Y H:i', strtotime($t['NgayBao'])) : '' ?>
+                                                </div>
+                                            </td>
 
-                                    <!-- Thông tin người lập -->
-                                    <div style="font-size: 0.78rem; color: #64748b;">
-                                        <?php if ($isHaTang): ?>
-                                            🏢 Lập bởi: <strong><?= htmlspecialchars($t['TenNhanVienBao'] ?? $t['MaNhanVienBao'] ?? 'Cán bộ quản lý') ?></strong>
-                                            <?php if (!empty($t['ChucVuNhanVienBao'])): ?>
-                                                (<?= htmlspecialchars($t['ChucVuNhanVienBao']) ?>)
-                                            <?php endif; ?>
-                                        <?php else: ?>
-                                            👤 Báo bởi: <strong><?= htmlspecialchars($t['TenSinhVien'] ?? $t['MaSinhVienBao']) ?></strong>
-                                            <?php if (!empty($t['SdtSinhVien'])): ?>
-                                                &bull; 📞 <?= htmlspecialchars($t['SdtSinhVien']) ?>
-                                            <?php endif; ?>
-                                        <?php endif; ?>
-                                    </div>
+                                            <!-- 2. Vị Trí & Khu Vực -->
+                                            <td>
+                                                <?php if (!empty($t['SoPhong'])): ?>
+                                                    <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">
+                                                        P.<?= htmlspecialchars($t['SoPhong']) ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <div style="font-size: 0.825rem; font-weight: 600; color: #1e40af; margin-top: 2px;">
+                                                    <?= htmlspecialchars($formatTenToa($t['TenToaNha'] ?? $t['FinalToaNha'], $t['FinalToaNha'])) ?>
+                                                </div>
+                                                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">
+                                                    Cụm <?= htmlspecialchars($t['MaCum'] ?? '---') ?> &bull; Khu <?= htmlspecialchars($t['MaKhu'] ?? '---') ?>
+                                                </div>
+                                            </td>
 
-                                    <!-- Thông tin người duyệt -->
-                                    <?php if (!empty($t['TenNguoiDuyet'])): ?>
-                                        <div style="font-size: 0.75rem; color: #059669; margin-top: 3px;">
-                                            ✓ Phê duyệt bởi: <strong><?= htmlspecialchars($t['TenNguoiDuyet']) ?></strong>
-                                        </div>
-                                    <?php endif; ?>
+                                            <!-- 3. Hạng Mục / Thiết Bị -->
+                                            <td>
+                                                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">
+                                                    <?= htmlspecialchars($t['TenThietBi'] ?? 'Cơ sở vật chất') ?>
+                                                </div>
+                                                <?php if (!empty($t['MaSoThietBi'])): ?>
+                                                    <div style="font-size: 0.78rem; color: var(--text-muted); font-family: monospace;">
+                                                        Mã TB: <?= htmlspecialchars($t['MaSoThietBi']) ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <?php if (!empty($t['TinhTrangThietBi'])): ?>
+                                                    <span class="badge" style="background: <?= ($t['TinhTrangThietBi'] === 'Tốt') ? '#dcfce7' : '#fee2e2' ?>; color: <?= ($t['TinhTrangThietBi'] === 'Tốt') ? '#166534' : '#991b1b' ?>; border: none; font-size: 0.72rem; padding: 2px 6px; margin-top: 4px; display: inline-block;">
+                                                        <?= htmlspecialchars($t['TinhTrangThietBi']) ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                            </td>
 
-                                    <!-- Ghi chú tiến độ KTV -->
-                                    <?php if (!empty($t['GhiChuTienDo'])): ?>
-                                        <div style="margin-top: 6px; font-size: 0.75rem; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 4px 8px; border-radius: 4px;">
-                                            <strong>Tiến độ KTV:</strong> <?= htmlspecialchars($t['GhiChuTienDo']) ?>
-                                        </div>
-                                    <?php endif; ?>
+                                            <!-- 4. Nội Dung Sự Cố & Người Báo -->
+                                            <td style="max-width: 280px;">
+                                                <div style="font-size: 0.85rem; color: var(--text-primary); line-height: 1.4; margin-bottom: 4px;">
+                                                    <?= htmlspecialchars($t['MoTaHuHong']) ?>
+                                                </div>
+                                                <?php if (!empty($t['HinhAnh'])): ?>
+                                                    <div style="margin-bottom: 4px;">
+                                                        <a href="<?= url(htmlspecialchars($t['HinhAnh'])) ?>" target="_blank" style="font-size: 0.75rem; color: #2563eb; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                                            <i class="fa-solid fa-image"></i> Xem ảnh hiện trường
+                                                        </a>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <div style="font-size: 0.78rem; color: var(--text-muted);">
+                                                    Người báo: <b><?= htmlspecialchars($t['TenSinhVien'] ?? $t['TenNhanVienBao'] ?? 'Cán bộ KTX') ?></b>
+                                                    <?php if (!empty($t['SdtSinhVien'])): ?>
+                                                        (<?= htmlspecialchars($t['SdtSinhVien']) ?>)
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
 
-                                    <!-- Ảnh hiện trường -->
-                                    <?php if (!empty($t['HinhAnh'])): ?>
-                                        <div style="margin-top: 6px;">
-                                            <a href="javascript:void(0)" onclick="viewImage('<?= htmlspecialchars($t['HinhAnh']) ?>')" style="font-size: 0.75rem; color: #2563eb; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
-                                                📷 Xem ảnh hiện trường
-                                            </a>
-                                        </div>
-                                    <?php endif; ?>
-                                </td>
-
-                                <!-- Cột 5: Kỹ thuật phụ trách (Kèm Khu) -->
-                                <td style="padding: 12px 10px; vertical-align: top;">
-                                    <?php if (!empty($t['TenTho'])): ?>
-                                        <div style="font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 6px;">
-                                            <span><?= htmlspecialchars($t['TenTho']) ?></span>
-                                            <?php if (!empty($t['TechKhu'])): ?>
-                                                <span class="badge" style="background: #e2e8f0; color: #334155; padding: 1px 5px; border-radius: 4px; font-size: 0.7rem;">
-                                                    Khu <?= htmlspecialchars($t['TechKhu']) ?>
-                                                </span>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div style="font-size: 0.75rem; color: #64748b;">
-                                            <?= htmlspecialchars($t['ChucVuTho'] ?? 'Nhân viên kỹ thuật') ?>
-                                        </div>
-                                        <?php if (!empty($t['SdtTho'])): ?>
-                                            <div style="font-size: 0.75rem; color: #475569;">
-                                                📞 <?= htmlspecialchars($t['SdtTho']) ?>
-                                            </div>
-                                        <?php endif; ?>
-                                    <?php else: ?>
-                                        <span class="badge" style="background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
-                                            Chưa phân công
-                                        </span>
-                                    <?php endif; ?>
-                                </td>
-
-                                <!-- Cột 6: Trạng thái sửa chữa -->
-                                <td style="padding: 12px 10px; vertical-align: top;">
-                                    <?php if ($t['TrangThaiSua'] === 'Chờ xử lý'): ?>
-                                        <span class="badge" style="background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; display: inline-block;">
-                                            ⏳ Chờ xử lý
-                                        </span>
-                                    <?php elseif ($t['TrangThaiSua'] === 'Đang sửa chữa'): ?>
-                                        <span class="badge" style="background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; display: inline-block;">
-                                            🛠️ Đang sửa chữa
-                                        </span>
-                                    <?php elseif ($t['TrangThaiSua'] === 'Đã hoàn thành'): ?>
-                                        <span class="badge" style="background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; display: inline-block;">
-                                            ✓ Đã hoàn thành
-                                        </span>
-                                    <?php elseif ($t['TrangThaiSua'] === 'Đã hủy'): ?>
-                                        <span class="badge" style="background: #e2e8f0; color: #475569; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; display: inline-block;">
-                                            ✕ Đã hủy
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="badge" style="background: #f1f5f9; color: #334155; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; display: inline-block;">
-                                            <?= htmlspecialchars($t['TrangThaiSua']) ?>
-                                        </span>
-                                    <?php endif; ?>
-                                </td>
-
-                                <!-- Cột 7: Thao tác theo cấp bậc -->
-                                <td style="padding: 12px 10px; vertical-align: top; text-align: right;">
-                                    <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
-                                        <!-- DÀNH CHO KỸ THUẬT VIÊN: Cập nhật tiến độ & Hoàn thành -->
-                                        <?php if ($scope['isTechnician']): ?>
-                                            <?php if (in_array($t['TrangThaiSua'], ['Chờ xử lý', 'Đang sửa chữa'])): ?>
-                                                <button type="button" class="btn btn-outline btn-sm" onclick="openProgressModal('<?= htmlspecialchars($t['MaPhieu']) ?>', '<?= htmlspecialchars($t['GhiChuTienDo'] ?? '') ?>', '<?= htmlspecialchars($t['TrangThaiSua']) ?>')" style="padding: 4px 10px; border-radius: 5px; border: 1px solid #0284c7; color: #0284c7; background: #fff; font-size: 0.78rem; cursor: pointer;">
-                                                    ⚙️ Cập nhật tiến độ
-                                                </button>
-                                                <button type="button" class="btn btn-primary btn-sm" onclick="openCompleteModal('<?= htmlspecialchars($t['MaPhieu']) ?>')" style="background: #16a34a; border: none; color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 0.78rem; font-weight: 600; cursor: pointer;">
-                                                    ✓ Nghiệm thu xong
-                                                </button>
-                                            <?php else: ?>
-                                                <span style="font-size: 0.78rem; color: #166534; font-style: italic;">Đã hoàn thành</span>
-                                            <?php endif; ?>
-
-                                            <!-- DÀNH CHO CÁN BỘ QUẢN LÝ (TRƯỞNG TÒA, CỤM, KHU, ADMIN) -->
-                                        <?php else: ?>
-                                            <?php if (in_array($t['TrangThaiSua'], ['Chờ xử lý', 'Đang sửa chữa'])): ?>
-                                                <!-- Nút Duyệt & Phân công -->
-                                                <?php if ($canManagerApproveThis): ?>
-                                                    <button type="button" class="btn btn-outline btn-sm" onclick="openAssignModal('<?= htmlspecialchars($t['MaPhieu']) ?>', '<?= htmlspecialchars($t['MaPhong'] ?? 'Hạ tầng chung') ?>', '<?= htmlspecialchars($t['TenThietBi'] ?? 'Hạng mục chung') ?>', '<?= htmlspecialchars($ticketKhu) ?>', '<?= (int)($t['NhanVienKyThuat'] ?? 0) ?>')" style="padding: 4px 10px; border-radius: 5px; border: 1px solid #cbd5e1; background: #fff; font-size: 0.78rem; cursor: pointer; color: #2563eb; font-weight: 600;">
-                                                        🔧 Duyệt & Phân công
-                                                    </button>
-                                                <?php elseif ($isHaTang && $scope['level'] === 'TOA'): ?>
-                                                    <span style="font-size: 0.75rem; color: #d97706; background: #fef3c7; padding: 2px 6px; border-radius: 4px;">
-                                                        ⏳ Chờ Cấp trên duyệt
+                                            <!-- 5. Kỹ Thuật Phụ Trách & Tiến Độ -->
+                                            <td style="max-width: 220px;">
+                                                <?php if (!empty($t['TenTho'])): ?>
+                                                    <div style="font-weight: 700; color: #0284c7; font-size: 0.88rem; display: flex; align-items: center; gap: 5px;">
+                                                        <i class="fa-solid fa-user-gear"></i> <?= htmlspecialchars($t['TenTho']) ?>
+                                                    </div>
+                                                    <?php if (!empty($t['SdtTho'])): ?>
+                                                        <div style="font-size: 0.78rem; color: var(--text-muted);">
+                                                            SĐT: <?= htmlspecialchars($t['SdtTho']) ?>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                <?php else: ?>
+                                                    <span class="badge" style="background: #fef3c7; color: #b45309; border: none; font-size: 0.75rem; padding: 2px 6px;">
+                                                        ⚠️ Chưa chỉ định thợ
                                                     </span>
                                                 <?php endif; ?>
 
-                                                <!-- Nút Nghiệm thu hoàn thành -->
-                                                <button type="button" class="btn btn-primary btn-sm" onclick="openCompleteModal('<?= htmlspecialchars($t['MaPhieu']) ?>')" style="background: #16a34a; border: none; color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 0.78rem; font-weight: 600; cursor: pointer;">
-                                                    ✓ Hoàn thành
-                                                </button>
+                                                <div style="margin-top: 6px;">
+                                                    <?php renderMaintenanceNote($t['GhiChuTienDo'] ?? ''); ?>
+                                                </div>
+                                            </td>
 
-                                                <!-- Nút Hủy phiếu (Trưởng Tòa không tự hủy phiếu hạ tầng do mình tạo mà phải cấp trên duyệt) -->
-                                                <?php if (!($isHaTang && $scope['level'] === 'TOA')): ?>
-                                                    <button type="button" onclick="openCancelModal('<?= htmlspecialchars($t['MaPhieu']) ?>')" style="background: none; border: none; color: #dc2626; font-size: 0.75rem; text-decoration: underline; cursor: pointer; padding: 2px;">
-                                                        Hủy phiếu
-                                                    </button>
+                                            <!-- 6. Trạng Thái -->
+                                            <td>
+                                                <?php if ($isCompleted): ?>
+                                                    <span class="badge" style="background: #dcfce7; color: #166534; border: none; font-weight: 600; padding: 4px 10px; border-radius: 6px; white-space: nowrap;">
+                                                        <i class="fa-solid fa-circle-check" style="margin-right: 4px;"></i> Đã hoàn thành
+                                                    </span>
+                                                <?php elseif ($isFixing): ?>
+                                                    <span class="badge" style="background: #dbeafe; color: #1e40af; border: none; font-weight: 600; padding: 4px 10px; border-radius: 6px; white-space: nowrap;">
+                                                        <i class="fa-solid fa-wrench" style="margin-right: 4px;"></i> Đang sửa chữa
+                                                    </span>
+                                                <?php elseif ($isCancelled): ?>
+                                                    <span class="badge" style="background: #fee2e2; color: #991b1b; border: none; font-weight: 600; padding: 4px 10px; border-radius: 6px; white-space: nowrap;">
+                                                        <i class="fa-solid fa-circle-xmark" style="margin-right: 4px;"></i> Đã hủy
+                                                    </span>
+                                                <?php else: ?>
+                                                    <span class="badge" style="background: #fef3c7; color: #92400e; border: none; font-weight: 600; padding: 4px 10px; border-radius: 6px; white-space: nowrap;">
+                                                        <i class="fa-solid fa-clock" style="margin-right: 4px;"></i> Chờ xử lý
+                                                    </span>
                                                 <?php endif; ?>
+                                            </td>
 
-                                            <?php elseif ($t['TrangThaiSua'] === 'Đã hoàn thành'): ?>
-                                                <span style="font-size: 0.78rem; color: #166534; font-weight: 500; font-style: italic;">
-                                                    ✓ Đã hoàn tất (TB Tốt)
-                                                </span>
-                                            <?php else: ?>
-                                                <span style="font-size: 0.78rem; color: #94a3b8; font-style: italic;">
-                                                    Đã đóng
-                                                </span>
-                                            <?php endif; ?>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="7" style="text-align: center; padding: 40px 20px; color: #64748b;">
-                                <div style="font-size: 2rem; margin-bottom: 8px;">📋</div>
-                                <div style="font-weight: 600; font-size: 1rem; color: #334155;">Không có phiếu báo hỏng nào trong phạm vi quản lý của bạn</div>
-                                <div style="font-size: 0.85rem; margin-top: 4px; color: #64748b;">
-                                    <?php if ($scope['level'] === 'TOA'): ?>
-                                        Hệ thống đang khóa lọc phạm vi Tòa nhà <?= htmlspecialchars($scope['maToa']) ?>.
-                                    <?php elseif ($scope['level'] === 'CUM'): ?>
-                                        Hệ thống đang khóa lọc phạm vi Cụm <?= htmlspecialchars($scope['maCum']) ?>.
-                                    <?php elseif ($scope['level'] === 'KHU' || $scope['isTechnician']): ?>
-                                        Hệ thống đang khóa lọc phạm vi Khu <?= htmlspecialchars($scope['maKhu']) ?>.
-                                    <?php endif; ?>
+                                            <!-- 7. Thao Tác (CÂN ĐỐI 100% INLINE-FLEX KHÔNG RỚT DÒNG) -->
+                                            <td style="text-align: right; white-space: nowrap; width: 195px; min-width: 195px;">
+                                                <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; white-space: nowrap;">
+                                                    <!-- A. DÀNH CHO CÁN BỘ QUẢN LÝ (PHÂN CÔNG & HỦY) -->
+                                                    <?php if ($canManagerAct && ($isPending || $isFixing)): ?>
+                                                        <button type="button" class="btn btn-primary btn-sm" onclick="openAssignModal('<?= htmlspecialchars($t['MaPhieu']) ?>', '<?= htmlspecialchars(addslashes($t['TenThietBi'] ?? 'Cơ sở vật chất')) ?>', '<?= htmlspecialchars($t['NhanVienKyThuat'] ?? '') ?>', '<?= htmlspecialchars($t['MaKhu'] ?? 'A') ?>')" style="border-radius: 6px; font-weight: 600; padding: 5px 11px; font-size: 0.825rem; display: inline-flex; align-items: center; gap: 4px; height: 32px; white-space: nowrap; flex-shrink: 0;" title="Phân công hoặc đổi kỹ thuật viên phụ trách">
+                                                            <i class="fa-solid fa-user-gear"></i> Phân công
+                                                        </button>
+
+                                                        <button type="button" class="btn btn-outline btn-sm" onclick="openCancelModal('<?= htmlspecialchars($t['MaPhieu']) ?>', '<?= htmlspecialchars(addslashes($t['TenThietBi'] ?? 'Cơ sở vật chất')) ?>')" style="border-radius: 6px; color: #dc2626; border-color: #fca5a5; background: #fff5f5; font-weight: 600; padding: 5px 11px; font-size: 0.825rem; display: inline-flex; align-items: center; gap: 4px; height: 32px; white-space: nowrap; flex-shrink: 0;" title="Hủy phiếu báo hỏng này">
+                                                            <i class="fa-solid fa-xmark"></i> Hủy
+                                                        </button>
+
+                                                    <!-- B. DÀNH CHO KỸ THUẬT VIÊN (TIẾP NHẬN, CẬP NHẬT & NGHIỆM THU) -->
+                                                    <?php elseif ($canTechAct && ($isPending || $isFixing)): ?>
+                                                        <?php if ($isPending): ?>
+                                                            <form action="<?= url('staff/maintenance/update-progress') ?>" method="POST" style="margin: 0; display: inline-flex;">
+                                                                <input type="hidden" name="maPhieu" value="<?= htmlspecialchars($t['MaPhieu']) ?>">
+                                                                <input type="hidden" name="trangThai" value="Đang sửa chữa">
+                                                                <input type="hidden" name="ghiChu" value="Kỹ thuật viên đã tiếp nhận phiếu và đang chuẩn bị trang thiết bị vật tư xử lý.">
+                                                                <button type="submit" class="btn btn-primary btn-sm" style="border-radius: 6px; font-weight: 600; padding: 5px 12px; font-size: 0.825rem; display: inline-flex; align-items: center; gap: 5px; height: 32px; white-space: nowrap; flex-shrink: 0;">
+                                                                    <i class="fa-solid fa-play"></i> Tiếp nhận
+                                                                </button>
+                                                            </form>
+                                                        <?php else: ?>
+                                                            <button type="button" class="btn btn-outline btn-sm" onclick="openProgressModal('<?= htmlspecialchars($t['MaPhieu']) ?>', '<?= htmlspecialchars(addslashes($t['MoTaHuHong'] ?? '')) ?>', '<?= htmlspecialchars(addslashes($t['GhiChuTienDo'] ?? '')) ?>')" style="border-radius: 6px; font-weight: 600; padding: 5px 11px; font-size: 0.825rem; display: inline-flex; align-items: center; gap: 4px; height: 32px; white-space: nowrap; color: #0284c7; border-color: #7dd3fc; background: #f0f9ff; flex-shrink: 0;" title="Cập nhật tiến độ hoặc báo cáo hoàn thành">
+                                                                <i class="fa-solid fa-pen-to-square"></i> Cập nhật
+                                                            </button>
+
+                                                            <button type="button" class="btn btn-primary btn-sm" onclick="openCompleteModal('<?= htmlspecialchars($t['MaPhieu']) ?>', '<?= htmlspecialchars(addslashes($t['TenThietBi'] ?? 'Cơ sở vật chất')) ?>')" style="border-radius: 6px; font-weight: 600; padding: 5px 11px; font-size: 0.825rem; display: inline-flex; align-items: center; gap: 4px; height: 32px; white-space: nowrap; background: #16a34a; border-color: #16a34a; flex-shrink: 0;" title="Nghiệm thu hoàn tất sửa chữa">
+                                                                <i class="fa-solid fa-check"></i> Xong
+                                                            </button>
+                                                        <?php endif; ?>
+
+                                                    <!-- C. PHIẾU ĐÃ HOÀN TẤT HOẶC ĐÃ HỦY -->
+                                                    <?php else: ?>
+                                                        <?php if ($isCompleted): ?>
+                                                            <span class="badge" style="background: #dcfce7; color: #166534; border: none; font-size: 0.78rem; font-weight: 600; padding: 4px 10px; border-radius: 6px;">
+                                                                <i class="fa-solid fa-circle-check" style="margin-right: 4px;"></i> Đã nghiệm thu
+                                                            </span>
+                                                        <?php elseif ($isCancelled): ?>
+                                                            <span class="badge" style="background: #fee2e2; color: #991b1b; border: none; font-size: 0.78rem; font-weight: 600; padding: 4px 10px; border-radius: 6px;">
+                                                                <i class="fa-solid fa-circle-xmark" style="margin-right: 4px;"></i> Đã đóng phiếu
+                                                            </span>
+                                                        <?php else: ?>
+                                                            <span style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Đã giải quyết</span>
+                                                        <?php endif; ?>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- THANH PHÂN TRANG -->
+                    <?php if (!empty($cfg['list'])): ?>
+                        <div id="<?= $tabKey ?>PaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                                <span id="<?= $tabKey ?>PaginationInfo" style="font-size: 0.85rem; color: var(--text-muted);">
+                                    Hiển thị 1 - <?= min(10, count($cfg['list'])) ?> trên tổng số <?= count($cfg['list']) ?> phiếu
+                                </span>
+                                <div style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--text-muted);">
+                                    <span>Hiển thị:</span>
+                                    <select id="<?= $tabKey ?>PageSizeSelect" onchange="changeMaintenancePageSize('<?= $tabKey ?>', this.value)" style="padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.85rem;">
+                                        <option value="10" selected>10 / trang</option>
+                                        <option value="25">25 / trang</option>
+                                        <option value="50">50 / trang</option>
+                                    </select>
                                 </div>
-                            </td>
-                        </tr>
+                            </div>
+                            <div id="<?= $tabKey ?>PaginationNav" style="display: flex; gap: 4px; align-items: center;"></div>
+                        </div>
                     <?php endif; ?>
-                </tbody>
-            </table>
+                </div>
+            </div>
+        <?php endforeach; ?>
+
+    <?php endif; ?>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL 1: DUYỆT & PHÂN CÔNG KỸ THUẬT VIÊN (CHO CÁN BỘ QUẢN LÝ)             -->
+<!-- ========================================================================= -->
+<div id="modalAssignTech" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="card" style="width: 100%; max-width: 520px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #1e40af; margin: 0; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-user-gear"></i> Phân công Kỹ thuật viên sửa chữa
+            </h3>
+            <button type="button" onclick="closeAssignModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">&times;</button>
         </div>
+
+        <form action="<?= url('staff/maintenance/assign') ?>" method="POST" id="formModalAssign">
+            <input type="hidden" name="maPhieu" id="assignModalMaPhieu" value="">
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.85rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="color: var(--text-muted);">Mã phiếu:</span>
+                    <strong style="color: var(--primary); font-family: monospace;" id="assignModalMaPhieuText">---</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-muted);">Hạng mục thiết bị:</span>
+                    <strong style="color: var(--text-primary);" id="assignModalTenThietBi">---</strong>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">
+                    Chọn Kỹ thuật viên phụ trách: <span style="color: #dc2626;">*</span>
+                </label>
+                <select name="maNhanVien" id="selectAssignTho" required class="btn-outline" style="width: 100%; height: 38px; padding: 0 12px; border-radius: 6px; font-size: 0.85rem; background: #fff;">
+                    <option value="">-- Chọn kỹ thuật viên --</option>
+                    <?php foreach ($technicians ?? [] as $tc): ?>
+                        <option value="<?= htmlspecialchars($tc['MaTaiKhoan']) ?>">
+                            👨‍🔧 <?= htmlspecialchars($tc['HoVaTen']) ?> - SĐT: <?= htmlspecialchars($tc['SoDienThoai'] ?? '---') ?> (Khu <?= htmlspecialchars($tc['MaCumQuanLy'] ?? 'A') ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <small style="color: var(--text-muted); font-size: 0.78rem; display: block; margin-top: 4px;">
+                    * Lưu ý: Hệ thống bắt buộc phân công Kỹ thuật viên cùng Khu với phiếu báo hỏng.
+                </small>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">
+                    Chuyển trạng thái phiếu:
+                </label>
+                <select name="trangThai" class="btn-outline" style="width: 100%; height: 38px; padding: 0 12px; border-radius: 6px; font-size: 0.85rem; background: #fff;">
+                    <option value="Đang sửa chữa" selected>🛠️ Đang sửa chữa (Đang thi công)</option>
+                    <option value="Chờ xử lý">⏳ Chờ xử lý (Chờ thợ sắp xếp lịch)</option>
+                </select>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-outline" onclick="closeAssignModal()" style="border-radius: 6px; font-weight: 600;">
+                    Đóng
+                </button>
+                <button type="submit" class="btn btn-primary" style="border-radius: 6px; font-weight: 600;">
+                    <i class="fa-solid fa-check" style="margin-right: 6px;"></i> Xác nhận phân công
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
-<!-- MODAL 1: CÁN BỘ LẬP PHIẾU SỰ CỐ HẠ TẦNG CHUNG -->
-<div id="staffTicketModal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); align-items: center; justify-content: center;">
-    <div style="background: #fff; border-radius: 10px; max-width: 540px; width: 90%; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-            <h3 style="margin: 0; font-size: 1.15rem; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                <span>➕</span> Lập Phiếu Sự Cố Hạ Tầng / Thiết Bị Chung
+<!-- ========================================================================= -->
+<!-- MODAL 2: CẬP NHẬT TIẾN ĐỘ SỬA CHỮA (CHO KỸ THUẬT VIÊN)                    -->
+<!-- ========================================================================= -->
+<div id="modalProgress" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="card" style="width: 100%; max-width: 520px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #0284c7; margin: 0; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-pen-to-square"></i> Cập nhật tiến độ & Vật tư sửa chữa
             </h3>
-            <button type="button" onclick="closeStaffTicketModal()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: #64748b;">&times;</button>
+            <button type="button" onclick="closeProgressModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">&times;</button>
         </div>
 
-        <p style="font-size: 0.85rem; color: #64748b; margin-top: 0; margin-bottom: 16px; line-height: 1.5;">
-            Dành cho cán bộ ghi nhận sự cố công cộng (nứt tường, hư cây, đèn hành lang, vỡ kính, hỏng cổng...). Phiếu sẽ được chuyển lên cấp trên phê duyệt & cử thợ.
-        </p>
+        <form action="<?= url('staff/maintenance/update-progress') ?>" method="POST" id="formModalProgress">
+            <input type="hidden" name="maPhieu" id="progressModalMaPhieu" value="">
 
-        <form action="<?= url('staff/maintenance/create-staff-ticket') ?>" method="POST" enctype="multipart/form-data">
+            <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.85rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="color: #0369a1;">Mã phiếu:</span>
+                    <strong style="color: #0284c7; font-family: monospace;" id="progressModalMaPhieuText">---</strong>
+                </div>
+                <div style="color: #334155;">
+                    <span style="color: #0369a1;">Mô tả ban đầu:</span>
+                    <em id="progressModalMoTa">---</em>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">
+                    Trạng thái công việc:
+                </label>
+                <select name="trangThai" id="selectProgressTrangThai" class="btn-outline" style="width: 100%; height: 38px; padding: 0 12px; border-radius: 6px; font-size: 0.85rem; background: #fff;">
+                    <option value="Đang sửa chữa" selected>🛠️ Đang sửa chữa (Đang thi công khắc phục)</option>
+                    <option value="Đã hoàn thành">✓ Đã hoàn thành (Nghiệm thu sửa xong)</option>
+                    <option value="Chờ xử lý">⏳ Chờ xử lý (Chờ vật tư phụ tùng)</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">
+                    Nhật ký tiến độ & Linh kiện thay thế: <span style="color: #dc2626;">*</span>
+                </label>
+                <textarea name="ghiChu" id="textareaProgressGhiChu" rows="4" required class="btn-outline" style="width: 100%; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; background: #fff; resize: vertical;" placeholder="Ví dụ: Đã thay tụ điện quạt trần, kiểm tra đường dây nguồn hoạt động tốt..."></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-outline" onclick="closeProgressModal()" style="border-radius: 6px; font-weight: 600;">
+                    Đóng
+                </button>
+                <button type="submit" class="btn btn-primary" style="border-radius: 6px; font-weight: 600;">
+                    <i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i> Lưu cập nhật
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL 3: BÁO CÁO NGHIỆM THU HOÀN THÀNH (QUICK COMPLETE)                   -->
+<!-- ========================================================================= -->
+<div id="modalComplete" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="card" style="width: 100%; max-width: 500px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #15803d; margin: 0; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-circle-check"></i> Xác nhận hoàn thành sửa chữa
+            </h3>
+            <button type="button" onclick="closeCompleteModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+
+        <form action="<?= url('staff/maintenance/complete') ?>" method="POST" id="formModalComplete">
+            <input type="hidden" name="maPhieu" id="completeModalMaPhieu" value="">
+
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0 0 16px; line-height: 1.5;">
+                Bạn có chắc chắn muốn xác nhận hoàn thành công tác sửa chữa cho phiếu <strong style="color: var(--primary);" id="completeModalMaPhieuText">---</strong>?
+                Hệ thống sẽ tự động hoàn nguyên tình trạng thiết bị về <b>Tốt</b>.
+            </p>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">
+                    Ghi chú nghiệm thu bàn giao:
+                </label>
+                <textarea name="ghiChu" rows="3" class="btn-outline" style="width: 100%; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; background: #fff; resize: vertical;" placeholder="Đã kiểm tra vận hành thử nghiệm, sinh viên xác nhận hài lòng..."></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-outline" onclick="closeCompleteModal()" style="border-radius: 6px; font-weight: 600;">
+                    Hủy bỏ
+                </button>
+                <button type="submit" class="btn btn-primary" style="border-radius: 6px; font-weight: 600; background: #16a34a; border-color: #16a34a;">
+                    <i class="fa-solid fa-check" style="margin-right: 6px;"></i> Xác nhận hoàn thành
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL 4: LẬP PHIẾU SỰ CỐ HẠ TẦNG CHUNG (DÀNH CHO CÁN BỘ)                  -->
+<!-- ========================================================================= -->
+<div id="modalStaffTicket" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="card" style="width: 100%; max-width: 560px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #1e40af; margin: 0; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-building-circle-exclamation"></i> Lập phiếu sự cố hạ tầng công cộng
+            </h3>
+            <button type="button" onclick="closeStaffTicketModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+
+        <form action="<?= url('staff/maintenance/create-staff-ticket') ?>" method="POST" enctype="multipart/form-data" id="formModalStaffTicket">
             <div style="margin-bottom: 14px;">
-                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #334155; margin-bottom: 6px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">
                     Tòa nhà xảy ra sự cố: <span style="color: #dc2626;">*</span>
                 </label>
-                <select name="maToaNha" required style="width: 100%; padding: 9px 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #cbd5e1; background: #fff;">
-                    <?php foreach ($buildings as $b): ?>
-                        <option value="<?= htmlspecialchars($b['MaToaNha']) ?>">
-                            Tòa <?= htmlspecialchars($b['MaToaNha']) ?> - <?= htmlspecialchars($b['TenToaNha']) ?> (Cụm <?= htmlspecialchars($b['MaCum']) ?> &bull; Khu <?= htmlspecialchars($b['MaKhu']) ?>)
+                <select name="maToaNha" id="staffTicketToaSelect" required class="btn-outline" style="width: 100%; height: 38px; padding: 0 12px; border-radius: 6px; font-size: 0.85rem; background: #fff;">
+                    <option value="">-- Chọn tòa nhà --</option>
+                    <?php foreach ($scope['availableToas'] ?? [] as $t): ?>
+                        <option value="<?= htmlspecialchars($t['MaToaNha']) ?>">
+                            <?= htmlspecialchars($formatTenToa($t['TenToaNha'] ?? $t['MaToaNha'], $t['MaToaNha'])) ?> (<?= htmlspecialchars($t['MaToaNha']) ?>)
                         </option>
                     <?php endforeach; ?>
                 </select>
             </div>
 
             <div style="margin-bottom: 14px;">
-                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #334155; margin-bottom: 6px;">
-                    Vị trí chi tiết / Phòng (nếu có):
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">
+                    Vị trí cụ thể (Hành lang, Sảnh, Thang máy, Sân thể thao...):
                 </label>
-                <input type="text" name="maPhong" placeholder="Ví dụ: Hành lang Tầng 3, Sảnh chính, Ban công, Bồn nước..." style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.85rem; box-sizing: border-box;">
+                <input type="text" name="maPhong" class="btn-outline" placeholder="Ví dụ: Hành lang tầng 3, Thang máy số 2, Nhà xe..." style="width: 100%; height: 38px; padding: 0 12px; border-radius: 6px; font-size: 0.85rem; background: #fff;">
             </div>
 
             <div style="margin-bottom: 14px;">
-                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #334155; margin-bottom: 6px;">
-                    Mô tả chi tiết hiện trường & mức độ hư hỏng: <span style="color: #dc2626;">*</span>
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">
+                    Mô tả chi tiết hiện tượng hư hỏng: <span style="color: #dc2626;">*</span>
                 </label>
-                <textarea name="moTa" rows="3" required placeholder="Mô tả cụ thể sự cố (ví dụ: Nứt tường ban công tầng 2 có nguy cơ thấm dột, cây đổ gãy cành chắn lối đi...)" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.85rem; box-sizing: border-box;"></textarea>
+                <textarea name="moTa" rows="3" required class="btn-outline" style="width: 100%; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; background: #fff; resize: vertical;" placeholder="Mô tả mức độ nghiêm trọng, nguy cơ mất an toàn..."></textarea>
             </div>
 
-            <!-- Upload hình ảnh hiện trường -->
-            <div style="margin-bottom: 16px;">
-                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #334155; margin-bottom: 6px;">
-                    Ảnh chụp sự cố hiện trường:
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">
+                    Đính kèm hình ảnh hiện trường (Tối đa 5MB, JPG/PNG):
                 </label>
-
-                <!-- Input ẩn dạng file -->
-                <input type="file" name="hinhAnhFile" id="staffTicketImageInput" accept="image/png, image/jpeg, image/jpg, image/webp, image/gif" style="display: none;" onchange="handleImageSelect(this)">
-
-                <!-- Khung kéo thả / Chọn tệp -->
-                <div id="dropZone" onclick="document.getElementById('staffTicketImageInput').click()" style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 16px 12px; text-align: center; cursor: pointer; background: #f8fafc; transition: all 0.2s ease;">
-                    <div id="uploadPrompt">
-                        <div style="font-size: 1.8rem; line-height: 1; margin-bottom: 6px;">📷</div>
-                        <div style="font-size: 0.85rem; font-weight: 600; color: #334155;">Nhấn để chọn ảnh tải lên hoặc kéo thả vào đây</div>
-                        <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Định dạng hỗ trợ: JPG, PNG, WEBP, GIF (Tối đa 5MB)</div>
-                    </div>
-
-                    <div id="imagePreviewContainer" style="display: none; position: relative;">
-                        <img id="imagePreview" src="" alt="Xem trước ảnh" style="max-height: 150px; max-width: 100%; border-radius: 6px; border: 1px solid #e2e8f0; object-fit: contain;">
-                        <div style="margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                            <span id="imageFileName" style="font-size: 0.75rem; color: #475569; font-weight: 500; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
-                            <button type="button" onclick="removeSelectedImage(event)" style="background: #fee2e2; border: 1px solid #fecaca; color: #dc2626; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">✕ Xóa ảnh</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tùy chọn dán URL dự phòng -->
-                <div style="margin-top: 8px;">
-                    <span onclick="toggleUrlInput()" style="font-size: 0.75rem; color: #2563eb; cursor: pointer; text-decoration: underline;">
-                        🔗 Hoặc dán đường dẫn ảnh trực tiếp (URL)
-                    </span>
-                    <div id="urlInputContainer" style="display: none; margin-top: 6px;">
-                        <input type="text" name="hinhAnh" id="hinhAnhUrlInput" placeholder="Ví dụ: uploads/maintenance/su_co_tuong.jpg" style="width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.82rem; box-sizing: border-box;">
-                    </div>
-                </div>
+                <input type="file" name="hinhAnhFile" accept="image/*" class="btn-outline" style="width: 100%; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; background: #fff;">
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" onclick="closeStaffTicketModal()" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #475569; font-size: 0.85rem; cursor: pointer;">Hủy</button>
-                <button type="submit" style="padding: 8px 18px; border-radius: 6px; border: none; background: #059669; color: #fff; font-size: 0.85rem; font-weight: 600; cursor: pointer;">➕ Gửi phiếu chờ phê duyệt</button>
+                <button type="button" class="btn btn-outline" onclick="closeStaffTicketModal()" style="border-radius: 6px; font-weight: 600;">
+                    Đóng
+                </button>
+                <button type="submit" class="btn btn-primary" style="border-radius: 6px; font-weight: 600;">
+                    <i class="fa-solid fa-paper-plane" style="margin-right: 6px;"></i> Gửi phiếu sự cố
+                </button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- MODAL 2: DUYỆT & PHÂN CÔNG KỸ THUẬT VIÊN THEO ĐÚNG KHU -->
-<div id="assignModal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); align-items: center; justify-content: center;">
-    <div style="background: #fff; border-radius: 10px; max-width: 500px; width: 90%; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-            <h3 style="margin: 0; font-size: 1.15rem; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                <span>🔧</span> Duyệt & Phân công Kỹ thuật viên
+<!-- ========================================================================= -->
+<!-- MODAL 5: HỦY PHIẾU BÁO HỎNG (KÈM LÝ DO)                                    -->
+<!-- ========================================================================= -->
+<div id="modalCancelTicket" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="card" style="width: 100%; max-width: 500px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #991b1b; margin: 0; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-ban"></i> Hủy phiếu sự cố bảo trì
             </h3>
-            <button type="button" onclick="closeAssignModal()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: #64748b;">&times;</button>
+            <button type="button" onclick="closeCancelModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">&times;</button>
         </div>
 
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 0.85rem; line-height: 1.6;">
-            <div><strong>Mã phiếu:</strong> <span id="modalMaPhieuText" style="font-family: monospace; font-weight: bold; color: #1e293b;"></span></div>
-            <div><strong>Vị trí:</strong> <span id="modalMaPhongText" style="font-weight: bold; color: #2563eb;"></span> &bull; <span id="modalMaKhuBadge" class="badge" style="background: #dbeafe; color: #1e40af; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;"></span></div>
-            <div><strong>Hạng mục:</strong> <span id="modalTenTBText" style="font-weight: 500; color: #334155;"></span></div>
-        </div>
+        <form action="<?= url('staff/maintenance/cancel') ?>" method="POST" id="formModalCancel">
+            <input type="hidden" name="maPhieu" id="cancelModalMaPhieu" value="">
 
-        <form action="<?= url('staff/maintenance/assign') ?>" method="POST">
-            <input type="hidden" name="maPhieu" id="modalMaPhieu">
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.85rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="color: #991b1b;">Mã phiếu:</span>
+                    <strong style="color: #b91c1c; font-family: monospace;" id="cancelModalMaPhieuText">---</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #991b1b;">Thiết bị:</span>
+                    <strong style="color: #7f1d1d;" id="cancelModalTenThietBi">---</strong>
+                </div>
+            </div>
 
             <div style="margin-bottom: 14px;">
-                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #334155; margin-bottom: 6px;">
-                    Cán bộ kỹ thuật phụ trách: <span style="color: #dc2626;">*</span>
-                    <span id="modalTechKhuNote" style="font-size: 0.75rem; font-weight: normal; color: #0284c7; margin-left: 4px;"></span>
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">
+                    Chọn nhanh lý do hủy:
                 </label>
-                <select name="maNhanVien" id="modalSelectMaNhanVien" required style="width: 100%; padding: 9px 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #cbd5e1; background: #fff;">
-                    <!-- Đổ tự động theo Khu của phiếu qua JS -->
+                <select id="selectQuickCancelReason" class="btn-outline" style="width: 100%; height: 38px; padding: 0 12px; border-radius: 6px; font-size: 0.85rem; background: #fff;" onchange="onQuickCancelChange(this.value)">
+                    <option value="">-- Chọn lý do mẫu --</option>
+                    <option value="Báo trùng lặp sự cố đã có phiếu xử lý trước đó">Báo trùng lặp sự cố đã có phiếu xử lý trước đó</option>
+                    <option value="Sinh viên báo nhầm, thiết bị vẫn hoạt động bình thường sau khi kiểm tra">Sinh viên báo nhầm, thiết bị vẫn hoạt động bình thường</option>
+                    <option value="Hư hỏng do sinh viên cố tình làm gãy/vỡ, chuyển xử lý bồi thường tài sản">Hư hỏng do cố ý làm vỡ, chuyển xử lý bồi thường</option>
+                    <option value="Khu vực đang chuẩn bị cải tạo tổng thể toàn diện">Khu vực đang chuẩn bị cải tạo tổng thể toàn diện</option>
                 </select>
             </div>
 
-            <div style="margin-bottom: 18px;">
-                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Trạng thái điều phối:</label>
-                <select name="trangThai" style="width: 100%; padding: 9px 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #cbd5e1; background: #fff;">
-                    <option value="Đang sửa chữa" selected>Đang sửa chữa (Đồng bộ TB sang 'Đang bảo trì')</option>
-                    <option value="Chờ xử lý">Chờ xử lý</option>
-                    <option value="Đã hoàn thành">Đã hoàn thành (Hoàn nguyên TB về 'Tốt')</option>
-                </select>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">
+                    Lý do hủy chi tiết: <span style="color: #dc2626;">*</span>
+                </label>
+                <textarea name="lyDo" id="inputCancelReason" rows="3" required class="btn-outline" style="width: 100%; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; background: #fff; resize: vertical;" placeholder="Nhập lý do hủy bỏ phiếu sự cố này..."></textarea>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" onclick="closeAssignModal()" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #475569; font-size: 0.85rem; cursor: pointer;">Đóng</button>
-                <button type="submit" style="padding: 8px 18px; border-radius: 6px; border: none; background: #2563eb; color: #fff; font-size: 0.85rem; font-weight: 600; cursor: pointer;">🛠️ Phê duyệt & Gán thợ</button>
+                <button type="button" class="btn btn-outline" onclick="closeCancelModal()" style="border-radius: 6px; font-weight: 600;">
+                    Đóng
+                </button>
+                <button type="submit" class="btn btn-outline" style="border-radius: 6px; font-weight: 600; color: #dc2626; border-color: #fca5a5; background: #fff5f5;">
+                    <i class="fa-solid fa-trash-can" style="margin-right: 6px;"></i> Xác nhận hủy phiếu
+                </button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- MODAL 3: KỸ THUẬT VIÊN CẬP NHẬT TIẾN ĐỘ -->
-<div id="progressModal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); align-items: center; justify-content: center;">
-    <div style="background: #fff; border-radius: 10px; max-width: 480px; width: 90%; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-        <h3 style="margin-top: 0; font-size: 1.15rem; color: #1e293b;">⚙️ Cập nhật Tiến độ Sửa chữa</h3>
-        <p style="font-size: 0.85rem; color: #475569; margin-bottom: 16px;">
-            Nhập ghi chú hiện trường (vật tư thay thế, tình trạng, hẹn giờ sinh viên...) để cán bộ BQL cùng theo dõi.
-        </p>
-        <form action="<?= url('staff/maintenance/update-progress') ?>" method="POST">
-            <input type="hidden" name="maPhieu" id="progressMaPhieu">
-
-            <div style="margin-bottom: 14px;">
-                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Ghi chú tiến độ KTV: <span style="color: #dc2626;">*</span></label>
-                <textarea name="ghiChu" id="progressGhiChu" rows="3" required placeholder="Ví dụ: Đã kiểm tra quạt trần, thay tụ điện mới; đang theo dõi chạy thử..." style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.85rem; box-sizing: border-box;"></textarea>
-            </div>
-
-            <div style="margin-bottom: 18px;">
-                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Cập nhật trạng thái:</label>
-                <select name="trangThai" id="progressTrangThai" style="width: 100%; padding: 9px 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #cbd5e1; background: #fff;">
-                    <option value="Đang sửa chữa">Đang sửa chữa</option>
-                    <option value="Chờ xử lý">Chờ linh kiện / Chờ xử lý</option>
-                </select>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" onclick="closeProgressModal()" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #475569; font-size: 0.85rem; cursor: pointer;">Đóng</button>
-                <button type="submit" style="padding: 8px 18px; border-radius: 6px; border: none; background: #0284c7; color: #fff; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Lưu tiến độ</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- MODAL 4: NGHIỆM THU HOÀN THÀNH -->
-<div id="completeModal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); align-items: center; justify-content: center;">
-    <div style="background: #fff; border-radius: 10px; max-width: 480px; width: 90%; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-        <h3 style="margin-top: 0; font-size: 1.15rem; color: #166534;">✓ Nghiệm thu Hoàn thành Sửa chữa</h3>
-        <p style="font-size: 0.88rem; color: #475569; line-height: 1.5;">
-            Xác nhận phiếu <strong id="completeMaPhieuText"></strong> đã được xử lý xong. Hệ thống sẽ <strong>tự động hoàn nguyên thiết bị về trạng thái 'Tốt'</strong>.
-        </p>
-        <form action="<?= url('staff/maintenance/complete') ?>" method="POST">
-            <input type="hidden" name="maPhieu" id="completeMaPhieu">
-            <div style="margin-bottom: 16px;">
-                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Ghi chú nghiệm thu (tùy chọn):</label>
-                <textarea name="ghiChu" rows="2" placeholder="Ví dụ: Đã thay linh kiện mới, kiểm tra hoạt động tốt 100%..." style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.85rem; box-sizing: border-box;"></textarea>
-            </div>
-            <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" onclick="closeCompleteModal()" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #475569; font-size: 0.85rem; cursor: pointer;">Đóng</button>
-                <button type="submit" style="padding: 8px 18px; border-radius: 6px; border: none; background: #16a34a; color: #fff; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Xác nhận Hoàn thành</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- MODAL 5: HỦY PHIẾU BÁO HỎNG -->
-<div id="cancelModal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); align-items: center; justify-content: center;">
-    <div style="background: #fff; border-radius: 10px; max-width: 480px; width: 90%; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-        <h3 style="margin-top: 0; font-size: 1.15rem; color: #1e293b;">✕ Xác nhận Hủy phiếu sự cố</h3>
-        <p style="font-size: 0.88rem; color: #475569; line-height: 1.5;">
-            Phiếu sự cố sẽ được chuyển sang trạng thái <strong>'Đã hủy'</strong>. Thiết bị tương ứng (nếu có) sẽ được hoàn trả về trạng thái bình thường.
-        </p>
-        <form action="<?= url('staff/maintenance/cancel') ?>" method="POST">
-            <input type="hidden" name="maPhieu" id="cancelMaPhieu">
-            <div style="margin-bottom: 16px;">
-                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Lý do hủy (tùy chọn):</label>
-                <textarea name="lyDo" rows="3" placeholder="Nhập lý do hủy phiếu (ví dụ: Sinh viên báo nhầm, đã tự khắc phục...)" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.85rem; box-sizing: border-box;"></textarea>
-            </div>
-            <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" onclick="closeCancelModal()" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #475569; font-size: 0.85rem; cursor: pointer;">Đóng</button>
-                <button type="submit" style="padding: 8px 16px; border-radius: 6px; border: none; background: #dc2626; color: #fff; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Xác nhận Hủy</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- MODAL 6: XEM ẢNH HIỆN TRƯỜNG -->
-<div id="imageModal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); align-items: center; justify-content: center;" onclick="this.style.display='none'">
-    <div style="background: #fff; border-radius: 8px; max-width: 600px; width: 90%; padding: 16px; position: relative;" onclick="event.stopPropagation()">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <strong style="font-size: 0.95rem; color: #1e293b;">Ảnh chụp sự cố hiện trường</strong>
-            <button type="button" onclick="document.getElementById('imageModal').style.display='none'" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b;">&times;</button>
-        </div>
-        <div style="text-align: center; max-height: 480px; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0f172a; border-radius: 6px; padding: 10px;">
-            <img id="imgViewer" src="" alt="Hiện trường sự cố" style="max-width: 100%; max-height: 430px; object-fit: contain;" onerror="this.style.display='none'; document.getElementById('imgFallback').style.display='block';">
-            <div id="imgFallback" style="display: none; color: #94a3b8; font-size: 0.85rem; padding: 30px 20px;">
-                📷 Tệp hình ảnh sự cố lưu trữ cục bộ: <br>
-                <code id="imgFallbackPath" style="color: #38bdf8; word-break: break-all;"></code>
-            </div>
-        </div>
-    </div>
-</div>
-
+<!-- ========================================================================= -->
+<!-- JAVASCRIPT: PHÂN TRANG, CHUYỂN TAB, MODALS & XUẤT CSV                      -->
+<!-- ========================================================================= -->
 <script>
-    // Danh sách Kỹ thuật viên đã chuẩn hóa theo Khu
-    const allTechnicians = <?= json_encode($technicians, JSON_UNESCAPED_UNICODE) ?>;
-    const currentViewKhu = '<?= htmlspecialchars($currentKhu) ?>';
+// 1. Phân trang Client-side cho cả 5 tabs
+const maintenancePaginationState = {
+    pending: { page: 1, pageSize: 10 },
+    fixing: { page: 1, pageSize: 10 },
+    infra: { page: 1, pageSize: 10 },
+    completed: { page: 1, pageSize: 10 },
+    cancelled: { page: 1, pageSize: 10 }
+};
 
-    /**
-     * Hàm nạp danh sách Kỹ thuật viên vào thẻ <select> chỉ lọc đúng theo Khu A hoặc Khu B
-     */
-    function renderTechnicianOptions(selectElement, targetKhu, selectedId = null) {
-        if (!selectElement) return;
-        selectElement.innerHTML = '';
+function renderMaintenancePagination(tabKey) {
+    const tbody = document.getElementById(`tbody_${tabKey}`);
+    if (!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll(`.${tabKey}-row`));
+    const total = rows.length;
 
-        const defaultOpt = document.createElement('option');
-        defaultOpt.value = '';
-        if (targetKhu && targetKhu !== 'all') {
-            defaultOpt.textContent = `-- Chọn Kỹ thuật viên (Chỉ Khu ${targetKhu}) --`;
-        } else {
-            defaultOpt.textContent = '-- Chọn nhân viên kỹ thuật --';
-        }
-        selectElement.appendChild(defaultOpt);
+    if (total === 0) return;
 
-        const filtered = allTechnicians.filter(t => {
-            if (!targetKhu || targetKhu === 'all') return true;
-            return t.MaKhu === targetKhu;
-        });
+    const state = maintenancePaginationState[tabKey] || { page: 1, pageSize: 10 };
+    const pageSize = state.pageSize;
+    const totalPages = Math.ceil(total / pageSize) || 1;
+    if (state.page > totalPages) state.page = totalPages;
+    const curPage = state.page;
 
-        filtered.forEach(tech => {
-            const opt = document.createElement('option');
-            opt.value = tech.MaTaiKhoan;
-            opt.setAttribute('data-khu', tech.MaKhu);
-            opt.textContent = `${tech.HoVaTen} (Khu ${tech.MaKhu} - ${tech.TenDangNhap}${tech.SoDienThoai ? ' - 📞' + tech.SoDienThoai : ''})`;
-            if (selectedId && parseInt(selectedId) === parseInt(tech.MaTaiKhoan)) {
-                opt.selected = true;
-            }
-            selectElement.appendChild(opt);
-        });
+    const startIdx = (curPage - 1) * pageSize;
+    const endIdx = startIdx + pageSize;
 
-        if (filtered.length === 0) {
-            const emptyOpt = document.createElement('option');
-            emptyOpt.disabled = true;
-            emptyOpt.textContent = `(Không tìm thấy nhân viên kỹ thuật thuộc Khu ${targetKhu})`;
-            selectElement.appendChild(emptyOpt);
-        }
+    rows.forEach((row, i) => {
+        row.style.display = (i >= startIdx && i < endIdx) ? '' : 'none';
+    });
+
+    const info = document.getElementById(`${tabKey}PaginationInfo`);
+    if (info) {
+        const toShow = Math.min(endIdx, total);
+        info.innerText = `Hiển thị ${startIdx + 1} - ${toShow} trên tổng số ${total} phiếu`;
     }
 
-    /**
-     * Xử lý khi người dùng chọn phiếu sự cố ở Form trên đầu trang
-     */
-    function onTicketChange() {
-        const selectPhieu = document.getElementById('selectMaPhieu');
-        const selectNV = document.getElementById('selectMaNhanVien');
-        const note = document.getElementById('techKhuNote');
-        if (!selectPhieu || !selectNV) return;
+    const nav = document.getElementById(`${tabKey}PaginationNav`);
+    if (nav) {
+        let html = '';
+        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToMaintenancePage('${tabKey}', ${curPage - 1})" ${curPage <= 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}><i class="fa-solid fa-chevron-left"></i></button>`;
 
-        const selectedOption = selectPhieu.options[selectPhieu.selectedIndex];
-        if (!selectedOption || !selectedOption.value) {
-            const defaultKhu = (currentViewKhu !== 'all') ? currentViewKhu : null;
-            renderTechnicianOptions(selectNV, defaultKhu);
-            if (note) note.textContent = defaultKhu ? `(Lọc theo Khu ${defaultKhu})` : '';
-            return;
+        let startP = Math.max(1, curPage - 2);
+        let endP = Math.min(totalPages, curPage + 2);
+
+        if (startP > 1) {
+            html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToMaintenancePage('${tabKey}', 1)">1</button>`;
+            if (startP > 2) html += `<span style="padding: 0 4px; color: var(--text-muted);">&hellip;</span>`;
         }
 
-        const ticketKhu = selectedOption.getAttribute('data-khu') || 'A';
-        const assignedNV = selectedOption.getAttribute('data-nv') || 0;
-
-        renderTechnicianOptions(selectNV, ticketKhu, assignedNV);
-        if (note) note.textContent = `(Tự động khóa chỉ hiển thị KTV Khu ${ticketKhu})`;
-    }
-
-    /**
-     * Modal lập phiếu sự cố hạ tầng cán bộ
-     */
-    function openStaffTicketModal() {
-        document.getElementById('staffTicketModal').style.display = 'flex';
-    }
-
-    function closeStaffTicketModal() {
-        document.getElementById('staffTicketModal').style.display = 'none';
-        removeSelectedImage(null);
-        const urlInput = document.getElementById('hinhAnhUrlInput');
-        if (urlInput) urlInput.value = '';
-    }
-
-    /**
-     * Xử lý xem trước ảnh khi người dùng chọn tệp
-     */
-    function handleImageSelect(input) {
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
-
-            // Giới hạn 5MB
-            if (file.size > 5 * 1024 * 1024) {
-                alert('Dung lượng ảnh vượt quá 5MB. Vui lòng nén hoặc chọn tệp khác!');
-                input.value = '';
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.getElementById('imagePreview');
-                const fileName = document.getElementById('imageFileName');
-                const prompt = document.getElementById('uploadPrompt');
-                const container = document.getElementById('imagePreviewContainer');
-                const dropZone = document.getElementById('dropZone');
-
-                preview.src = e.target.result;
-                fileName.textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
-                prompt.style.display = 'none';
-                container.style.display = 'block';
-                dropZone.style.borderColor = '#10b981';
-                dropZone.style.background = '#f0fdf4';
-            };
-            reader.readAsDataURL(file);
-        }
-    }
-
-    /**
-     * Hủy bỏ ảnh hiện trường đã chọn
-     */
-    function removeSelectedImage(e) {
-        if (e) e.stopPropagation();
-        const input = document.getElementById('staffTicketImageInput');
-        if (input) input.value = '';
-
-        const preview = document.getElementById('imagePreview');
-        const fileName = document.getElementById('imageFileName');
-        const prompt = document.getElementById('uploadPrompt');
-        const container = document.getElementById('imagePreviewContainer');
-        const dropZone = document.getElementById('dropZone');
-
-        if (preview) preview.src = '';
-        if (fileName) fileName.textContent = '';
-        if (container) container.style.display = 'none';
-        if (prompt) prompt.style.display = 'block';
-        if (dropZone) {
-            dropZone.style.borderColor = '#cbd5e1';
-            dropZone.style.background = '#f8fafc';
-        }
-    }
-
-    /**
-     * Đóng mở ô nhập URL trực tiếp
-     */
-    function toggleUrlInput() {
-        const box = document.getElementById('urlInputContainer');
-        if (box) {
-            box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
-        }
-    }
-
-    /**
-     * Modal Phân công nhanh theo từng dòng phiếu
-     */
-    function openAssignModal(maPhieu, maPhong, tenTB, maKhu, currentNhanVienId) {
-        document.getElementById('modalMaPhieu').value = maPhieu;
-        document.getElementById('modalMaPhieuText').textContent = maPhieu;
-        document.getElementById('modalMaPhongText').textContent = maPhong;
-        document.getElementById('modalMaKhuBadge').textContent = 'Khu ' + maKhu;
-        document.getElementById('modalTenTBText').textContent = tenTB;
-
-        const modalSelectNV = document.getElementById('modalSelectMaNhanVien');
-        const modalNote = document.getElementById('modalTechKhuNote');
-        if (modalNote) modalNote.textContent = `(Chỉ hiển thị KTV phụ trách Khu ${maKhu})`;
-
-        renderTechnicianOptions(modalSelectNV, maKhu, currentNhanVienId);
-        document.getElementById('assignModal').style.display = 'flex';
-    }
-
-    function closeAssignModal() {
-        document.getElementById('assignModal').style.display = 'none';
-    }
-
-    /**
-     * Modal cập nhật tiến độ cho KTV
-     */
-    function openProgressModal(maPhieu, ghiChu, trangThai) {
-        document.getElementById('progressMaPhieu').value = maPhieu;
-        document.getElementById('progressGhiChu').value = ghiChu || '';
-        if (trangThai) {
-            document.getElementById('progressTrangThai').value = trangThai;
-        }
-        document.getElementById('progressModal').style.display = 'flex';
-    }
-
-    function closeProgressModal() {
-        document.getElementById('progressModal').style.display = 'none';
-    }
-
-    /**
-     * Modal nghiệm thu hoàn thành
-     */
-    function openCompleteModal(maPhieu) {
-        document.getElementById('completeMaPhieu').value = maPhieu;
-        document.getElementById('completeMaPhieuText').textContent = maPhieu;
-        document.getElementById('completeModal').style.display = 'flex';
-    }
-
-    function closeCompleteModal() {
-        document.getElementById('completeModal').style.display = 'none';
-    }
-
-    /**
-     * Modal Hủy phiếu
-     */
-    function openCancelModal(maPhieu) {
-        document.getElementById('cancelMaPhieu').value = maPhieu;
-        document.getElementById('cancelModal').style.display = 'flex';
-    }
-
-    function closeCancelModal() {
-        document.getElementById('cancelModal').style.display = 'none';
-    }
-
-    /**
-     * Xem ảnh hiện trường
-     */
-    function viewImage(rawUrl) {
-        const img = document.getElementById('imgViewer');
-        const fallback = document.getElementById('imgFallback');
-        const pathText = document.getElementById('imgFallbackPath');
-
-        img.style.display = 'block';
-        fallback.style.display = 'none';
-
-        let finalUrl = rawUrl;
-        if (rawUrl && !rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
-            finalUrl = '<?= url() ?>/' + rawUrl.replace(/^\/+/, '');
+        for (let p = startP; p <= endP; p++) {
+            const isActive = (p === curPage);
+            html += `<button type="button" class="btn btn-sm ${isActive ? 'btn-primary' : 'btn-outline'}" onclick="goToMaintenancePage('${tabKey}', ${p})" style="min-width: 32px; ${isActive ? 'font-weight: 700;' : ''}">${p}</button>`;
         }
 
-        img.src = finalUrl;
-        pathText.textContent = rawUrl;
-        document.getElementById('imageModal').style.display = 'flex';
-    }
-
-    // Khởi tạo ban đầu khi tải trang
-    document.addEventListener('DOMContentLoaded', function() {
-        const selectNV = document.getElementById('selectMaNhanVien');
-        const selectPhieu = document.getElementById('selectMaPhieu');
-
-        if (selectPhieu && selectPhieu.value) {
-            onTicketChange();
-        } else if (selectNV) {
-            const defaultKhu = (currentViewKhu !== 'all') ? currentViewKhu : null;
-            renderTechnicianOptions(selectNV, defaultKhu);
-            const note = document.getElementById('techKhuNote');
-            if (note && defaultKhu) {
-                note.textContent = `(Lọc theo Khu ${defaultKhu})`;
-            }
+        if (endP < totalPages) {
+            if (endP < totalPages - 1) html += `<span style="padding: 0 4px; color: var(--text-muted);">&hellip;</span>`;
+            html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToMaintenancePage('${tabKey}', ${totalPages})">${totalPages}</button>`;
         }
 
-        // Kéo thả ảnh vào dropZone của Modal lập phiếu
-        const dropZone = document.getElementById('dropZone');
-        const fileInput = document.getElementById('staffTicketImageInput');
-        if (dropZone && fileInput) {
-            ['dragenter', 'dragover'].forEach(name => {
-                dropZone.addEventListener(name, function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    dropZone.style.borderColor = '#2563eb';
-                    dropZone.style.background = '#eff6ff';
-                }, false);
-            });
+        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToMaintenancePage('${tabKey}', ${curPage + 1})" ${curPage >= totalPages ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}><i class="fa-solid fa-chevron-right"></i></button>`;
+        nav.innerHTML = html;
+    }
+}
 
-            ['dragleave', 'drop'].forEach(name => {
-                dropZone.addEventListener(name, function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (name === 'dragleave') {
-                        dropZone.style.borderColor = '#cbd5e1';
-                        dropZone.style.background = '#f8fafc';
-                    }
-                }, false);
-            });
+function goToMaintenancePage(tabKey, p) {
+    if (p < 1) return;
+    maintenancePaginationState[tabKey].page = p;
+    renderMaintenancePagination(tabKey);
+}
 
-            dropZone.addEventListener('drop', function(e) {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-                if (files && files.length > 0) {
-                    fileInput.files = files;
-                    handleImageSelect(fileInput);
-                }
-            }, false);
+function changeMaintenancePageSize(tabKey, newSize) {
+    maintenancePaginationState[tabKey].pageSize = parseInt(newSize, 10);
+    maintenancePaginationState[tabKey].page = 1;
+    renderMaintenancePagination(tabKey);
+}
+
+// 2. Chuyển Tab Client-side mượt mà
+function updateExportButtonCount(tabKey) {
+    const tbody = document.getElementById(`tbody_${tabKey}`);
+    const rows = tbody ? tbody.querySelectorAll(`.${tabKey}-row`).length : 0;
+    const btnText = document.getElementById('btnExportText');
+    if (btnText) {
+        btnText.innerText = `Xuất Excel (${rows})`;
+    }
+}
+
+function switchMaintenanceTab(tabKey) {
+    const input = document.getElementById('currentActiveTab');
+    if (input) input.value = tabKey;
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', tabKey);
+    window.history.replaceState({}, '', url.toString());
+
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        b.style.color = 'var(--text-secondary)';
+        b.style.background = 'transparent';
+        b.style.fontWeight = '600';
+        b.classList.remove('active');
+    });
+
+    ['pending', 'fixing', 'infra', 'completed', 'cancelled'].forEach(k => {
+        const el = document.getElementById(`tabContent_${k}`);
+        if (el) el.style.display = 'none';
+    });
+
+    const activeBtn = document.getElementById(`tabBtn${tabKey.charAt(0).toUpperCase() + tabKey.slice(1)}`);
+    if (activeBtn) {
+        activeBtn.style.color = 'var(--primary)';
+        activeBtn.style.background = '#eff6ff';
+        activeBtn.style.fontWeight = '700';
+        activeBtn.classList.add('active');
+    }
+
+    const activeEl = document.getElementById(`tabContent_${tabKey}`);
+    if (activeEl) activeEl.style.display = 'block';
+
+    updateExportButtonCount(tabKey);
+}
+
+// 3. Dropdown liên hoàn (Cascading Dropdowns)
+function onKhuChange(khuVal) {
+    const cumSelect = document.getElementById('filterCumSelect');
+    const toaSelect = document.getElementById('filterToaSelect');
+    if (cumSelect) cumSelect.value = '';
+    if (toaSelect) toaSelect.value = '';
+    document.getElementById('filterFormMaintenance').submit();
+}
+
+function onCumChange(cumVal) {
+    const toaSelect = document.getElementById('filterToaSelect');
+    if (toaSelect) toaSelect.value = '';
+    document.getElementById('filterFormMaintenance').submit();
+}
+
+// 4. Xuất Excel / CSV
+function exportMaintenance() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const input = document.getElementById('currentActiveTab');
+    const currentTab = input ? input.value : 'pending';
+    urlParams.set('tab', currentTab);
+    window.location.href = '<?= url('staff/maintenance/export') ?>?' + urlParams.toString();
+}
+
+// 5. Xử lý Modals
+// Modal Phân công
+function openAssignModal(maPhieu, tenThietBi, currentTechId, maKhu) {
+    document.getElementById('assignModalMaPhieu').value = maPhieu;
+    document.getElementById('assignModalMaPhieuText').innerText = maPhieu;
+    document.getElementById('assignModalTenThietBi').innerText = tenThietBi;
+
+    const select = document.getElementById('selectAssignTho');
+    if (select) {
+        select.value = currentTechId || '';
+    }
+    document.getElementById('modalAssignTech').style.display = 'flex';
+}
+function closeAssignModal() {
+    document.getElementById('modalAssignTech').style.display = 'none';
+}
+
+// Modal Cập nhật tiến độ
+function openProgressModal(maPhieu, moTa, currentNote) {
+    document.getElementById('progressModalMaPhieu').value = maPhieu;
+    document.getElementById('progressModalMaPhieuText').innerText = maPhieu;
+    document.getElementById('progressModalMoTa').innerText = moTa || 'Không có mô tả chi tiết';
+    document.getElementById('textareaProgressGhiChu').value = currentNote || '';
+    document.getElementById('modalProgress').style.display = 'flex';
+}
+function closeProgressModal() {
+    document.getElementById('modalProgress').style.display = 'none';
+}
+
+// Modal Hoàn thành
+function openCompleteModal(maPhieu, tenThietBi) {
+    document.getElementById('completeModalMaPhieu').value = maPhieu;
+    document.getElementById('completeModalMaPhieuText').innerText = maPhieu;
+    document.getElementById('modalComplete').style.display = 'flex';
+}
+function closeCompleteModal() {
+    document.getElementById('modalComplete').style.display = 'none';
+}
+
+// Modal Lập phiếu sự cố hạ tầng
+function openStaffTicketModal() {
+    document.getElementById('modalStaffTicket').style.display = 'flex';
+}
+function closeStaffTicketModal() {
+    document.getElementById('modalStaffTicket').style.display = 'none';
+}
+
+// Modal Hủy phiếu
+function openCancelModal(maPhieu, tenThietBi) {
+    document.getElementById('cancelModalMaPhieu').value = maPhieu;
+    document.getElementById('cancelModalMaPhieuText').innerText = maPhieu;
+    document.getElementById('cancelModalTenThietBi').innerText = tenThietBi;
+    document.getElementById('inputCancelReason').value = '';
+    document.getElementById('selectQuickCancelReason').value = '';
+    document.getElementById('modalCancelTicket').style.display = 'flex';
+}
+function closeCancelModal() {
+    document.getElementById('modalCancelTicket').style.display = 'none';
+}
+
+function onQuickCancelChange(val) {
+    if (val) {
+        document.getElementById('inputCancelReason').value = val;
+    }
+}
+
+// Khởi chạy khi DOM sẵn sàng
+document.addEventListener('DOMContentLoaded', function() {
+    ['pending', 'fixing', 'infra', 'completed', 'cancelled'].forEach(k => {
+        renderMaintenancePagination(k);
+    });
+
+    const input = document.getElementById('currentActiveTab');
+    const initialTab = input ? input.value : 'pending';
+    updateExportButtonCount(initialTab);
+});
+
+// ESC & Backdrop close
+window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeAssignModal();
+        closeProgressModal();
+        closeCompleteModal();
+        closeStaffTicketModal();
+        closeCancelModal();
+    }
+});
+
+window.addEventListener('click', function(e) {
+    const modals = [
+        document.getElementById('modalAssignTech'),
+        document.getElementById('modalProgress'),
+        document.getElementById('modalComplete'),
+        document.getElementById('modalStaffTicket'),
+        document.getElementById('modalCancelTicket')
+    ];
+    modals.forEach(m => {
+        if (m && e.target === m) {
+            m.style.display = 'none';
         }
     });
+});
 </script>
 
 <?php
 $content = ob_get_clean();
-$title = "Điều phối Sửa chữa Thiết bị - BQL KTX";
+$title = !empty($isAllowed)
+    ? "Điều phối Sửa chữa & Phiếu Báo Hỏng - KTX ĐHQG-HCM"
+    : "Từ chối truy cập - Điều phối Bảo trì";
 require dirname(__DIR__) . '/layouts/main.php';
 ?>
