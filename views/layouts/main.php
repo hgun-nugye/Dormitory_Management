@@ -49,9 +49,10 @@
                     <li><a href="<?= url('student/dashboard') ?>" class="<?= nav_active_class('student/dashboard') ?>">Cổng sinh viên</a></li>
                     <li><a href="<?= url('student/profile') ?>" class="<?= nav_active_class('student/profile') ?>">Hồ sơ sinh viên</a></li>
                     <li><a href="<?= url('student/payments') ?>" class="<?= nav_active_class('student/payments') ?>">Thanh toán</a></li>
+                    <li><a href="<?= url('student/requests') ?>" class="<?= nav_active_class('student/requests') ?>">Dịch vụ một cửa</a></li>
                 <?php elseif (\App\Core\Auth::isNhanVien()): ?>
                     <li><a href="<?= url('staff/dashboard') ?>" class="<?= nav_active_class('staff/dashboard') ?>">BQL Cụm</a></li>
-                    <?php if (\App\Core\Auth::isQuanLy()): ?>
+                   <?php if (\App\Core\Auth::isQuanLy()): ?>
                         <li><a href="<?= url('staff/zones') ?>" class="<?= nav_active_class('staff/zones') ?>">Khu KTX</a></li>
                         <li><a href="<?= url('staff/rooms') ?>" class="<?= nav_active_class('staff/rooms') ?>">Sơ đồ phòng</a></li>
                         <li><a href="<?= url('staff/applications') ?>" class="<?= nav_active_class('staff/applications') ?>">Xét duyệt 72h</a></li>
@@ -59,7 +60,7 @@
                         <li><a href="<?= url('staff/requests') ?>" class="<?= nav_active_class('staff/requests') ?>">Đơn 1 cửa</a></li>
                         <li><a href="<?= url('staff/maintenance') ?>" class="<?= nav_active_class('staff/maintenance') ?>">Bảo trì</a></li>
                         <li><a href="<?= url('staff/discipline') ?>" class="<?= nav_active_class('staff/discipline') ?>">An ninh</a></li>
-                    <?php elseif (\App\Core\Auth::isKeToan()): ?>
+                 <?php elseif (\App\Core\Auth::isKeToan()): ?>
                         <li><a href="<?= url('staff/utilities') ?>" class="<?= nav_active_class('staff/utilities') ?>">Điện nước & Công nợ</a></li>
                         <li><a href="<?= url('staff/requests') ?>" class="<?= nav_active_class('staff/requests') ?>">Đơn 1 cửa</a></li>
                     <?php else: /* Thợ kỹ thuật điện nước / Nhân viên bảo trì */ ?>
@@ -70,8 +71,6 @@
                     <li><a href="<?= url('admin/users') ?>" class="<?= nav_active_class('admin/users') ?>">Cán bộ</a></li>
                     <li><a href="<?= url('admin/students') ?>" class="<?= nav_active_class('admin/students') ?>">Sinh viên</a></li>
                     <li><a href="<?= url('admin/universities') ?>" class="<?= nav_active_class('admin/universities') ?>">Trường ĐH</a></li>
-                    <li><a href="<?= url('staff/maintenance') ?>" class="<?= nav_active_class('staff/maintenance') ?>">Bảo trì</a></li>
-                    <li><a href="<?= url('staff/discipline') ?>" class="<?= nav_active_class('staff/discipline') ?>">An ninh</a></li>
                 <?php endif; ?>
                 <li>
                     <span class="user-info">
@@ -80,6 +79,7 @@
                 </li>
                 <li><a href="<?= url('logout') ?>" class="btn btn-primary btn-sm" style="color:white">Đăng xuất</a></li>
             <?php else: ?>
+                <li><a href="<?= url('register') ?>" class="<?= nav_active_class('register') ?>">Đăng ký hồ sơ</a></li>
                 <li><a href="<?= url('login') ?>" class="btn btn-primary btn-sm" style="color:white">Đăng nhập</a></li>
             <?php endif; ?>
         </ul>
