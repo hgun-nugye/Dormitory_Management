@@ -10,8 +10,6 @@ $hoSoDangKy = $hoSoDangKy ?? null;
     <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
         <a href="<?= url('/') ?>" style="color: var(--text-muted); text-decoration: none;"><i class="fa-solid fa-house"></i> Trang chủ</a>
         <span>/</span>
-        <a href="<?= url('student/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">Cổng sinh viên</a>
-        <span>/</span>
         <span style="color: var(--text-primary); font-weight: 600;">Hồ sơ sinh viên</span>
     </div>
 

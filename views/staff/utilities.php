@@ -26,14 +26,12 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('staff/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">BQL KTX</a>
             <span>/</span>
-            <span style="color: var(--text-muted);">Điện nước & Tiện ích</span>
-            <span>/</span>
-            <span style="color: var(--text-primary); font-weight: 500;">Ghi nhận Điện Nước & Công nợ</span>
+            <span style="color: var(--text-primary); font-weight: 500;">Ghi nhận Điện Nước</span>
         </div>
 
         <div class="page-header" style="align-items: center; flex-wrap: wrap; gap: 12px; display: flex; justify-content: space-between;">
             <div>
-                <h1 class="page-title">Quản lý Điện Nước & Đối soát Công nợ</h1>
+                <h1 class="page-title">Quản lý Điện Nước</h1>
                 <p class="page-subtitle" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
                     <span>Phạm vi cán bộ:</span>
                     <span class="badge <?= htmlspecialchars($scope['badgeClass'] ?? 'badge-primary') ?>" style="font-size: 0.8rem; padding: 4px 10px;">
@@ -50,25 +48,25 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                             onsubmit="return confirm('Xác nhận chốt sổ và phát hành hóa đơn điện nước tháng <?= $currentMonth ?>/<?= $currentYear ?> cho tất cả các phòng trong phạm vi quản lý?');">
                             <input type="hidden" name="thang" value="<?= $currentMonth ?>">
                             <input type="hidden" name="nam" value="<?= $currentYear ?>">
-                            <button type="submit" class="btn btn-primary" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                            <button type="submit" class="btn btn-primary" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
                                 <i class="fa-solid fa-bullhorn"></i> Chốt sổ & Phát hành HĐ
                             </button>
                         </form>
                     <?php endif; ?>
 
                     <?php if (!empty($scope['canRecordReading'])): ?>
-                        <button type="button" class="btn btn-outline" onclick="openImportModal()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; color: #2563eb; border-color: #bfdbfe; background: #eff6ff;" title="Nhập danh sách chỉ số từ file CSV">
+                        <button type="button" class="btn btn-outline" onclick="openImportModal()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #2563eb; border-color: #bfdbfe; background: #eff6ff;" title="Nhập danh sách chỉ số từ file CSV">
                             <i class="fa-solid fa-file-import" style="color: #2563eb;"></i> Nhập file
                         </button>
                     <?php endif; ?>
 
-                    <button type="button" class="btn btn-outline" onclick="exportUtilities()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; color: #15803d; border-color: #86efac; background: #f0fdf4; cursor: pointer;" title="Xuất dữ liệu theo tab đang xem ra Excel/CSV">
+                    <button type="button" class="btn btn-outline" onclick="exportUtilities()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #15803d; border-color: #86efac; background: #f0fdf4; cursor: pointer;" title="Xuất dữ liệu theo tab đang xem ra Excel/CSV">
                         <i class="fa-solid fa-file-excel" style="color: #16a34a;"></i> <span id="btnExportText">Xuất Excel (<?= count($readingList) ?>)</span>
                     </button>
                 <?php endif; ?>
 
-                <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 6px 14px;">
-                    <i class="fa-solid fa-arrow-left" style="margin-right: 6px;"></i> Về Dashboard
+                <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="fa-solid fa-arrow-left"></i> Về Dashboard
                 </a>
             </div>
         </div>
@@ -236,7 +234,7 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                                     <option value="<?= htmlspecialchars($c['MaCum']) ?>" <?= $selectedCum === $c['MaCum'] ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($c['TenCum'] ?? ('Cụm ' . $c['MaCum'])) ?>
                                     </option>
-                                <?php endIf; ?>
+                                <?php endif; ?>
                             <?php endforeach; ?>
                         </select>
                     <?php endif; ?>
@@ -277,12 +275,9 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                     </select>
 
                     <!-- Nút Lọc & Nút Xóa bộ lọc -->
-                    <button type="submit" class="btn btn-primary btn-sm" style="border-radius: 6px; height: 38px; padding: 0 16px; font-weight: 600;">
-                        Lọc
-                    </button>
                     <?php if (!empty($searchTerm) || !empty($selectedKhu) || !empty($selectedCum) || !empty($selectedToa) || !empty($selectedTang) || !empty($selectedTrangThai)): ?>
                         <a href="<?= url('staff/utilities') ?>?thang=<?= $currentMonth ?>&nam=<?= $currentYear ?>&tab=<?= htmlspecialchars($activeTab ?? 'readings') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; height: 38px; padding: 0 14px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; color: #dc2626; border-color: #fca5a5; background: #fff5f5; font-weight: 600;" title="Xóa toàn bộ bộ lọc và trở về mặc định">
-                            <i class="fa-solid fa-filter-circle-xmark"></i> Xóa lọc
+                            <i class="fa-solid fa-filter-circle-xmark"></i> Xóa bộ lọc
                         </a>
                     <?php endif; ?>
                 </div>
@@ -293,19 +288,19 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
         <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; flex-wrap: wrap;">
             <button type="button" class="tab-btn <?= ($activeTab === 'readings') ? 'active' : '' ?>" id="tabBtnReadings" onclick="switchUtilTab('readings')"
                 style="background: <?= ($activeTab === 'readings') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'readings') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'readings') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
-                <i class="fa-solid fa-bolt" style="margin-right: 6px;"></i> 1. Ghi nhận Chỉ số & Cảnh báo
+                Ghi nhận Chỉ số & Cảnh báo
                 <span class="badge" style="font-size: 0.75rem; margin-left: 6px; padding: 3px 8px; background: #e0f2fe; color: #0369a1; border: none; font-weight: 700;"><?= count($readingList) ?></span>
             </button>
 
             <button type="button" class="tab-btn <?= ($activeTab === 'invoices') ? 'active' : '' ?>" id="tabBtnInvoices" onclick="switchUtilTab('invoices')"
                 style="background: <?= ($activeTab === 'invoices') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'invoices') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'invoices') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
-                <i class="fa-solid fa-receipt" style="margin-right: 6px;"></i> 2. Hóa đơn & Đối soát Công nợ
+                Hóa đơn & Đối soát Công nợ
                 <span class="badge" style="font-size: 0.75rem; margin-left: 6px; padding: 3px 8px; background: #fef3c7; color: #92400e; border: none; font-weight: 700;"><?= count($invoiceList) ?></span>
             </button>
 
             <button type="button" class="tab-btn <?= ($activeTab === 'missing') ? 'active' : '' ?>" id="tabBtnMissing" onclick="switchUtilTab('missing')"
                 style="background: <?= ($activeTab === 'missing') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'missing') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'missing') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
-                <i class="fa-solid fa-clock-rotate-left" style="margin-right: 6px;"></i> 3. Phòng chưa ghi số
+                Phòng chưa ghi số
                 <span class="badge" style="font-size: 0.75rem; margin-left: 6px; padding: 3px 8px; background: #fee2e2; color: #991b1b; border: none; font-weight: 700;"><?= count($missingList) ?></span>
             </button>
         </div>
@@ -319,8 +314,8 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
             <?php if (!empty($scope['canRecordReading'])): ?>
                 <div class="card" id="boxFormRecordReading" style="margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
                     <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
-                            <i class="fa-solid fa-gauge-high" style="color: var(--primary);"></i> Biểu mẫu ghi nhận chỉ số công tơ Điện & Nước (Tháng <?= $currentMonth ?>/<?= $currentYear ?>)
+                        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 0;">
+                            Biểu mẫu ghi nhận chỉ số công tơ Điện & Nước (Tháng <?= $currentMonth ?>/<?= $currentYear ?>)
                         </h3>
                         <span style="font-size: 0.8rem; color: var(--text-muted);">Tự động tính tiền lũy tiến 6 bậc EVN & Nước KTX</span>
                     </div>
@@ -478,8 +473,8 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                                                     <input type="hidden" name="maPhong" value="<?= htmlspecialchars($r['MaPhong']) ?>">
                                                     <input type="hidden" name="thang" value="<?= $currentMonth ?>">
                                                     <input type="hidden" name="nam" value="<?= $currentYear ?>">
-                                                    <button type="submit" class="btn btn-primary btn-sm" style="border-radius: 6px; font-weight: 500; padding: 4px 10px;">
-                                                        <i class="fa-solid fa-paper-plane" style="margin-right: 4px;"></i> Phát hành HĐ
+                                                    <button type="submit" class="btn btn-primary btn-sm" style="height: 30px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;">
+                                                        <i class="fa-solid fa-paper-plane"></i> Phát hành HĐ
                                                     </button>
                                                 </form>
                                             <?php else: ?>
@@ -601,7 +596,7 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                                                     <input type="hidden" name="phuongThuc" value="Mã QR KTX">
                                                     <input type="hidden" name="thang" value="<?= $currentMonth ?>">
                                                     <input type="hidden" name="nam" value="<?= $currentYear ?>">
-                                                    <button type="submit" class="btn btn-outline btn-sm" style="border-radius: 6px; color: #166534; border-color: #86efac; font-weight: 600; padding: 5px 12px; display: inline-flex; align-items: center; gap: 4px;">
+                                                    <button type="submit" class="btn btn-outline btn-sm" style="height: 30px; border-radius: 6px; color: #166534; border-color: #86efac; background: #f0fdf4; font-weight: 600; font-size: 0.8rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;">
                                                         <i class="fa-solid fa-bolt"></i> Xác nhận thanh toán
                                                     </button>
                                                 </form>
@@ -696,7 +691,7 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                                         </td>
                                         <td style="text-align: right;">
                                             <?php if (!empty($scope['canRecordReading'])): ?>
-                                                <button type="button" class="btn btn-primary btn-sm" onclick="quickFillRoom('<?= htmlspecialchars($m['MaPhong']) ?>')" style="border-radius: 6px; font-weight: 500; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;">
+                                                <button type="button" class="btn btn-primary btn-sm" onclick="quickFillRoom('<?= htmlspecialchars($m['MaPhong']) ?>')" style="height: 30px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;">
                                                     <i class="fa-solid fa-pen-to-square"></i> Ghi số ngay
                                                 </button>
                                             <?php else: ?>
@@ -741,8 +736,8 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
 <div id="modalImportUtilities" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 540px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-file-import" style="color: var(--primary);"></i> Nhập chỉ số Điện Nước từ file CSV
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0;">
+                Nhập chỉ số Điện Nước từ file CSV
             </h3>
             <button type="button" onclick="closeImportModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">
                 &times;
@@ -774,10 +769,10 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="btn btn-outline" onclick="closeImportModal()" style="border-radius: 6px; padding: 8px 16px; font-weight: 500;">
+                <button type="button" class="btn btn-outline" onclick="closeImportModal()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px;">
                     Hủy bỏ
                 </button>
-                <button type="submit" class="btn btn-primary" style="border-radius: 6px; padding: 8px 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                <button type="submit" class="btn btn-primary" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 20px; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="fa-solid fa-cloud-arrow-up"></i> Tải lên & Xử lý
                 </button>
             </div>
@@ -789,329 +784,372 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
 <!-- JAVASCRIPT: AUTO-FILL, PREVIEW TÍNH TIỀN, TABS, PHÂN TRANG CLIENT-SIDE     -->
 <!-- ========================================================================= -->
 <script>
-const roomMeta = <?= json_encode($meta, JSON_UNESCAPED_UNICODE) ?>;
+    const roomMeta = <?= json_encode($meta, JSON_UNESCAPED_UNICODE) ?>;
 
-// 1. Phân trang Client-side cho cả 3 tabs
-const utilPaginationState = {
-    readings: { page: 1, pageSize: 10 },
-    invoices: { page: 1, pageSize: 10 },
-    missing: { page: 1, pageSize: 10 }
-};
-
-function renderUtilPagination(tabKey) {
-    const rowClass = `${tabKey}-row`;
-    const rows = document.querySelectorAll(`.${rowClass}`);
-    const total = rows.length;
-    const state = utilPaginationState[tabKey];
-    const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
-
-    if (state.page > totalPages) state.page = totalPages;
-
-    const startIdx = (state.page - 1) * state.pageSize;
-    const endIdx = startIdx + state.pageSize;
-
-    rows.forEach((row, idx) => {
-        if (idx >= startIdx && idx < endIdx) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
+    // 1. Phân trang Client-side cho cả 3 tabs
+    const utilPaginationState = {
+        readings: {
+            page: 1,
+            pageSize: 10
+        },
+        invoices: {
+            page: 1,
+            pageSize: 10
+        },
+        missing: {
+            page: 1,
+            pageSize: 10
         }
-    });
+    };
 
-    const infoEl = document.getElementById(`${tabKey}PaginationInfo`);
-    if (infoEl) {
-        if (total === 0) {
-            infoEl.innerText = 'Không có bản ghi nào';
-        } else {
-            const curStart = startIdx + 1;
-            const curEnd = Math.min(endIdx, total);
-            infoEl.innerText = `Hiển thị ${curStart} - ${curEnd} trên tổng số ${total} bản ghi (Trang ${state.page} / ${totalPages})`;
+    function renderUtilPagination(tabKey) {
+        const rowClass = `${tabKey}-row`;
+        const rows = document.querySelectorAll(`.${rowClass}`);
+        const total = rows.length;
+        const state = utilPaginationState[tabKey];
+        const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
+
+        if (state.page > totalPages) state.page = totalPages;
+
+        const startIdx = (state.page - 1) * state.pageSize;
+        const endIdx = startIdx + state.pageSize;
+
+        rows.forEach((row, idx) => {
+            if (idx >= startIdx && idx < endIdx) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        const infoEl = document.getElementById(`${tabKey}PaginationInfo`);
+        if (infoEl) {
+            if (total === 0) {
+                infoEl.innerText = 'Không có bản ghi nào';
+            } else {
+                const curStart = startIdx + 1;
+                const curEnd = Math.min(endIdx, total);
+                infoEl.innerText = `Hiển thị ${curStart} - ${curEnd} trên tổng số ${total} bản ghi (Trang ${state.page} / ${totalPages})`;
+            }
+        }
+
+        const navEl = document.getElementById(`${tabKey}PaginationNav`);
+        if (navEl) {
+            if (totalPages <= 1) {
+                navEl.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            // Nút trang trước
+            html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToUtilPage('${tabKey}', ${state.page - 1})" ${state.page === 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} style="padding: 4px 10px; border-radius: 6px;">&laquo; Trước</button>`;
+
+            // Các số trang
+            for (let p = 1; p <= totalPages; p++) {
+                if (p === 1 || p === totalPages || (p >= state.page - 1 && p <= state.page + 1)) {
+                    const isActive = (p === state.page);
+                    const btnStyle = isActive ?
+                        'background: var(--primary); color: #fff; border-color: var(--primary);' :
+                        'background: #fff; color: var(--text-primary); border-color: #cbd5e1;';
+                    html += `<button type="button" class="btn btn-sm" onclick="goToUtilPage('${tabKey}', ${p})" style="padding: 4px 10px; border-radius: 6px; font-weight: 600; ${btnStyle}">${p}</button>`;
+                } else if (p === state.page - 2 || p === state.page + 2) {
+                    html += `<span style="padding: 4px 6px; color: var(--text-muted);">&hellip;</span>`;
+                }
+            }
+
+            // Nút trang sau
+            html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToUtilPage('${tabKey}', ${state.page + 1})" ${state.page === totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} style="padding: 4px 10px; border-radius: 6px;">Sau &raquo;</button>`;
+
+            navEl.innerHTML = html;
         }
     }
 
-    const navEl = document.getElementById(`${tabKey}PaginationNav`);
-    if (navEl) {
-        if (totalPages <= 1) {
-            navEl.innerHTML = '';
+    function goToUtilPage(tabKey, targetPage) {
+        const rowClass = `${tabKey}-row`;
+        const rows = document.querySelectorAll(`.${rowClass}`);
+        const totalPages = Math.max(1, Math.ceil(rows.length / utilPaginationState[tabKey].pageSize));
+
+        if (targetPage < 1 || targetPage > totalPages) return;
+        utilPaginationState[tabKey].page = targetPage;
+        renderUtilPagination(tabKey);
+    }
+
+    function changeUtilPageSize(tabKey, newSize) {
+        utilPaginationState[tabKey].pageSize = parseInt(newSize, 10) || 10;
+        utilPaginationState[tabKey].page = 1;
+        renderUtilPagination(tabKey);
+    }
+
+    // 2. Tự động điền dữ liệu phòng khi chọn
+    function onRoomChanged(maPhong) {
+        if (!maPhong || !roomMeta[maPhong]) {
+            document.getElementById('inputDienCu').value = '';
+            document.getElementById('inputNuocCu').value = '';
+            document.getElementById('inputSoSV').value = '1';
+            clearPreview();
             return;
         }
 
-        let html = '';
-        // Nút trang trước
-        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToUtilPage('${tabKey}', ${state.page - 1})" ${state.page === 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} style="padding: 4px 10px; border-radius: 6px;">&laquo; Trước</button>`;
+        const data = roomMeta[maPhong];
+        document.getElementById('inputDienCu').value = data.dienCu || 0;
+        document.getElementById('inputNuocCu').value = data.nuocCu || 0;
+        document.getElementById('inputSoSV').value = data.soSV || 1;
 
-        // Các số trang
-        for (let p = 1; p <= totalPages; p++) {
-            if (p === 1 || p === totalPages || (p >= state.page - 1 && p <= state.page + 1)) {
-                const isActive = (p === state.page);
-                const btnStyle = isActive
-                    ? 'background: var(--primary); color: #fff; border-color: var(--primary);'
-                    : 'background: #fff; color: var(--text-primary); border-color: #cbd5e1;';
-                html += `<button type="button" class="btn btn-sm" onclick="goToUtilPage('${tabKey}', ${p})" style="padding: 4px 10px; border-radius: 6px; font-weight: 600; ${btnStyle}">${p}</button>`;
-            } else if (p === state.page - 2 || p === state.page + 2) {
-                html += `<span style="padding: 4px 6px; color: var(--text-muted);">&hellip;</span>`;
-            }
+        calculatePreview();
+    }
+
+    function clearPreview() {
+        const elDien = document.getElementById('previewDien');
+        const elNuoc = document.getElementById('previewNuoc');
+        const elTong = document.getElementById('previewTongTien');
+        if (elDien) elDien.innerText = '';
+        if (elNuoc) elNuoc.innerText = '';
+        if (elTong) elTong.innerText = '';
+    }
+
+    function calculatePreview() {
+        const dienCu = parseInt(document.getElementById('inputDienCu').value) || 0;
+        const dienMoi = parseInt(document.getElementById('inputDienMoi').value);
+        const nuocCu = parseInt(document.getElementById('inputNuocCu').value) || 0;
+        const nuocMoi = parseInt(document.getElementById('inputNuocMoi').value);
+        const soSV = parseInt(document.getElementById('inputSoSV').value) || 1;
+
+        if (isNaN(dienMoi) && isNaN(nuocMoi)) {
+            clearPreview();
+            return;
         }
 
-        // Nút trang sau
-        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToUtilPage('${tabKey}', ${state.page + 1})" ${state.page === totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} style="padding: 4px 10px; border-radius: 6px;">Sau &raquo;</button>`;
+        let kwh = 0;
+        let m3 = 0;
 
-        navEl.innerHTML = html;
-    }
-}
-
-function goToUtilPage(tabKey, targetPage) {
-    const rowClass = `${tabKey}-row`;
-    const rows = document.querySelectorAll(`.${rowClass}`);
-    const totalPages = Math.max(1, Math.ceil(rows.length / utilPaginationState[tabKey].pageSize));
-
-    if (targetPage < 1 || targetPage > totalPages) return;
-    utilPaginationState[tabKey].page = targetPage;
-    renderUtilPagination(tabKey);
-}
-
-function changeUtilPageSize(tabKey, newSize) {
-    utilPaginationState[tabKey].pageSize = parseInt(newSize, 10) || 10;
-    utilPaginationState[tabKey].page = 1;
-    renderUtilPagination(tabKey);
-}
-
-// 2. Tự động điền dữ liệu phòng khi chọn
-function onRoomChanged(maPhong) {
-    if (!maPhong || !roomMeta[maPhong]) {
-        document.getElementById('inputDienCu').value = '';
-        document.getElementById('inputNuocCu').value = '';
-        document.getElementById('inputSoSV').value = '1';
-        clearPreview();
-        return;
-    }
-
-    const data = roomMeta[maPhong];
-    document.getElementById('inputDienCu').value = data.dienCu || 0;
-    document.getElementById('inputNuocCu').value = data.nuocCu || 0;
-    document.getElementById('inputSoSV').value = data.soSV || 1;
-
-    calculatePreview();
-}
-
-function clearPreview() {
-    const elDien = document.getElementById('previewDien');
-    const elNuoc = document.getElementById('previewNuoc');
-    const elTong = document.getElementById('previewTongTien');
-    if (elDien) elDien.innerText = '';
-    if (elNuoc) elNuoc.innerText = '';
-    if (elTong) elTong.innerText = '';
-}
-
-function calculatePreview() {
-    const dienCu = parseInt(document.getElementById('inputDienCu').value) || 0;
-    const dienMoi = parseInt(document.getElementById('inputDienMoi').value);
-    const nuocCu = parseInt(document.getElementById('inputNuocCu').value) || 0;
-    const nuocMoi = parseInt(document.getElementById('inputNuocMoi').value);
-    const soSV = parseInt(document.getElementById('inputSoSV').value) || 1;
-
-    if (isNaN(dienMoi) && isNaN(nuocMoi)) {
-        clearPreview();
-        return;
-    }
-
-    let kwh = 0;
-    let m3 = 0;
-
-    if (!isNaN(dienMoi)) {
-        if (dienMoi < dienCu) {
-            document.getElementById('previewDien').innerHTML = '<span style="color: #b91c1c; font-weight: 600;">⚠️ Điện mới < cũ!</span>';
-        } else {
-            kwh = dienMoi - dienCu;
-            document.getElementById('previewDien').innerHTML = `Tiêu thụ: <b>${kwh} kWh</b>`;
-        }
-    }
-
-    if (!isNaN(nuocMoi)) {
-        if (nuocMoi < nuocCu) {
-            document.getElementById('previewNuoc').innerHTML = '<span style="color: #b91c1c; font-weight: 600;">⚠️ Nước mới < cũ!</span>';
-        } else {
-            m3 = nuocMoi - nuocCu;
-            document.getElementById('previewNuoc').innerHTML = `Tiêu thụ: <b>${m3} m³</b>`;
-        }
-    }
-
-    if (kwh >= 0 && m3 >= 0 && (!isNaN(dienMoi) || !isNaN(nuocMoi))) {
-        // Ước tính sơ bộ: Nước 12.500 đ/m3 + Điện trung bình ~2.000 đ/kWh
-        const estTienNuoc = m3 * 12500;
-        let estTienDien = 0;
-        let rem = kwh;
-        const tiers = [
-            { limit: 50, price: 1806 },
-            { limit: 100, price: 1866 },
-            { limit: 200, price: 2167 },
-            { limit: 300, price: 2729 },
-            { limit: 400, price: 3050 },
-            { limit: 999999, price: 3151 }
-        ];
-        let prevLim = 0;
-        for (const t of tiers) {
-            const cap = t.limit - prevLim;
-            if (rem > cap) {
-                estTienDien += cap * t.price;
-                rem -= cap;
-                prevLim = t.limit;
+        if (!isNaN(dienMoi)) {
+            if (dienMoi < dienCu) {
+                document.getElementById('previewDien').innerHTML = '<span style="color: #b91c1c; font-weight: 600;">⚠️ Điện mới < cũ!</span>';
             } else {
-                estTienDien += rem * t.price;
-                break;
+                kwh = dienMoi - dienCu;
+                document.getElementById('previewDien').innerHTML = `Tiêu thụ: <b>${kwh} kWh</b>`;
             }
         }
 
-        const tong = estTienDien + estTienNuoc;
-        const perSV = soSV > 0 ? Math.round(tong / soSV) : 0;
-        document.getElementById('previewTongTien').innerHTML = `Dự kiến: <b>${tong.toLocaleString('vi-VN')} đ</b> (~${perSV.toLocaleString('vi-VN')} đ/SV)`;
+        if (!isNaN(nuocMoi)) {
+            if (nuocMoi < nuocCu) {
+                document.getElementById('previewNuoc').innerHTML = '<span style="color: #b91c1c; font-weight: 600;">⚠️ Nước mới < cũ!</span>';
+            } else {
+                m3 = nuocMoi - nuocCu;
+                document.getElementById('previewNuoc').innerHTML = `Tiêu thụ: <b>${m3} m³</b>`;
+            }
+        }
+
+        if (kwh >= 0 && m3 >= 0 && (!isNaN(dienMoi) || !isNaN(nuocMoi))) {
+            // Ước tính sơ bộ: Nước 12.500 đ/m3 + Điện trung bình ~2.000 đ/kWh
+            const estTienNuoc = m3 * 12500;
+            let estTienDien = 0;
+            let rem = kwh;
+            const tiers = [{
+                    limit: 50,
+                    price: 1806
+                },
+                {
+                    limit: 100,
+                    price: 1866
+                },
+                {
+                    limit: 200,
+                    price: 2167
+                },
+                {
+                    limit: 300,
+                    price: 2729
+                },
+                {
+                    limit: 400,
+                    price: 3050
+                },
+                {
+                    limit: 999999,
+                    price: 3151
+                }
+            ];
+            let prevLim = 0;
+            for (const t of tiers) {
+                const cap = t.limit - prevLim;
+                if (rem > cap) {
+                    estTienDien += cap * t.price;
+                    rem -= cap;
+                    prevLim = t.limit;
+                } else {
+                    estTienDien += rem * t.price;
+                    break;
+                }
+            }
+
+            const tong = estTienDien + estTienNuoc;
+            const perSV = soSV > 0 ? Math.round(tong / soSV) : 0;
+            document.getElementById('previewTongTien').innerHTML = `Dự kiến: <b>${tong.toLocaleString('vi-VN')} đ</b> (~${perSV.toLocaleString('vi-VN')} đ/SV)`;
+        }
     }
-}
 
-function validateReadingForm() {
-    const dienCu = parseInt(document.getElementById('inputDienCu').value) || 0;
-    const dienMoi = parseInt(document.getElementById('inputDienMoi').value);
-    const nuocCu = parseInt(document.getElementById('inputNuocCu').value) || 0;
-    const nuocMoi = parseInt(document.getElementById('inputNuocMoi').value);
+    function validateReadingForm() {
+        const dienCu = parseInt(document.getElementById('inputDienCu').value) || 0;
+        const dienMoi = parseInt(document.getElementById('inputDienMoi').value);
+        const nuocCu = parseInt(document.getElementById('inputNuocCu').value) || 0;
+        const nuocMoi = parseInt(document.getElementById('inputNuocMoi').value);
 
-    if (dienMoi < dienCu) {
-        alert('Lỗi: Chỉ số điện mới (' + dienMoi + ') không được nhỏ hơn chỉ số cũ (' + dienCu + ')!');
-        return false;
+        if (dienMoi < dienCu) {
+            alert('Lỗi: Chỉ số điện mới (' + dienMoi + ') không được nhỏ hơn chỉ số cũ (' + dienCu + ')!');
+            return false;
+        }
+
+        if (nuocMoi < nuocCu) {
+            alert('Lỗi: Chỉ số nước mới (' + nuocMoi + ') không được nhỏ hơn chỉ số cũ (' + nuocCu + ')!');
+            return false;
+        }
+
+        return true;
     }
 
-    if (nuocMoi < nuocCu) {
-        alert('Lỗi: Chỉ số nước mới (' + nuocMoi + ') không được nhỏ hơn chỉ số cũ (' + nuocCu + ')!');
-        return false;
+    // 3. Chuyển đổi Sub-Tabs & Cập nhật số đếm nút Xuất Excel
+    function updateExportButtonCount(tabKey) {
+        const btnText = document.getElementById('btnExportText');
+        if (!btnText) return;
+
+        let count = 0;
+        if (tabKey === 'invoices') {
+            count = document.querySelectorAll('.invoices-row').length;
+        } else if (tabKey === 'missing') {
+            count = document.querySelectorAll('.missing-row').length;
+        } else {
+            count = document.querySelectorAll('.readings-row').length;
+        }
+        btnText.innerText = `Xuất Excel (${count})`;
     }
 
-    return true;
-}
+    function switchUtilTab(tabKey) {
+        const input = document.getElementById('currentActiveTab');
+        if (input) input.value = tabKey;
 
-// 3. Chuyển đổi Sub-Tabs & Cập nhật số đếm nút Xuất Excel
-function updateExportButtonCount(tabKey) {
-    const btnText = document.getElementById('btnExportText');
-    if (!btnText) return;
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.style.color = 'var(--text-secondary)';
+            b.style.background = 'transparent';
+            b.style.fontWeight = '600';
+            b.classList.remove('active');
+        });
 
-    let count = 0;
-    if (tabKey === 'invoices') {
-        count = document.querySelectorAll('.invoices-row').length;
-    } else if (tabKey === 'missing') {
-        count = document.querySelectorAll('.missing-row').length;
-    } else {
-        count = document.querySelectorAll('.readings-row').length;
+        const readingsEl = document.getElementById('tabContentReadings');
+        const invoicesEl = document.getElementById('tabContentInvoices');
+        const missingEl = document.getElementById('tabContentMissing');
+
+        if (readingsEl) readingsEl.style.display = 'none';
+        if (invoicesEl) invoicesEl.style.display = 'none';
+        if (missingEl) missingEl.style.display = 'none';
+
+        if (tabKey === 'invoices') {
+            const btn = document.getElementById('tabBtnInvoices');
+            if (btn) {
+                btn.style.color = 'var(--primary)';
+                btn.style.background = '#eff6ff';
+                btn.style.fontWeight = '700';
+                btn.classList.add('active');
+            }
+            if (invoicesEl) invoicesEl.style.display = 'block';
+        } else if (tabKey === 'missing') {
+            const btn = document.getElementById('tabBtnMissing');
+            if (btn) {
+                btn.style.color = 'var(--primary)';
+                btn.style.background = '#eff6ff';
+                btn.style.fontWeight = '700';
+                btn.classList.add('active');
+            }
+            if (missingEl) missingEl.style.display = 'block';
+        } else {
+            const btn = document.getElementById('tabBtnReadings');
+            if (btn) {
+                btn.style.color = 'var(--primary)';
+                btn.style.background = '#eff6ff';
+                btn.style.fontWeight = '700';
+                btn.classList.add('active');
+            }
+            if (readingsEl) readingsEl.style.display = 'block';
+        }
+
+        updateExportButtonCount(tabKey);
     }
-    btnText.innerText = `Xuất Excel (${count})`;
-}
 
-function switchUtilTab(tabKey) {
-    const input = document.getElementById('currentActiveTab');
-    if (input) input.value = tabKey;
+    // 4. Quick Fill khi bấm "Ghi số ngay" từ Tab 3
+    function quickFillRoom(maPhong) {
+        switchUtilTab('readings');
+        const select = document.getElementById('selectPhong');
+        if (select) {
+            select.value = maPhong;
+            onRoomChanged(maPhong);
+        }
+        const formBox = document.getElementById('boxFormRecordReading');
+        if (formBox) {
+            formBox.scrollIntoView({
+                behavior: 'smooth'
+            });
+        }
+        const inpDien = document.getElementById('inputDienMoi');
+        if (inpDien) inpDien.focus();
+    }
 
-    document.querySelectorAll('.tab-btn').forEach(b => {
-        b.style.color = 'var(--text-secondary)';
-        b.style.background = 'transparent';
-        b.style.fontWeight = '600';
-        b.classList.remove('active');
+    // 5. Cascading Dropdown Handlers
+    function onKhuChange(khuVal) {
+        const cumSelect = document.getElementById('filterCumSelect');
+        const toaSelect = document.getElementById('filterToaSelect');
+        if (cumSelect) cumSelect.value = '';
+        if (toaSelect) toaSelect.value = '';
+        document.getElementById('filterFormUtilities').submit();
+    }
+
+    function onCumChange(cumVal) {
+        const toaSelect = document.getElementById('filterToaSelect');
+        if (toaSelect) toaSelect.value = '';
+        document.getElementById('filterFormUtilities').submit();
+    }
+
+    // 6. Xuất Excel
+    function exportUtilities() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const input = document.getElementById('currentActiveTab');
+        const currentTab = input ? input.value : 'readings';
+        urlParams.set('tab', currentTab);
+        window.location.href = '<?= url('staff/utilities/export') ?>?' + urlParams.toString();
+    }
+
+    // 7. Modals
+    function openImportModal() {
+        const modal = document.getElementById('modalImportUtilities');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    function closeImportModal() {
+        const modal = document.getElementById('modalImportUtilities');
+        if (modal) modal.style.display = 'none';
+    }
+
+    // Khởi chạy khi DOM sẵn sàng
+    document.addEventListener('DOMContentLoaded', function() {
+        renderUtilPagination('readings');
+        renderUtilPagination('invoices');
+        renderUtilPagination('missing');
+
+        const input = document.getElementById('currentActiveTab');
+        const initialTab = input ? input.value : 'readings';
+        updateExportButtonCount(initialTab);
     });
 
-    const readingsEl = document.getElementById('tabContentReadings');
-    const invoicesEl = document.getElementById('tabContentInvoices');
-    const missingEl = document.getElementById('tabContentMissing');
+    // ESC & Backdrop close
+    window.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImportModal();
+        }
+    });
 
-    if (readingsEl) readingsEl.style.display = 'none';
-    if (invoicesEl) invoicesEl.style.display = 'none';
-    if (missingEl) missingEl.style.display = 'none';
-
-    if (tabKey === 'invoices') {
-        const btn = document.getElementById('tabBtnInvoices');
-        if (btn) { btn.style.color = 'var(--primary)'; btn.style.background = '#eff6ff'; btn.style.fontWeight = '700'; btn.classList.add('active'); }
-        if (invoicesEl) invoicesEl.style.display = 'block';
-    } else if (tabKey === 'missing') {
-        const btn = document.getElementById('tabBtnMissing');
-        if (btn) { btn.style.color = 'var(--primary)'; btn.style.background = '#eff6ff'; btn.style.fontWeight = '700'; btn.classList.add('active'); }
-        if (missingEl) missingEl.style.display = 'block';
-    } else {
-        const btn = document.getElementById('tabBtnReadings');
-        if (btn) { btn.style.color = 'var(--primary)'; btn.style.background = '#eff6ff'; btn.style.fontWeight = '700'; btn.classList.add('active'); }
-        if (readingsEl) readingsEl.style.display = 'block';
-    }
-
-    updateExportButtonCount(tabKey);
-}
-
-// 4. Quick Fill khi bấm "Ghi số ngay" từ Tab 3
-function quickFillRoom(maPhong) {
-    switchUtilTab('readings');
-    const select = document.getElementById('selectPhong');
-    if (select) {
-        select.value = maPhong;
-        onRoomChanged(maPhong);
-    }
-    const formBox = document.getElementById('boxFormRecordReading');
-    if (formBox) {
-        formBox.scrollIntoView({ behavior: 'smooth' });
-    }
-    const inpDien = document.getElementById('inputDienMoi');
-    if (inpDien) inpDien.focus();
-}
-
-// 5. Cascading Dropdown Handlers
-function onKhuChange(khuVal) {
-    const cumSelect = document.getElementById('filterCumSelect');
-    const toaSelect = document.getElementById('filterToaSelect');
-    if (cumSelect) cumSelect.value = '';
-    if (toaSelect) toaSelect.value = '';
-    document.getElementById('filterFormUtilities').submit();
-}
-
-function onCumChange(cumVal) {
-    const toaSelect = document.getElementById('filterToaSelect');
-    if (toaSelect) toaSelect.value = '';
-    document.getElementById('filterFormUtilities').submit();
-}
-
-// 6. Xuất Excel
-function exportUtilities() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const input = document.getElementById('currentActiveTab');
-    const currentTab = input ? input.value : 'readings';
-    urlParams.set('tab', currentTab);
-    window.location.href = '<?= url('staff/utilities/export') ?>?' + urlParams.toString();
-}
-
-// 7. Modals
-function openImportModal() {
-    const modal = document.getElementById('modalImportUtilities');
-    if (modal) modal.style.display = 'flex';
-}
-
-function closeImportModal() {
-    const modal = document.getElementById('modalImportUtilities');
-    if (modal) modal.style.display = 'none';
-}
-
-// Khởi chạy khi DOM sẵn sàng
-document.addEventListener('DOMContentLoaded', function() {
-    renderUtilPagination('readings');
-    renderUtilPagination('invoices');
-    renderUtilPagination('missing');
-
-    const input = document.getElementById('currentActiveTab');
-    const initialTab = input ? input.value : 'readings';
-    updateExportButtonCount(initialTab);
-});
-
-// ESC & Backdrop close
-window.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeImportModal();
-    }
-});
-
-window.addEventListener('click', function(e) {
-    const importModal = document.getElementById('modalImportUtilities');
-    if (e.target === importModal) closeImportModal();
-});
+    window.addEventListener('click', function(e) {
+        const importModal = document.getElementById('modalImportUtilities');
+        if (e.target === importModal) closeImportModal();
+    });
 </script>
 
 <?php

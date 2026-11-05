@@ -114,7 +114,7 @@ class AutoReleaseService {
 
             Database::execute(
                 "UPDATE HoSoDangKy 
-                 SET TrangThaiHoSo = 'Đã từ chối',
+                 SET TrangThaiHoSo = 'Từ chối',
                      NguoiDuyet = :nguoiDuyet,
                      ThoiGianDuyet = NOW(),
                      GhiChuTuChoi = :lyDo
@@ -153,29 +153,31 @@ class AutoReleaseService {
     }
 
     /**
-     * Dịch vụ chạy ngầm (Background Worker / Cron Job):
+     * Dịch vụ chạy ngầm / Tự động hủy giữ chỗ khi quá hạn 72h (Background Worker / Auto-Release):
      * Quét toàn bộ hồ sơ 'Chờ thanh toán' đã quá HanChotThanhToan:
-     * - Đổi trạng thái sang 'Hết hạn - Đã hủy chỗ'
+     * - Đổi trạng thái sang 'Hết hạn thanh toán'
      * - Giải phóng giường về lại 'Trống'
+     * - Hủy hóa đơn lệ phí chưa thanh toán tương ứng
      */
     public static function scanAndReleaseExpiredBeds(): array {
         $now = date('Y-m-d H:i:s');
         $expiredRecords = Database::fetchAll(
             "SELECT * FROM HoSoDangKy 
-             WHERE TrangThaiHoSo = 'Chờ thanh toán' AND HanChotThanhToan < :now",
+             WHERE TrangThaiHoSo = 'Chờ thanh toán' AND (HanChotThanhToan < NOW() OR HanChotThanhToan < :now)",
             ['now' => $now]
         );
 
         $releasedCount = 0;
         $releasedBeds = [];
+        $releasedRecords = [];
 
         foreach ($expiredRecords as $rec) {
             Database::beginTransaction();
             try {
-                // 1. Cập nhật hồ sơ hết hạn
+                // 1. Cập nhật hồ sơ hết hạn (Dùng 'Hết hạn thanh toán' để thỏa mãn check constraint CSDL)
                 Database::execute(
                     "UPDATE HoSoDangKy 
-                     SET TrangThaiHoSo = 'Hết hạn - Đã hủy chỗ',
+                     SET TrangThaiHoSo = 'Hết hạn thanh toán',
                          GhiChuTuChoi = 'Tự động hủy do quá hạn 72 giờ thanh toán'
                      WHERE MaHoSo = :maHoSo",
                     ['maHoSo' => $rec['MaHoSo']]
@@ -198,8 +200,15 @@ class AutoReleaseService {
 
                 Database::commit();
                 $releasedCount++;
+                $releasedRecords[] = [
+                    'MaHoSo' => $rec['MaHoSo'],
+                    'MaSinhVien' => $rec['MaSinhVien'],
+                    'MaGiuong' => $rec['MaGiuong'] ?? '',
+                    'HanChotThanhToan' => $rec['HanChotThanhToan'] ?? ''
+                ];
             } catch (Exception $e) {
                 Database::rollBack();
+                error_log("Lỗi tự động giải phóng hồ sơ {$rec['MaHoSo']}: " . $e->getMessage());
             }
         }
 
@@ -207,6 +216,7 @@ class AutoReleaseService {
             'total_scanned' => count($expiredRecords),
             'total_released' => $releasedCount,
             'released_beds' => $releasedBeds,
+            'released_records' => $releasedRecords,
             'timestamp' => $now
         ];
     }

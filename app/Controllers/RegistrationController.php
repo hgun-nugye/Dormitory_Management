@@ -8,6 +8,7 @@ use App\Core\Request;
 use App\Core\Session;
 use App\Core\Auth;
 use App\Services\MailService;
+use App\Services\AutoReleaseService;
 use PDOException;
 
 class RegistrationController extends Controller
@@ -29,6 +30,9 @@ class RegistrationController extends Controller
 
     public function show(): void
     {
+        // Tự động giải phóng các giường quá hạn 72h để sinh viên mới có thể thấy phòng trống
+        AutoReleaseService::scanAndReleaseExpiredBeds();
+
         $user = Auth::user();
         $studentPrefill = null;
         if ($user) {
