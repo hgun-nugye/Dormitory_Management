@@ -7,100 +7,167 @@ use App\Core\Controller;
 use App\Core\Database;
 use App\Core\Request;
 use App\Core\Session;
-use App\Services\RoomConsolidationService;
-use App\Services\AttendanceDisciplineService;
+use App\Services\DashboardService;
 use App\Services\AutoReleaseService;
+use App\Services\AttendanceDisciplineService;
+use App\Services\RoomConsolidationService;
 
 /**
- * Controller: Bảng điều khiển Cán bộ BQL KTX (Staff Dashboard)
+ * Controller: Bảng điều khiển Trung tâm BQL KTX (Staff Dashboard)
  * View: views/staff/dashboard.php
  * 
- * Kiến trúc module hóa tách biệt theo từng nghiệp vụ:
- * - Hạ tầng KTX (Khu, Cụm, Tòa, Phòng): App\Controllers\Staff\ZoneController
- * - Quản lý Phòng & Giường nội trú: App\Controllers\Staff\RoomController
- * - Hồ sơ Đăng ký & Duyệt giữ chỗ: App\Controllers\Staff\ApplicationController
- * - Điện nước & Tiện ích: App\Controllers\Staff\UtilityController
- * - Yêu cầu sinh viên: App\Controllers\Staff\RequestController
- * - Quản lý Bảo trì & Sửa chữa: App\Controllers\Staff\MaintenanceController
- * - Kỷ luật & Điểm danh lưu trú: App\Controllers\Staff\DisciplineController
+ * Kiến trúc module hóa tích hợp đa tầng RBAC:
+ * - Admin / Giám đốc: Toàn cảnh 2 Khu A & B, dropdown lọc linh hoạt
+ * - Trưởng Khu: Giới hạn trong Khu A hoặc Khu B
+ * - Trưởng Cụm: Giới hạn trong Cụm nhà quản lý
+ * - Trưởng Tòa: Khóa cố định trong Tòa nhà trực tiếp
+ * - Kế toán: Dashboard Tài chính & Công nợ chuyên biệt
+ * - Kỹ thuật viên: Dashboard Nhiệm vụ sửa chữa cá nhân
+ * - An ninh: Dashboard Giám sát Barrier & Vắng mặt
+ * - Sinh viên / Trưởng phòng: Chặn 100% bằng Red Warning Card
  */
 class DashboardController extends Controller
 {
     /**
-     * Lấy mã Cụm quản lý của cán bộ đang đăng nhập
+     * Xác định phạm vi và quyền hạn của cán bộ trên Dashboard
      */
-    private function getMaCum(): string
+    public function getStaffScope(?array $user = null): array
     {
-        $user = Auth::user();
-        $maCum = 'AG';
-        if (!empty($user['profile']['HoVaTen'])) {
-            $cum = Database::fetch(
-                "SELECT MaCum FROM CumNha WHERE HoTenTruongCum = :name LIMIT 1",
-                ['name' => $user['profile']['HoVaTen']]
-            );
-            if ($cum) {
-                $maCum = $cum['MaCum'];
-            }
-        }
-        return $maCum;
+        return DashboardService::getStaffScope($user);
     }
 
     /**
-     * Màn hình tổng quan Bảng điều khiển Cán bộ KTX
+     * Màn hình tổng quan Bảng điều khiển Trung tâm BQL KTX
      */
     public function index(): void
     {
-        $user = Auth::user();
-        $maCum = $this->getMaCum();
+        $user = Auth::user() ?? [];
+        $scope = $this->getStaffScope($user);
 
-        // Hồ sơ chờ duyệt
-        $pendingApplications = [];
-        $consolidation = [];
-        $absenceWarnings = [];
-        $maintenanceTickets = [];
+        // Flash message
+        $flashSuccess = Session::flash('success');
+        $flashError = Session::flash('error');
 
-        try {
-            $pendingApplications = Database::fetchAll("
-                SELECT hs.*, sv.HoVaTen, sv.GioiTinh, g.MaPhong, t.TenTruong
-                FROM HoSoDangKy hs
-                JOIN SinhVien sv ON hs.MaSinhVien = sv.MaSinhVien
-                JOIN TruongDaiHoc t ON sv.MaTruong = t.MaTruong
-                JOIN Giuong g ON hs.MaGiuong = g.MaGiuong
-                JOIN Phong p ON g.MaPhong = p.MaPhong
-                JOIN ToaNha tn ON p.MaToaNha = tn.MaToaNha
-                WHERE hs.TrangThaiHoSo = 'Chờ duyệt' AND tn.MaCum = :cum
-                ORDER BY hs.ThoiGianNop ASC
-            ", ['cum' => $maCum]);
-
-            // Đề xuất dồn phòng (Chức năng 3)
-            $consolidation = RoomConsolidationService::getUnderOccupiedRooms($maCum);
-
-            // Cảnh báo vắng mặt 30 ngày (Chức năng 8)
-            $absenceWarnings = AttendanceDisciplineService::detectLongTermAbsence(30);
-
-            // Phiếu báo hỏng cần xử lý
-            $maintenanceTickets = Database::fetchAll("
-                SELECT pb.*, sv.HoVaTen AS NguoiBao, tb.TenThietBi, p.SoPhong, tn.TenToaNha
-                FROM PhieuBaoHong pb
-                JOIN SinhVien sv ON pb.MaSinhVienBao = sv.MaSinhVien
-                JOIN Phong p ON pb.MaPhong = p.MaPhong
-                JOIN ToaNha tn ON p.MaToaNha = tn.MaToaNha
-                LEFT JOIN ThietBiPhong tb ON pb.MaThietBi = tb.MaThietBi
-                WHERE tn.MaCum = :cum AND pb.TrangThaiSua IN ('Chờ tiếp nhận', 'Chờ xử lý')
-                ORDER BY pb.NgayBao DESC
-            ", ['cum' => $maCum]);
-        } catch (\Throwable $e) {
-            // Dữ liệu mẫu dự phòng nếu bảng chưa sẵn sàng
+        // 1. Nếu bị từ chối quyền truy cập (Sinh viên, Trưởng phòng, khách vãng lai)
+        if (!$scope['isAllowed']) {
+            $this->view('staff.dashboard', [
+                'user' => $user,
+                'scope' => $scope,
+                'isAllowed' => false,
+                'viewType' => 'blocked',
+                'flashSuccess' => $flashSuccess,
+                'flashError' => $flashError,
+            ]);
+            return;
         }
 
-        $this->view('staff.dashboard', [
+        // 2. Phân nhánh Kế toán & Tài chính
+        if (!empty($scope['isKeToan'])) {
+            $accountingData = DashboardService::getAccountingDashboardData();
+            $this->view('staff.dashboard', [
+                'user' => $user,
+                'scope' => $scope,
+                'isAllowed' => true,
+                'viewType' => 'accounting',
+                'accountingData' => $accountingData,
+                'flashSuccess' => $flashSuccess,
+                'flashError' => $flashError,
+            ]);
+            return;
+        }
+
+        // 3. Phân nhánh Kỹ thuật viên Sửa chữa
+        if (!empty($scope['isKyThuat'])) {
+            $technicalData = DashboardService::getTechnicalDashboardData($scope['userId'] ?? 0, $scope['maCum'] ?? null);
+            $this->view('staff.dashboard', [
+                'user' => $user,
+                'scope' => $scope,
+                'isAllowed' => true,
+                'viewType' => 'technical',
+                'technicalData' => $technicalData,
+                'flashSuccess' => $flashSuccess,
+                'flashError' => $flashError,
+            ]);
+            return;
+        }
+
+        // 4. Phân nhánh Cán bộ Quản lý (Admin, Trưởng Khu, Trưởng Cụm, Trưởng Tòa)
+        $filterKhu = trim($_GET['khu'] ?? '');
+        $filterCum = trim($_GET['cum'] ?? '');
+        $filterToa = trim($_GET['toa'] ?? '');
+
+        // Ràng buộc bảo mật RBAC với các tham số lọc URL
+        if ($scope['level'] === 'KHU') {
+            $filterKhu = $scope['maKhu'];
+        } elseif ($scope['level'] === 'CUM') {
+            $filterKhu = $scope['maKhu'];
+            $filterCum = $scope['maCum'];
+        } elseif ($scope['level'] === 'TOA') {
+            $filterKhu = $scope['maKhu'];
+            $filterCum = $scope['maCum'];
+            $filterToa = $scope['maToa'];
+        }
+
+        $dashboardData = DashboardService::getManagerDashboardData($scope, $filterKhu, $filterCum, $filterToa);
+
+        $this->view('staff.dashboard', array_merge([
             'user' => $user,
-            'maCum' => $maCum,
-            'pendingApplications' => $pendingApplications,
-            'consolidation' => $consolidation,
-            'absenceWarnings' => $absenceWarnings,
-            'maintenanceTickets' => $maintenanceTickets
-        ]);
+            'scope' => $scope,
+            'isAllowed' => true,
+            'viewType' => 'manager',
+            'flashSuccess' => $flashSuccess,
+            'flashError' => $flashError,
+        ], $dashboardData));
+    }
+
+    /**
+     * Thao tác thủ công: Kích hoạt đối soát thu hồi chỗ 72h
+     */
+    public function triggerRelease(): void
+    {
+        $user = Auth::user();
+        $scope = $this->getStaffScope($user);
+
+        if (!$scope['isAllowed']) {
+            Session::flash('error', 'Từ chối quyền: Bạn không có quyền chạy tác vụ này!');
+            $this->redirect('staff/dashboard');
+            return;
+        }
+
+        try {
+            $result = AutoReleaseService::scanAndReleaseExpiredBeds();
+            $released = $result['released'] ?? 0;
+            Session::flash('success', "Đã hoàn tất quét đối soát 72h: Thu hồi {$released} chỗ ở quá hạn thanh toán.");
+        } catch (\Throwable $e) {
+            Session::flash('error', "Lỗi khi quét đối soát: " . $e->getMessage());
+        }
+
+        $this->redirect('staff/dashboard');
+    }
+
+    /**
+     * Thao tác thủ công: Kích hoạt rà quét sinh viên vắng mặt 30 ngày
+     */
+    public function triggerAbsence(): void
+    {
+        $user = Auth::user();
+        $scope = $this->getStaffScope($user);
+
+        if (!$scope['isAllowed']) {
+            Session::flash('error', 'Từ chối quyền: Bạn không có quyền chạy tác vụ này!');
+            $this->redirect('staff/dashboard');
+            return;
+        }
+
+        try {
+            $result = AttendanceDisciplineService::detectLongTermAbsence(30);
+            $count = count($result['warnings'] ?? []);
+            Session::flash('success', "Đã hoàn tất quét điểm danh: Phát hiện {$count} trường hợp vắng mặt trên 30 ngày.");
+        } catch (\Throwable $e) {
+            Session::flash('error', "Lỗi khi quét vắng mặt: " . $e->getMessage());
+        }
+
+        $this->redirect('staff/dashboard');
     }
 
     // =========================================================================
@@ -109,7 +176,6 @@ class DashboardController extends Controller
 
     // Module Hạ tầng KTX (ZoneController)
     public function zones(): void { (new ZoneController())->zones(); }
-    public function getStaffScope(?array $user = null): array { return (new ZoneController())->getStaffScope($user); }
     public function saveToa(): void { (new ZoneController())->saveToa(); }
     public function deleteToa(): void { (new ZoneController())->deleteToa(); }
     public function saveCum(): void { (new ZoneController())->saveCum(); }
