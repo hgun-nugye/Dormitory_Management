@@ -128,6 +128,9 @@ Router::post('/staff/applications/reject', 'Staff\\ApplicationController@rejectA
 Router::post('/staff/applications/scan-release', 'Staff\\ApplicationController@scanRelease72h', [AuthMiddleware::class]);
 Router::post('/staff/applications/approve-miengiam', 'Staff\\ApplicationController@approveMienGiam', [AuthMiddleware::class]);
 Router::post('/staff/applications/reject-miengiam', 'Staff\\ApplicationController@rejectMienGiam', [AuthMiddleware::class]);
+Router::post('/staff/applications/create-period', 'Staff\\ApplicationController@createPeriod', [AuthMiddleware::class]);
+Router::post('/staff/applications/close-period', 'Staff\\ApplicationController@closePeriod', [AuthMiddleware::class]);
+Router::post('/staff/applications/extend-period', 'Staff\\ApplicationController@extendPeriod', [AuthMiddleware::class]);
 
 // Staff - Tiện ích, Yêu cầu, Bảo trì, Kỷ luật
 Router::get('/staff/utilities', 'Staff\\UtilityController@utilities', [AuthMiddleware::class]);

@@ -13,10 +13,10 @@ ob_start();
         </div>
         <div style="display: flex; gap: 8px;">
             <a href="<?= url('cron/trigger_release') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">
-                ⏱️ Đối soát thu hồi 72h
+                Đối soát thu hồi 72h
             </a>
             <a href="<?= url('cron/trigger_absence') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">
-                📋 Quét vắng mặt 30 ngày
+                Quét vắng mặt 30 ngày
             </a>
         </div>
     </div>
@@ -48,7 +48,7 @@ ob_start();
     <!-- KHỐI 1: XÉT DUYỆT HỒ SƠ ĐĂNG KÝ CHỖ Ở (TRONG CỤM PHỤ TRÁCH) -->
     <div class="card" style="margin-bottom: 24px;">
         <div class="card-title">
-            <span>1. Danh sách hồ sơ đăng ký chỗ ở chờ duyệt (Cụm <?= htmlspecialchars($maCum ?? 'AG') ?>)</span>
+            <span>Danh sách hồ sơ đăng ký chỗ ở chờ duyệt (Cụm <?= htmlspecialchars($maCum ?? 'AG') ?>)</span>
             <div style="display: flex; gap: 8px; align-items: center;">
                 <span class="badge badge-warning"><?= count($pendingApplications ?? []) ?> hồ sơ</span>
                 <a href="<?= url('staff/applications') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">Xem tất cả &rarr;</a>
@@ -82,12 +82,12 @@ ob_start();
                                     <form action="<?= url('staff/approve-application') ?>" method="POST" style="display:inline;">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="maHoSo" value="<?= htmlspecialchars($app['MaHoSo']) ?>">
-                                        <button type="submit" class="btn btn-primary btn-sm" style="border-radius: 6px;">
-                                            ✓ Duyệt giữ chỗ 72h
+                                        <button type="submit" class="btn btn-primary btn-sm" style="border-radius: 6px; font-weight: 600; padding: 5px 12px; display: inline-flex; align-items: center; gap: 4px;">
+                                            <i class="fa-solid fa-check"></i> Duyệt giữ chỗ 72h
                                         </button>
                                     </form>
-                                    <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px;" onclick="alert('Từ chối hồ sơ')">
-                                        ✕ Từ chối
+                                    <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px; font-weight: 600; padding: 5px 12px; display: inline-flex; align-items: center; gap: 4px; color: #dc2626; border-color: #fca5a5; background: #fff5f5;" onclick="alert('Từ chối hồ sơ')">
+                                        <i class="fa-solid fa-xmark"></i> Từ chối
                                     </button>
                                 </td>
                             </tr>
@@ -103,7 +103,7 @@ ob_start();
     <!-- KHỐI 2: TÌNH TRẠNG LƯU TRÚ & ĐỀ XUẤT DỒN PHÒNG (TRONG CỤM) -->
     <div class="card" style="margin-bottom: 24px;">
         <div class="card-title">
-            <span>2. Theo dõi công suất phòng & Đề xuất dồn phòng (Cụm <?= htmlspecialchars($maCum ?? 'AG') ?>)</span>
+            <span>Theo dõi công suất phòng & Đề xuất dồn phòng (Cụm <?= htmlspecialchars($maCum ?? 'AG') ?>)</span>
             <div style="display: flex; gap: 8px; align-items: center;">
                 <span class="badge badge-info"><?= count($consolidation ?? []) ?> phòng</span>
                 <a href="<?= url('staff/rooms') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">Xem sơ đồ phòng &rarr;</a>
@@ -155,7 +155,7 @@ ob_start();
     <!-- KHỐI 3: PHIẾU BÁO HỎNG & SỬA CHỮA THIẾT BỊ PHÒNG -->
     <div class="card" style="margin-bottom: 24px;">
         <div class="card-title">
-            <span>3. Xử lý phiếu báo hỏng thiết bị phòng (Cụm <?= htmlspecialchars($maCum ?? 'AG') ?>)</span>
+            <span>Xử lý phiếu báo hỏng thiết bị phòng (Cụm <?= htmlspecialchars($maCum ?? 'AG') ?>)</span>
             <div style="display: flex; gap: 8px; align-items: center;">
                 <span class="badge badge-danger"><?= count($maintenanceTickets ?? []) ?> phiếu</span>
                 <a href="<?= url('staff/maintenance') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">Xem chi tiết &rarr;</a>
@@ -188,8 +188,8 @@ ob_start();
                                     <span class="badge badge-warning"><?= htmlspecialchars($mb['TrangThaiSua']) ?></span>
                                 </td>
                                 <td style="text-align: right;">
-                                    <a href="<?= url('staff/maintenance') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">
-                                        🛠️ Tiếp nhận xử lý
+                                    <a href="<?= url('staff/maintenance') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-weight: 600; padding: 5px 12px; display: inline-flex; align-items: center; gap: 4px; color: #0284c7; border-color: #7dd3fc; background: #f0f9ff; text-decoration: none;">
+                                        <i class="fa-solid fa-wrench"></i> Tiếp nhận xử lý
                                     </a>
                                 </td>
                             </tr>
@@ -205,18 +205,18 @@ ob_start();
     <!-- KHỐI 4: GHI NHẬN CHỈ SỐ ĐIỆN NƯỚC ĐỊNH KỲ -->
     <div class="card">
         <div class="card-title">
-            <span>4. Ghi nhận chỉ số Điện - Nước định kỳ hàng tháng</span>
+            <span>Ghi nhận chỉ số Điện - Nước định kỳ hàng tháng</span>
             <a href="<?= url('staff/utilities') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px;">Vào phân hệ Điện Nước &rarr;</a>
         </div>
         <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">
             Nhập số đo công tơ ngày 25 hàng tháng cho các phòng thuộc cụm quản lý:
         </p>
         <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-            <a href="<?= url('staff/utilities') ?>" class="btn btn-primary" style="border-radius: 6px;">
-                ⚡ Nhập chỉ số Điện & Nước tháng này
+            <a href="<?= url('staff/utilities') ?>" class="btn btn-primary" style="height: 38px; border-radius: 8px; font-weight: 600; padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
+                <i class="fa-solid fa-bolt"></i> Nhập chỉ số Điện & Nước tháng này
             </a>
-            <button type="button" class="btn btn-outline" style="border-radius: 6px;" onclick="alert('Xuất danh sách chỉ số ra Excel')">
-                📥 Xuất bảng chỉ số cụm
+            <button type="button" class="btn btn-outline" style="height: 38px; border-radius: 8px; font-weight: 600; padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px;" onclick="alert('Xuất danh sách chỉ số ra Excel')">
+                <i class="fa-solid fa-file-excel"></i> Xuất bảng chỉ số cụm
             </button>
         </div>
     </div>

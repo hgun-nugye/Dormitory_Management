@@ -1,7 +1,7 @@
 <?php
 ob_start();
 
-$formatTenToa = function(?string $name, string $code = '') {
+$formatTenToa = function (?string $name, string $code = '') {
     $str = trim((string)($name ?: $code));
     $cleaned = preg_replace('/^(tòa\s*|toà\s*)+/ui', '', $str);
     return 'Tòa ' . (!empty($cleaned) ? $cleaned : $str);
@@ -37,9 +37,14 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                 </p>
             </div>
 
-            <!-- CÁC NÚT THAO TÁC HEADER (ĐỒNG BỘ ADMIN & ZONES: QUÉT 72H, IMPORT, EXPORT, VỀ DASHBOARD) -->
+            <!-- CÁC NÚT THAO TÁC HEADER (ĐỒNG BỘ STYLE TOÀN HỆ THỐNG) -->
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                 <?php if (!empty($isAllowed)): ?>
+                    <?php if (!empty($scope['level']) && $scope['level'] === 'ALL'): ?>
+                        <button type="button" class="btn btn-primary" onclick="openCreatePeriodModal()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px;" title="Tạo Đợt Đăng Ký Nội Trú Mới">
+                            <i class="fa-solid fa-calendar-plus"></i> Tạo đợt đăng ký
+                        </button>
+                    <?php endif; ?>
                     <?php if (!empty($scope['canScanRelease'])): ?>
                         <form action="<?= url('staff/applications/scan-release') ?>" method="POST" style="display: inline;" onsubmit="return confirm('Kích hoạt tiến trình ngầm kiểm tra và giải phóng toàn bộ các giường quá hạn thanh toán 72h?');">
                             <?= csrf_field() ?>
@@ -228,24 +233,31 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
         <!-- TABS ĐIỀU HƯỚNG SUB-TABS XÉT DUYỆT -->
         <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; flex-wrap: wrap;">
             <button type="button" class="tab-btn <?= ($activeTab === 'cho_duyet') ? 'active' : '' ?>" id="tabBtnPending" onclick="switchAppTab('cho_duyet')" style="background:none; border:none; padding: 10px 18px; font-size: 0.95rem; font-weight: 700; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'cho_duyet') ? 'var(--primary)' : 'var(--text-secondary)' ?>; background: <?= ($activeTab === 'cho_duyet') ? '#eff6ff' : 'transparent' ?>;">
-                <i class="fa-solid fa-clock" style="margin-right: 6px;"></i> 1. Chờ xét duyệt (24h)
+                Chờ xét duyệt (24h)
                 <span class="badge" style="font-size:0.75rem; margin-left:6px; padding:3px 8px; background: #fef3c7; color: #92400e; border: none; font-weight: 700;"><?= count($pendingApplications ?? []) ?></span>
             </button>
 
             <button type="button" class="tab-btn <?= ($activeTab === 'dang_giu_cho') ? 'active' : '' ?>" id="tabBtnActive72h" onclick="switchAppTab('dang_giu_cho')" style="background:none; border:none; padding: 10px 18px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'dang_giu_cho') ? 'var(--primary)' : 'var(--text-secondary)' ?>; background: <?= ($activeTab === 'dang_giu_cho') ? '#eff6ff' : 'transparent' ?>;">
-                <i class="fa-solid fa-hourglass-half" style="margin-right: 6px;"></i> 2. Đang giữ chỗ 72h
+                Đang giữ chỗ 72h
                 <span class="badge" style="font-size:0.75rem; margin-left:6px; padding:3px 8px; background: #dbeafe; color: #1e40af; border: none; font-weight: 700;"><?= count($active72hApplications ?? []) ?></span>
             </button>
 
             <button type="button" class="tab-btn <?= ($activeTab === 'lich_su') ? 'active' : '' ?>" id="tabBtnHistory" onclick="switchAppTab('lich_su')" style="background:none; border:none; padding: 10px 18px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'lich_su') ? 'var(--primary)' : 'var(--text-secondary)' ?>; background: <?= ($activeTab === 'lich_su') ? '#eff6ff' : 'transparent' ?>;">
-                <i class="fa-solid fa-clipboard-check" style="margin-right: 6px;"></i> 3. Lịch sử & Thu hồi 72h
+                Lịch sử & Thu hồi 72h
                 <span class="badge" style="font-size:0.75rem; margin-left:6px; padding:3px 8px; background: #f1f5f9; color: #475569; border: none; font-weight: 700;"><?= count($historyApplications ?? []) ?></span>
             </button>
 
             <button type="button" class="tab-btn <?= ($activeTab === 'mien_giam') ? 'active' : '' ?>" id="tabBtnMienGiam" onclick="switchAppTab('mien_giam')" style="background:none; border:none; padding: 10px 18px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'mien_giam') ? 'var(--primary)' : 'var(--text-secondary)' ?>; background: <?= ($activeTab === 'mien_giam') ? '#eff6ff' : 'transparent' ?>;">
-                <i class="fa-solid fa-certificate" style="margin-right: 6px;"></i> 4. Thẩm định Miễn giảm nội trú
+                Thẩm định Miễn giảm nội trú
                 <span class="badge" style="font-size:0.75rem; margin-left:6px; padding:3px 8px; background: #dcfce7; color: #166534; border: none; font-weight: 700;"><?= count($mienGiamList ?? []) ?></span>
             </button>
+
+            <?php if (!empty($scope['level']) && $scope['level'] === 'ALL'): ?>
+                <button type="button" class="tab-btn <?= ($activeTab === 'dot_dang_ky') ? 'active' : '' ?>" id="tabBtnDotDangKy" onclick="switchAppTab('dot_dang_ky')" style="background:none; border:none; padding: 10px 18px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'dot_dang_ky') ? 'var(--primary)' : 'var(--text-secondary)' ?>; background: <?= ($activeTab === 'dot_dang_ky') ? '#eff6ff' : 'transparent' ?>;">
+                    Quản lý Đợt Đăng Ký
+                    <span class="badge" style="font-size:0.75rem; margin-left:6px; padding:3px 8px; background: #e0e7ff; color: #4338ca; border: none; font-weight: 700;"><?= count($dotDangKyList ?? []) ?></span>
+                </button>
+            <?php endif; ?>
         </div>
 
         <!-- ===================================================================== -->
@@ -755,6 +767,139 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                         <div id="mienGiamPaginationControls" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;"></div>
                     </div>
                 <?php endif; ?>
+            </div>
+        </div>
+
+        <?php if (!empty($scope['level']) && $scope['level'] === 'ALL'): ?>
+            <!-- ===================================================================== -->
+            <!-- TAB 5: QUẢN LÝ ĐỢT ĐĂNG KÝ NỘI TRÚ (DÀNH RIÊNG QUẢN LÝ KTX / ADMIN)   -->
+            <!-- ===================================================================== -->
+            <div id="tabContentDotDangKy" style="display: <?= ($activeTab === 'dot_dang_ky') ? 'block' : 'none' ?>;">
+                <div class="card" style="margin-bottom: 24px; border-radius: 10px; border: 1px solid var(--border);">
+                    <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <span style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">Danh sách Đợt Đăng ký Chỗ ở KTX</span>
+                            <span style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-top: 2px;">Cấu hình thời gian mở/đóng cổng đăng ký của sinh viên và hạn định giữ chỗ thanh toán</span>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="openCreatePeriodModal()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; background: #2563eb; color: #fff;">
+                            <i class="fa-solid fa-calendar-plus" style="margin-right: 6px;"></i> Tạo đợt đăng ký mới
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table" id="tableDotDangKy">
+                            <thead>
+                                <tr>
+                                    <th>Mã đợt</th>
+                                    <th>Tên đợt đăng ký</th>
+                                    <th>Năm học</th>
+                                    <th>Thời gian mở cổng</th>
+                                    <th>Thời gian đóng cổng</th>
+                                    <th>Trạng thái cổng</th>
+                                    <th>Giữ chỗ</th>
+                                    <th>Tổng hồ sơ</th>
+                                    <th>Đã duyệt</th>
+                                    <th style="text-align: right; width: 200px;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (!empty($dotDangKyList)): ?>
+                                    <?php foreach ($dotDangKyList as $dot): ?>
+                                        <?php
+                                        $isOpening = ($dot['TrangThaiDot'] === 'Đang mở cổng');
+                                        $badgeColor = match ($dot['TrangThaiDot']) {
+                                            'Đang mở cổng' => '#16a34a',
+                                            'Sắp mở' => '#2563eb',
+                                            default => '#64748b'
+                                        };
+                                        $badgeBg = match ($dot['TrangThaiDot']) {
+                                            'Đang mở cổng' => '#dcfce7',
+                                            'Sắp mở' => '#dbeafe',
+                                            default => '#f1f5f9'
+                                        };
+                                        ?>
+                                        <tr>
+                                            <td>
+                                                <span style="font-weight: 700; color: var(--primary); font-family: monospace;">
+                                                    #<?= (int)$dot['MaDot'] ?>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">
+                                                    <?= htmlspecialchars($dot['TenDot']) ?>
+                                                </div>
+                                                <?php if (!empty($dot['MocKetThuc1']) || !empty($dot['MocKetThuc2'])): ?>
+                                                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                                                        <?= !empty($dot['MocKetThuc1']) ? ('Kỳ 1 đến: ' . date('d/m/Y', strtotime($dot['MocKetThuc1']))) : '' ?>
+                                                        <?= (!empty($dot['MocKetThuc1']) && !empty($dot['MocKetThuc2'])) ? ' &bull; ' : '' ?>
+                                                        <?= !empty($dot['MocKetThuc2']) ? ('Kỳ 2 đến: ' . date('d/m/Y', strtotime($dot['MocKetThuc2']))) : '' ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <span class="badge" style="background: #f8fafc; border: 1px solid #cbd5e1; color: #334155; font-weight: 600;">
+                                                    <?= htmlspecialchars($dot['NamHoc']) ?>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div style="font-size: 0.85rem; font-weight: 600; color: #0284c7;">
+                                                    <i class="fa-regular fa-clock" style="margin-right: 4px;"></i> <?= date('H:i - d/m/Y', strtotime($dot['ThoiGianMoCong'])) ?>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div style="font-size: 0.85rem; font-weight: 600; color: <?= $isOpening ? '#b91c1c' : '#64748b' ?>;">
+                                                    <i class="fa-regular fa-calendar-xmark" style="margin-right: 4px;"></i> <?= date('H:i - d/m/Y', strtotime($dot['ThoiGianDongCong'])) ?>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge" style="background: <?= $badgeBg ?>; color: <?= $badgeColor ?>; font-weight: 700; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 5px;">
+                                                    <?php if ($isOpening): ?>
+                                                        <span style="width: 8px; height: 8px; background: #16a34a; border-radius: 50%; display: inline-block;"></span>
+                                                    <?php endif; ?>
+                                                    <?= htmlspecialchars($dot['TrangThaiDot']) ?>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <b style="color: #4338ca;"><?= (int)$dot['SoGioGiuCho'] ?> giờ</b>
+                                            </td>
+                                            <td>
+                                                <span style="font-weight: 600; color: var(--text-primary);"><?= number_format($dot['TongHoSo'] ?? 0) ?></span>
+                                            </td>
+                                            <td>
+                                                <span style="font-weight: 600; color: #16a34a;"><?= number_format($dot['SoHoSoDaDuyet'] ?? 0) ?></span>
+                                            </td>
+                                            <td style="text-align: right;">
+                                                <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                                                    <?php if ($isOpening): ?>
+                                                        <form action="<?= url('staff/applications/close-period') ?>" method="POST" style="display: inline;" onsubmit="return confirm('Bạn có chắc chắn muốn ĐÓNG CỔNG đợt đăng ký này ngay lập tức? Cổng sẽ ngừng tiếp nhận hồ sơ sinh viên mới.');">
+                                                            <?= csrf_field() ?>
+                                                            <input type="hidden" name="maDot" value="<?= (int)$dot['MaDot'] ?>">
+                                                            <button type="submit" class="btn btn-outline btn-sm" style="color: #dc2626; border-color: #fca5a5; background: #fff5f5; border-radius: 6px; padding: 4px 8px; font-size: 0.8rem;" title="Đóng cổng tiếp nhận ngay lập tức">
+                                                                <i class="fa-solid fa-lock" style="margin-right: 4px;"></i> Đóng cổng
+                                                            </button>
+                                                        </form>
+                                                    <?php endif; ?>
+
+                                                    <button type="button" class="btn btn-outline btn-sm" onclick="openExtendModal(<?= (int)$dot['MaDot'] ?>, '<?= htmlspecialchars(addslashes($dot['TenDot'])) ?>', '<?= date('Y-m-d\TH:i', strtotime($dot['ThoiGianDongCong'])) ?>')" style="color: #2563eb; border-color: #bfdbfe; background: #eff6ff; border-radius: 6px; padding: 4px 8px; font-size: 0.8rem;" title="Gia hạn thời gian đóng cổng">
+                                                        <i class="fa-solid fa-clock-rotate-left" style="margin-right: 4px;"></i> Gia hạn
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="10" style="text-align: center; padding: 36px 16px; color: var(--text-muted);">
+                                            <div style="font-weight: 600; color: var(--text-secondary);">Chưa có đợt đăng ký nội trú nào trong hệ thống. Bấm nút "Tạo đợt đăng ký mới" để bắt đầu!</div>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
 
     <?php endif; ?>
 </div>
@@ -765,8 +910,8 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
 <div id="modalRejectApplication" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
     <div style="background: #ffffff; border-radius: 12px; max-width: 500px; width: 92%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); overflow: hidden; border: 1px solid #e2e8f0;">
         <div style="padding: 18px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #fef2f2;">
-            <h3 style="margin: 0; font-size: 1.15rem; color: #991b1b; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-triangle-exclamation"></i> Từ chối hồ sơ đăng ký chỗ ở
+            <h3 style="margin: 0; font-size: 1.15rem; color: #991b1b;">
+                Từ chối hồ sơ đăng ký chỗ ở
             </h3>
             <button type="button" onclick="closeRejectModal()" style="border: none; background: none; font-size: 1.4rem; color: #94a3b8; cursor: pointer;">&times;</button>
         </div>
@@ -805,8 +950,8 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
 <div id="modalCancelActive" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
     <div style="background: #ffffff; border-radius: 12px; max-width: 500px; width: 92%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); overflow: hidden; border: 1px solid #e2e8f0;">
         <div style="padding: 18px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #fffbeb;">
-            <h3 style="margin: 0; font-size: 1.15rem; color: #92400e; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-clock-rotate-left"></i> Hủy giữ chỗ 72h trước hạn
+            <h3 style="margin: 0; font-size: 1.15rem; color: #92400e;">
+                Hủy giữ chỗ 72h trước hạn
             </h3>
             <button type="button" onclick="closeCancelModal()" style="border: none; background: none; font-size: 1.4rem; color: #94a3b8; cursor: pointer;">&times;</button>
         </div>
@@ -838,9 +983,8 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
 <div id="modalImportApplications" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 20px 16px; box-sizing: border-box; overflow-y: auto;">
     <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 620px; max-height: calc(100vh - 40px); display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
         <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; flex-shrink: 0;">
-            <div style="font-size: 1.05rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-file-import" style="color: #2563eb; margin-right: 6px;"></i>
-                <span>Nhập danh sách Xét duyệt Đợt đăng ký từ file CSV</span>
+            <div style="font-size: 1.05rem; font-weight: 700; color: #1e293b;">
+                Nhập danh sách Xét duyệt Đợt đăng ký từ file CSV
             </div>
             <button type="button" onclick="closeImportModal()" style="background: none; border: none; font-size: 1.25rem; color: #64748b; cursor: pointer; padding: 4px;" title="Đóng">
                 <i class="fa-solid fa-xmark"></i>
@@ -889,268 +1033,464 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
     </div>
 </div>
 
+<!-- ========================================================================= -->
+<!-- MODAL: TẠO ĐỢT ĐĂNG KÝ NỘI TRÚ MỚI (DÀNH CHO QUẢN LÝ KTX)                -->
+<!-- ========================================================================= -->
+<div id="modalCreatePeriod" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); z-index: 999999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+    <div style="background: #ffffff; border-radius: 12px; max-width: 620px; width: 92%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); overflow: hidden; border: 1px solid #e2e8f0;">
+        <div style="padding: 18px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #eff6ff;">
+            <h3 style="margin: 0; font-size: 1.15rem; color: #1e40af;">
+                Tạo Đợt Đăng Ký Nội Trú Mới
+            </h3>
+            <button type="button" onclick="closeCreatePeriodModal()" style="border: none; background: transparent; font-size: 1.3rem; color: #64748b; cursor: pointer;">&times;</button>
+        </div>
+        <form action="<?= url('staff/applications/create-period') ?>" method="POST" style="padding: 24px;">
+            <?= csrf_field() ?>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; color: #334155; margin-bottom: 6px;">Tên đợt đăng ký <span style="color: #dc2626;">*</span></label>
+                    <input type="text" name="tenDot" class="form-control" placeholder="VD: Đăng ký nội trú Học kỳ 1 Năm học 2026-2027" required style="border-radius: 8px;">
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; color: #334155; margin-bottom: 6px;">Năm học <span style="color: #dc2626;">*</span></label>
+                    <input type="text" name="namHoc" class="form-control" placeholder="VD: 2026-2027" value="2026-2027" required style="border-radius: 8px;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; color: #334155; margin-bottom: 6px;">Thời gian mở cổng <span style="color: #dc2626;">*</span></label>
+                    <input type="datetime-local" name="thoiGianMoCong" class="form-control" required style="border-radius: 8px;">
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; color: #334155; margin-bottom: 6px;">Thời gian đóng cổng <span style="color: #dc2626;">*</span></label>
+                    <input type="datetime-local" name="thoiGianDongCong" class="form-control" required style="border-radius: 8px;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 18px;">
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; color: #334155; margin-bottom: 6px;">Mốc kết thúc K1</label>
+                    <input type="date" name="mocKetThuc1" class="form-control" style="border-radius: 8px;">
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; color: #334155; margin-bottom: 6px;">Mốc kết thúc K2</label>
+                    <input type="date" name="mocKetThuc2" class="form-control" style="border-radius: 8px;">
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; color: #334155; margin-bottom: 6px;">Giữ chỗ thanh toán</label>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <input type="number" name="soGioGiuCho" class="form-control" value="72" min="1" required style="border-radius: 8px;">
+                        <span style="font-size: 0.85rem; color: #64748b; font-weight: 600;">giờ</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; margin-bottom: 20px; font-size: 0.825rem; color: #64748b; line-height: 1.5;">
+                <i class="fa-solid fa-circle-info" style="color: #0284c7; margin-right: 4px;"></i>
+                <b>Ràng buộc hệ thống:</b> Thời gian đóng cổng phải sau thời gian mở cổng; cổng trực tuyến sẽ tự động đóng và chặn sinh viên nộp hồ sơ khi hết hạn đóng cổng.
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" onclick="closeCreatePeriodModal()" class="btn btn-outline" style="border-radius: 8px; padding: 8px 18px;">Hủy bỏ</button>
+                <button type="submit" class="btn btn-primary" style="border-radius: 8px; padding: 8px 22px; font-weight: 600; background: #2563eb; color: #fff;">
+                    <i class="fa-solid fa-check" style="margin-right: 6px;"></i> Xác nhận tạo đợt
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: GIA HẠN THỜI GIAN ĐÓNG CỔNG ĐỢT ĐĂNG KÝ                          -->
+<!-- ========================================================================= -->
+<div id="modalExtendPeriod" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); z-index: 999999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+    <div style="background: #ffffff; border-radius: 12px; max-width: 480px; width: 92%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); overflow: hidden; border: 1px solid #e2e8f0;">
+        <div style="padding: 18px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #eff6ff;">
+            <h3 style="margin: 0; font-size: 1.15rem; color: #1e40af;">
+                Gia Hạn Thời Gian Đóng Cổng
+            </h3>
+            <button type="button" onclick="closeExtendModal()" style="border: none; background: transparent; font-size: 1.3rem; color: #64748b; cursor: pointer;">&times;</button>
+        </div>
+        <form action="<?= url('staff/applications/extend-period') ?>" method="POST" style="padding: 24px;">
+            <?= csrf_field() ?>
+            <input type="hidden" name="maDot" id="extendMaDot">
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-weight: 600; font-size: 0.875rem; color: #334155; margin-bottom: 4px;">Đợt đăng ký:</label>
+                <div id="extendTenDotDisplay" style="font-weight: 700; color: #1e293b; font-size: 0.95rem;"></div>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; font-size: 0.875rem; color: #334155; margin-bottom: 6px;">Thời gian đóng cổng mới <span style="color: #dc2626;">*</span></label>
+                <input type="datetime-local" name="thoiGianDongCongMoi" id="extendDongCongInput" class="form-control" required style="border-radius: 8px;">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" onclick="closeExtendModal()" class="btn btn-outline" style="border-radius: 8px; padding: 8px 18px;">Hủy</button>
+                <button type="submit" class="btn btn-primary" style="border-radius: 8px; padding: 8px 22px; font-weight: 600; background: #2563eb; color: #fff;">
+                    Lưu gia hạn
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-// =========================================================================
-// QUẢN LÝ PHÂN TRANG CLIENT-SIDE CHO CÁC BẢNG (ĐỒNG BỘ UX NHƯ STAFF/ROOMS)
-// =========================================================================
-const appPaginationState = {
-    pending: { page: 1, pageSize: 10, rowClass: 'pending-row', barId: 'pendingPaginationBar', infoId: 'pendingPaginationInfo', sizeId: 'pendingPageSize', ctrlId: 'pendingPaginationControls', name: 'hồ sơ' },
-    active72h: { page: 1, pageSize: 10, rowClass: 'active72h-row', barId: 'active72hPaginationBar', infoId: 'active72hPaginationInfo', sizeId: 'active72hPageSize', ctrlId: 'active72hPaginationControls', name: 'hồ sơ' },
-    history: { page: 1, pageSize: 10, rowClass: 'history-row', barId: 'historyPaginationBar', infoId: 'historyPaginationInfo', sizeId: 'historyPageSize', ctrlId: 'historyPaginationControls', name: 'bản ghi' },
-    mienGiam: { page: 1, pageSize: 10, rowClass: 'mienGiam-row', barId: 'mienGiamPaginationBar', infoId: 'mienGiamPaginationInfo', sizeId: 'mienGiamPageSize', ctrlId: 'mienGiamPaginationControls', name: 'hồ sơ' }
-};
+    // =========================================================================
+    // QUẢN LÝ PHÂN TRANG CLIENT-SIDE CHO CÁC BẢNG (ĐỒNG BỘ UX NHƯ STAFF/ROOMS)
+    // =========================================================================
+    const appPaginationState = {
+        pending: {
+            page: 1,
+            pageSize: 10,
+            rowClass: 'pending-row',
+            barId: 'pendingPaginationBar',
+            infoId: 'pendingPaginationInfo',
+            sizeId: 'pendingPageSize',
+            ctrlId: 'pendingPaginationControls',
+            name: 'hồ sơ'
+        },
+        active72h: {
+            page: 1,
+            pageSize: 10,
+            rowClass: 'active72h-row',
+            barId: 'active72hPaginationBar',
+            infoId: 'active72hPaginationInfo',
+            sizeId: 'active72hPageSize',
+            ctrlId: 'active72hPaginationControls',
+            name: 'hồ sơ'
+        },
+        history: {
+            page: 1,
+            pageSize: 10,
+            rowClass: 'history-row',
+            barId: 'historyPaginationBar',
+            infoId: 'historyPaginationInfo',
+            sizeId: 'historyPageSize',
+            ctrlId: 'historyPaginationControls',
+            name: 'bản ghi'
+        },
+        mienGiam: {
+            page: 1,
+            pageSize: 10,
+            rowClass: 'mienGiam-row',
+            barId: 'mienGiamPaginationBar',
+            infoId: 'mienGiamPaginationInfo',
+            sizeId: 'mienGiamPageSize',
+            ctrlId: 'mienGiamPaginationControls',
+            name: 'hồ sơ'
+        }
+    };
 
-function renderAppPagination(tabKey) {
-    const state = appPaginationState[tabKey];
-    if (!state) return;
+    function renderAppPagination(tabKey) {
+        const state = appPaginationState[tabKey];
+        if (!state) return;
 
-    const rows = document.querySelectorAll('.' + state.rowClass);
-    const total = rows.length;
+        const rows = document.querySelectorAll('.' + state.rowClass);
+        const total = rows.length;
 
-    if (total === 0) {
-        const bar = document.getElementById(state.barId);
-        if (bar) bar.style.display = 'none';
-        return;
+        if (total === 0) {
+            const bar = document.getElementById(state.barId);
+            if (bar) bar.style.display = 'none';
+            return;
+        }
+
+        const pageSize = state.pageSize;
+        let totalPages = pageSize === -1 ? 1 : Math.ceil(total / pageSize);
+        if (totalPages < 1) totalPages = 1;
+
+        if (state.page > totalPages) state.page = totalPages;
+        if (state.page < 1) state.page = 1;
+
+        const startIdx = pageSize === -1 ? 0 : (state.page - 1) * pageSize;
+        const endIdx = pageSize === -1 ? total : startIdx + pageSize;
+
+        rows.forEach((row, idx) => {
+            if (idx >= startIdx && idx < endIdx) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        const infoEl = document.getElementById(state.infoId);
+        if (infoEl) {
+            const displayStart = startIdx + 1;
+            const displayEnd = Math.min(endIdx, total);
+            infoEl.innerHTML = `Hiển thị <b>${displayStart} - ${displayEnd}</b> trên tổng số <b>${total}</b> ${state.name} (Trang <b>${state.page}</b> / <b>${totalPages}</b>)`;
+        }
+
+        const controlsEl = document.getElementById(state.ctrlId);
+        if (!controlsEl) return;
+
+        if (totalPages <= 1) {
+            controlsEl.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+        const disabledFirst = state.page === 1 ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : `onclick="goToAppPage('${tabKey}', 1)" style="padding: 5px 9px; border-radius: 6px;"`;
+        html += `<button type="button" class="btn btn-outline btn-sm" ${disabledFirst} title="Trang đầu"><i class="fa-solid fa-angles-left"></i></button>`;
+
+        const disabledPrev = state.page === 1 ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : `onclick="goToAppPage('${tabKey}', ${state.page - 1})" style="padding: 5px 9px; border-radius: 6px;"`;
+        html += `<button type="button" class="btn btn-outline btn-sm" ${disabledPrev} title="Trang trước"><i class="fa-solid fa-angle-left"></i></button>`;
+
+        let startP = Math.max(1, state.page - 2);
+        let endP = Math.min(totalPages, state.page + 2);
+
+        if (startP > 1) {
+            html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToAppPage('${tabKey}', 1)" style="padding: 5px 10px; border-radius: 6px;">1</button>`;
+            if (startP > 2) html += `<span style="padding: 0 4px; color: var(--text-muted);">...</span>`;
+        }
+
+        for (let p = startP; p <= endP; p++) {
+            if (p === state.page) {
+                html += `<button type="button" class="btn btn-primary btn-sm" style="padding: 5px 10px; border-radius: 6px; font-weight: 700;">${p}</button>`;
+            } else {
+                html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToAppPage('${tabKey}', ${p})" style="padding: 5px 10px; border-radius: 6px;">${p}</button>`;
+            }
+        }
+
+        if (endP < totalPages) {
+            if (endP < totalPages - 1) html += `<span style="padding: 0 4px; color: var(--text-muted);">...</span>`;
+            html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToAppPage('${tabKey}', ${totalPages})" style="padding: 5px 10px; border-radius: 6px;">${totalPages}</button>`;
+        }
+
+        const disabledNext = state.page === totalPages ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : `onclick="goToAppPage('${tabKey}', ${state.page + 1})" style="padding: 5px 9px; border-radius: 6px;"`;
+        html += `<button type="button" class="btn btn-outline btn-sm" ${disabledNext} title="Trang sau"><i class="fa-solid fa-angle-left fa-rotate-180"></i></button>`;
+
+        const disabledLast = state.page === totalPages ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : `onclick="goToAppPage('${tabKey}', ${totalPages})" style="padding: 5px 9px; border-radius: 6px;"`;
+        html += `<button type="button" class="btn btn-outline btn-sm" ${disabledLast} title="Trang cuối"><i class="fa-solid fa-angles-right"></i></button>`;
+
+        controlsEl.innerHTML = html;
     }
 
-    const pageSize = state.pageSize;
-    let totalPages = pageSize === -1 ? 1 : Math.ceil(total / pageSize);
-    if (totalPages < 1) totalPages = 1;
+    function goToAppPage(tabKey, page) {
+        if (appPaginationState[tabKey]) {
+            appPaginationState[tabKey].page = page;
+            renderAppPagination(tabKey);
+        }
+    }
 
-    if (state.page > totalPages) state.page = totalPages;
-    if (state.page < 1) state.page = 1;
+    function changeAppPageSize(tabKey, size) {
+        if (appPaginationState[tabKey]) {
+            appPaginationState[tabKey].pageSize = parseInt(size, 10);
+            appPaginationState[tabKey].page = 1;
+            renderAppPagination(tabKey);
+        }
+    }
 
-    const startIdx = pageSize === -1 ? 0 : (state.page - 1) * pageSize;
-    const endIdx = pageSize === -1 ? total : startIdx + pageSize;
+    function updateExportButtonCount(tabName) {
+        const btnText = document.getElementById('btnExportText');
+        if (!btnText) return;
 
-    rows.forEach((row, idx) => {
-        if (idx >= startIdx && idx < endIdx) {
-            row.style.display = '';
+        let count = 0;
+        if (tabName === 'cho_duyet') {
+            count = document.querySelectorAll('.pending-row').length;
+        } else if (tabName === 'dang_giu_cho') {
+            count = document.querySelectorAll('.active72h-row').length;
+        } else if (tabName === 'lich_su') {
+            count = document.querySelectorAll('.history-row').length;
+        } else if (tabName === 'mien_giam') {
+            count = document.querySelectorAll('.mienGiam-row').length;
         } else {
-            row.style.display = 'none';
+            count = document.querySelectorAll('.pending-row, .active72h-row').length;
+        }
+        btnText.innerText = `Xuất Excel (${count})`;
+    }
+
+    function switchAppTab(tabName) {
+        const input = document.getElementById('currentActiveTab');
+        if (input) input.value = tabName;
+
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.style.color = 'var(--text-secondary)';
+            b.style.background = 'transparent';
+            b.classList.remove('active');
+        });
+
+        const pendingEl = document.getElementById('tabContentPending');
+        const activeEl = document.getElementById('tabContentActive72h');
+        const historyEl = document.getElementById('tabContentHistory');
+        const mienGiamEl = document.getElementById('tabContentMienGiam');
+        const dotDangKyEl = document.getElementById('tabContentDotDangKy');
+
+        if (pendingEl) pendingEl.style.display = 'none';
+        if (activeEl) activeEl.style.display = 'none';
+        if (historyEl) historyEl.style.display = 'none';
+        if (mienGiamEl) mienGiamEl.style.display = 'none';
+        if (dotDangKyEl) dotDangKyEl.style.display = 'none';
+
+        if (tabName === 'cho_duyet') {
+            const btn = document.getElementById('tabBtnPending');
+            if (btn) {
+                btn.style.color = 'var(--primary)';
+                btn.style.background = '#eff6ff';
+                btn.classList.add('active');
+            }
+            if (pendingEl) pendingEl.style.display = 'block';
+        } else if (tabName === 'dang_giu_cho') {
+            const btn = document.getElementById('tabBtnActive72h');
+            if (btn) {
+                btn.style.color = 'var(--primary)';
+                btn.style.background = '#eff6ff';
+                btn.classList.add('active');
+            }
+            if (activeEl) activeEl.style.display = 'block';
+        } else if (tabName === 'lich_su') {
+            const btn = document.getElementById('tabBtnHistory');
+            if (btn) {
+                btn.style.color = 'var(--primary)';
+                btn.style.background = '#eff6ff';
+                btn.classList.add('active');
+            }
+            if (historyEl) historyEl.style.display = 'block';
+        } else if (tabName === 'mien_giam') {
+            const btn = document.getElementById('tabBtnMienGiam');
+            if (btn) {
+                btn.style.color = 'var(--primary)';
+                btn.style.background = '#eff6ff';
+                btn.classList.add('active');
+            }
+            if (mienGiamEl) mienGiamEl.style.display = 'block';
+        } else if (tabName === 'dot_dang_ky') {
+            const btn = document.getElementById('tabBtnDotDangKy');
+            if (btn) {
+                btn.style.color = 'var(--primary)';
+                btn.style.background = '#eff6ff';
+                btn.classList.add('active');
+            }
+            if (dotDangKyEl) dotDangKyEl.style.display = 'block';
+        }
+
+        updateExportButtonCount(tabName);
+    }
+
+    function onKhuChange(khuVal) {
+        const cumSelect = document.getElementById('filterCumSelect');
+        const toaSelect = document.getElementById('filterToaSelect');
+        if (cumSelect) cumSelect.value = '';
+        if (toaSelect) toaSelect.value = '';
+        document.getElementById('filterFormApplications').submit();
+    }
+
+    function onCumChange(cumVal) {
+        const toaSelect = document.getElementById('filterToaSelect');
+        if (toaSelect) toaSelect.value = '';
+        document.getElementById('filterFormApplications').submit();
+    }
+
+    function openRejectModal(maHoSo, studentName) {
+        document.getElementById('modalRejectMaHoSo').value = maHoSo;
+        document.getElementById('modalRejectLabelMaHoSo').textContent = maHoSo;
+        document.getElementById('modalRejectStudentName').textContent = studentName;
+        document.getElementById('modalRejectLyDo').value = '';
+        document.getElementById('selectQuickReason').value = '';
+        document.getElementById('modalRejectApplication').style.display = 'flex';
+    }
+
+    function closeRejectModal() {
+        document.getElementById('modalRejectApplication').style.display = 'none';
+    }
+
+    function onQuickReasonChange(val) {
+        if (val) {
+            document.getElementById('modalRejectLyDo').value = val;
+        }
+    }
+
+    function openCancelModal(maHoSo, studentName) {
+        document.getElementById('modalCancelMaHoSo').value = maHoSo;
+        document.getElementById('modalCancelLabelMaHoSo').textContent = maHoSo;
+        document.getElementById('modalCancelStudentName').textContent = studentName;
+        document.getElementById('modalCancelActive').style.display = 'flex';
+    }
+
+    function closeCancelModal() {
+        document.getElementById('modalCancelActive').style.display = 'none';
+    }
+
+    function openImportModal() {
+        const modal = document.getElementById('modalImportApplications');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    function closeImportModal() {
+        const modal = document.getElementById('modalImportApplications');
+        if (modal) modal.style.display = 'none';
+    }
+
+    function openCreatePeriodModal() {
+        const modal = document.getElementById('modalCreatePeriod');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    function closeCreatePeriodModal() {
+        const modal = document.getElementById('modalCreatePeriod');
+        if (modal) modal.style.display = 'none';
+    }
+
+    function openExtendModal(maDot, tenDot, thoiGianDongCong) {
+        const inputMaDot = document.getElementById('extendMaDot');
+        const displayTenDot = document.getElementById('extendTenDotDisplay');
+        const inputDongCong = document.getElementById('extendDongCongInput');
+        if (inputMaDot) inputMaDot.value = maDot;
+        if (displayTenDot) displayTenDot.textContent = '#' + maDot + ' - ' + tenDot;
+        if (inputDongCong) inputDongCong.value = thoiGianDongCong;
+        const modal = document.getElementById('modalExtendPeriod');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    function closeExtendModal() {
+        const modal = document.getElementById('modalExtendPeriod');
+        if (modal) modal.style.display = 'none';
+    }
+
+    function exportApplications() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const input = document.getElementById('currentActiveTab');
+        const currentTab = input ? input.value : 'cho_duyet';
+        urlParams.set('tab', currentTab);
+        window.location.href = '<?= url('staff/applications/export') ?>?' + urlParams.toString();
+    }
+
+    // Khởi chạy phân trang và phím bấm
+    document.addEventListener('DOMContentLoaded', function() {
+        renderAppPagination('pending');
+        renderAppPagination('active72h');
+        renderAppPagination('history');
+        renderAppPagination('mienGiam');
+
+        const input = document.getElementById('currentActiveTab');
+        const initialTab = input ? input.value : 'cho_duyet';
+        updateExportButtonCount(initialTab);
+    });
+
+    // Đóng modal khi bấm Escape hoặc click ra backdrop
+    window.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImportModal();
+            closeRejectModal();
+            closeCancelModal();
+            closeCreatePeriodModal();
+            closeExtendModal();
         }
     });
 
-    const infoEl = document.getElementById(state.infoId);
-    if (infoEl) {
-        const displayStart = startIdx + 1;
-        const displayEnd = Math.min(endIdx, total);
-        infoEl.innerHTML = `Hiển thị <b>${displayStart} - ${displayEnd}</b> trên tổng số <b>${total}</b> ${state.name} (Trang <b>${state.page}</b> / <b>${totalPages}</b>)`;
-    }
+    window.addEventListener('click', function(e) {
+        const importModal = document.getElementById('modalImportApplications');
+        if (e.target === importModal) closeImportModal();
 
-    const controlsEl = document.getElementById(state.ctrlId);
-    if (!controlsEl) return;
+        const rejectModal = document.getElementById('modalRejectApplication');
+        if (e.target === rejectModal) closeRejectModal();
 
-    if (totalPages <= 1) {
-        controlsEl.innerHTML = '';
-        return;
-    }
+        const cancelModal = document.getElementById('modalCancelActive');
+        if (e.target === cancelModal) closeCancelModal();
 
-    let html = '';
-    const disabledFirst = state.page === 1 ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : `onclick="goToAppPage('${tabKey}', 1)" style="padding: 5px 9px; border-radius: 6px;"`;
-    html += `<button type="button" class="btn btn-outline btn-sm" ${disabledFirst} title="Trang đầu"><i class="fa-solid fa-angles-left"></i></button>`;
+        const createModal = document.getElementById('modalCreatePeriod');
+        if (e.target === createModal) closeCreatePeriodModal();
 
-    const disabledPrev = state.page === 1 ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : `onclick="goToAppPage('${tabKey}', ${state.page - 1})" style="padding: 5px 9px; border-radius: 6px;"`;
-    html += `<button type="button" class="btn btn-outline btn-sm" ${disabledPrev} title="Trang trước"><i class="fa-solid fa-angle-left"></i></button>`;
-
-    let startP = Math.max(1, state.page - 2);
-    let endP = Math.min(totalPages, state.page + 2);
-
-    if (startP > 1) {
-        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToAppPage('${tabKey}', 1)" style="padding: 5px 10px; border-radius: 6px;">1</button>`;
-        if (startP > 2) html += `<span style="padding: 0 4px; color: var(--text-muted);">...</span>`;
-    }
-
-    for (let p = startP; p <= endP; p++) {
-        if (p === state.page) {
-            html += `<button type="button" class="btn btn-primary btn-sm" style="padding: 5px 10px; border-radius: 6px; font-weight: 700;">${p}</button>`;
-        } else {
-            html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToAppPage('${tabKey}', ${p})" style="padding: 5px 10px; border-radius: 6px;">${p}</button>`;
-        }
-    }
-
-    if (endP < totalPages) {
-        if (endP < totalPages - 1) html += `<span style="padding: 0 4px; color: var(--text-muted);">...</span>`;
-        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToAppPage('${tabKey}', ${totalPages})" style="padding: 5px 10px; border-radius: 6px;">${totalPages}</button>`;
-    }
-
-    const disabledNext = state.page === totalPages ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : `onclick="goToAppPage('${tabKey}', ${state.page + 1})" style="padding: 5px 9px; border-radius: 6px;"`;
-    html += `<button type="button" class="btn btn-outline btn-sm" ${disabledNext} title="Trang sau"><i class="fa-solid fa-angle-left fa-rotate-180"></i></button>`;
-
-    const disabledLast = state.page === totalPages ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : `onclick="goToAppPage('${tabKey}', ${totalPages})" style="padding: 5px 9px; border-radius: 6px;"`;
-    html += `<button type="button" class="btn btn-outline btn-sm" ${disabledLast} title="Trang cuối"><i class="fa-solid fa-angles-right"></i></button>`;
-
-    controlsEl.innerHTML = html;
-}
-
-function goToAppPage(tabKey, page) {
-    if (appPaginationState[tabKey]) {
-        appPaginationState[tabKey].page = page;
-        renderAppPagination(tabKey);
-    }
-}
-
-function changeAppPageSize(tabKey, size) {
-    if (appPaginationState[tabKey]) {
-        appPaginationState[tabKey].pageSize = parseInt(size, 10);
-        appPaginationState[tabKey].page = 1;
-        renderAppPagination(tabKey);
-    }
-}
-
-function updateExportButtonCount(tabName) {
-    const btnText = document.getElementById('btnExportText');
-    if (!btnText) return;
-
-    let count = 0;
-    if (tabName === 'cho_duyet') {
-        count = document.querySelectorAll('.pending-row').length;
-    } else if (tabName === 'dang_giu_cho') {
-        count = document.querySelectorAll('.active72h-row').length;
-    } else if (tabName === 'lich_su') {
-        count = document.querySelectorAll('.history-row').length;
-    } else if (tabName === 'mien_giam') {
-        count = document.querySelectorAll('.mienGiam-row').length;
-    } else {
-        count = document.querySelectorAll('.pending-row, .active72h-row').length;
-    }
-    btnText.innerText = `Xuất Excel (${count})`;
-}
-
-function switchAppTab(tabName) {
-    const input = document.getElementById('currentActiveTab');
-    if (input) input.value = tabName;
-
-    document.querySelectorAll('.tab-btn').forEach(b => {
-        b.style.color = 'var(--text-secondary)';
-        b.style.background = 'transparent';
-        b.classList.remove('active');
+        const extendModal = document.getElementById('modalExtendPeriod');
+        if (e.target === extendModal) closeExtendModal();
     });
-
-    const pendingEl = document.getElementById('tabContentPending');
-    const activeEl = document.getElementById('tabContentActive72h');
-    const historyEl = document.getElementById('tabContentHistory');
-    const mienGiamEl = document.getElementById('tabContentMienGiam');
-
-    if (pendingEl) pendingEl.style.display = 'none';
-    if (activeEl) activeEl.style.display = 'none';
-    if (historyEl) historyEl.style.display = 'none';
-    if (mienGiamEl) mienGiamEl.style.display = 'none';
-
-    if (tabName === 'cho_duyet') {
-        const btn = document.getElementById('tabBtnPending');
-        if (btn) { btn.style.color = 'var(--primary)'; btn.style.background = '#eff6ff'; btn.classList.add('active'); }
-        if (pendingEl) pendingEl.style.display = 'block';
-    } else if (tabName === 'dang_giu_cho') {
-        const btn = document.getElementById('tabBtnActive72h');
-        if (btn) { btn.style.color = 'var(--primary)'; btn.style.background = '#eff6ff'; btn.classList.add('active'); }
-        if (activeEl) activeEl.style.display = 'block';
-    } else if (tabName === 'lich_su') {
-        const btn = document.getElementById('tabBtnHistory');
-        if (btn) { btn.style.color = 'var(--primary)'; btn.style.background = '#eff6ff'; btn.classList.add('active'); }
-        if (historyEl) historyEl.style.display = 'block';
-    } else if (tabName === 'mien_giam') {
-        const btn = document.getElementById('tabBtnMienGiam');
-        if (btn) { btn.style.color = 'var(--primary)'; btn.style.background = '#eff6ff'; btn.classList.add('active'); }
-        if (mienGiamEl) mienGiamEl.style.display = 'block';
-    }
-
-    updateExportButtonCount(tabName);
-}
-
-function onKhuChange(khuVal) {
-    const cumSelect = document.getElementById('filterCumSelect');
-    const toaSelect = document.getElementById('filterToaSelect');
-    if (cumSelect) cumSelect.value = '';
-    if (toaSelect) toaSelect.value = '';
-    document.getElementById('filterFormApplications').submit();
-}
-
-function onCumChange(cumVal) {
-    const toaSelect = document.getElementById('filterToaSelect');
-    if (toaSelect) toaSelect.value = '';
-    document.getElementById('filterFormApplications').submit();
-}
-
-function openRejectModal(maHoSo, studentName) {
-    document.getElementById('modalRejectMaHoSo').value = maHoSo;
-    document.getElementById('modalRejectLabelMaHoSo').textContent = maHoSo;
-    document.getElementById('modalRejectStudentName').textContent = studentName;
-    document.getElementById('modalRejectLyDo').value = '';
-    document.getElementById('selectQuickReason').value = '';
-    document.getElementById('modalRejectApplication').style.display = 'flex';
-}
-
-function closeRejectModal() {
-    document.getElementById('modalRejectApplication').style.display = 'none';
-}
-
-function onQuickReasonChange(val) {
-    if (val) {
-        document.getElementById('modalRejectLyDo').value = val;
-    }
-}
-
-function openCancelModal(maHoSo, studentName) {
-    document.getElementById('modalCancelMaHoSo').value = maHoSo;
-    document.getElementById('modalCancelLabelMaHoSo').textContent = maHoSo;
-    document.getElementById('modalCancelStudentName').textContent = studentName;
-    document.getElementById('modalCancelActive').style.display = 'flex';
-}
-
-function closeCancelModal() {
-    document.getElementById('modalCancelActive').style.display = 'none';
-}
-
-function openImportModal() {
-    const modal = document.getElementById('modalImportApplications');
-    if (modal) modal.style.display = 'flex';
-}
-
-function closeImportModal() {
-    const modal = document.getElementById('modalImportApplications');
-    if (modal) modal.style.display = 'none';
-}
-
-function exportApplications() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const input = document.getElementById('currentActiveTab');
-    const currentTab = input ? input.value : 'cho_duyet';
-    urlParams.set('tab', currentTab);
-    window.location.href = '<?= url('staff/applications/export') ?>?' + urlParams.toString();
-}
-
-// Khởi chạy phân trang và phím bấm
-document.addEventListener('DOMContentLoaded', function() {
-    renderAppPagination('pending');
-    renderAppPagination('active72h');
-    renderAppPagination('history');
-    renderAppPagination('mienGiam');
-
-    const input = document.getElementById('currentActiveTab');
-    const initialTab = input ? input.value : 'cho_duyet';
-    updateExportButtonCount(initialTab);
-});
-
-// Đóng modal khi bấm Escape hoặc click ra backdrop
-window.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeImportModal();
-        closeRejectModal();
-        closeCancelModal();
-    }
-});
-
-window.addEventListener('click', function(e) {
-    const importModal = document.getElementById('modalImportApplications');
-    if (e.target === importModal) closeImportModal();
-
-    const rejectModal = document.getElementById('modalRejectApplication');
-    if (e.target === rejectModal) closeRejectModal();
-
-    const cancelModal = document.getElementById('modalCancelActive');
-    if (e.target === cancelModal) closeCancelModal();
-});
 </script>
 
 <?php
