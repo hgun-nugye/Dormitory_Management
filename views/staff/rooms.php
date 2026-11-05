@@ -38,24 +38,24 @@ $isAllToas = $isAllToas ?? empty($filterToa);
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                 <?php if (!empty($isAllowed)): ?>
                     <?php if (!empty($canCrudPhong)): ?>
-                        <button type="button" class="btn btn-primary" id="btnToggleAddRoom" onclick="toggleRoomForm()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center;">
-                            <i class="fa-solid fa-plus" style="margin-right: 6px;"></i> Thêm phòng mới
+                        <button type="button" class="btn btn-primary" id="btnToggleAddRoom" onclick="toggleRoomForm()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                            <i class="fa-solid fa-plus"></i> Thêm phòng mới
                         </button>
-                        <button type="button" class="btn btn-outline" onclick="openImportRoomModal()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; color: #2563eb; border-color: #bfdbfe; background: #eff6ff;" title="Nhập danh sách phòng từ file CSV">
-                            <i class="fa-solid fa-file-import" style="margin-right: 6px; color: #2563eb;"></i> Nhập file
+                        <button type="button" class="btn btn-outline" onclick="openImportRoomModal()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #2563eb; border-color: #bfdbfe; background: #eff6ff;" title="Nhập danh sách phòng từ file CSV">
+                            <i class="fa-solid fa-file-import" style="color: #2563eb;"></i> Nhập file
                         </button>
                     <?php endif; ?>
-                    <button type="button" class="btn btn-outline" id="btnExportRooms" onclick="exportFilteredRooms()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; color: #15803d; border-color: #86efac; background: #f0fdf4; cursor: pointer;" title="Xuất danh sách phòng theo kết quả lọc ra Excel/CSV">
-                        <i class="fa-solid fa-file-excel" style="margin-right: 6px; color: #16a34a;"></i> <span id="btnExportText">Xuất Excel (<?= count($phongList ?? []) ?>)</span>
+                    <button type="button" class="btn btn-outline" id="btnExportRooms" onclick="exportFilteredRooms()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #15803d; border-color: #86efac; background: #f0fdf4; cursor: pointer;" title="Xuất danh sách phòng theo kết quả lọc ra Excel/CSV">
+                        <i class="fa-solid fa-file-excel" style="color: #16a34a;"></i> <span id="btnExportText">Xuất Excel (<?= count($phongList ?? []) ?>)</span>
                     </button>
                     <?php if (!empty($canUpdateToa)): ?>
-                        <button type="button" class="btn btn-outline" onclick="openUpdateToaModal()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; color: #4338ca; border-color: #c7d2fe; background: #eef2ff;" title="Cập nhật thông tin Tòa nhà (Tên, Giới tính, Trạng thái)">
-                            <i class="fa-solid fa-gear" style="margin-right: 6px; color: #4f46e5;"></i> Cập nhật Tòa nhà
+                        <button type="button" class="btn btn-outline" onclick="openUpdateToaModal()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #4338ca; border-color: #c7d2fe; background: #eef2ff;" title="Cập nhật thông tin Tòa nhà (Tên, Giới tính, Trạng thái)">
+                            <i class="fa-solid fa-gear" style="color: #4f46e5;"></i> Cập nhật Tòa nhà
                         </button>
                     <?php endif; ?>
                 <?php endif; ?>
-                <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 6px 14px;">
-                    <i class="fa-solid fa-arrow-left" style="margin-right: 6px;"></i> Về Dashboard
+                <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="fa-solid fa-arrow-left"></i> Về Dashboard
                 </a>
             </div>
         </div>
@@ -717,9 +717,8 @@ $isAllToas = $isAllToas ?? empty($filterToa);
         <div id="importRoomModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 20px 16px; box-sizing: border-box; overflow-y: auto;">
             <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 620px; max-height: calc(100vh - 40px); display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
                 <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; flex-shrink: 0;">
-                    <div style="font-size: 1.05rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                        <i class="fa-solid fa-file-import" style="color: #2563eb; margin-right: 6px;"></i>
-                        <span>Nhập danh sách Phòng ở từ file CSV</span>
+                    <div style="font-size: 1.05rem; font-weight: 700; color: #1e293b;">
+                        Nhập danh sách Phòng ở từ file CSV
                     </div>
                     <button type="button" onclick="closeImportRoomModal()" style="background: none; border: none; font-size: 1.25rem; color: #64748b; cursor: pointer; padding: 4px;" title="Đóng">
                         <i class="fa-solid fa-xmark"></i>
@@ -773,11 +772,11 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     </div>
 
                     <div style="padding: 14px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
-                        <button type="button" class="btn btn-outline" onclick="closeImportRoomModal()" style="border-radius: 6px; padding: 8px 18px;">
+                        <button type="button" class="btn btn-outline" onclick="closeImportRoomModal()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 18px;">
                             Hủy bỏ
                         </button>
-                        <button type="submit" class="btn btn-primary" style="border-radius: 6px; padding: 8px 20px; font-weight: 600;">
-                            <i class="fa-solid fa-file-import" style="margin-right: 6px;"></i> Bắt đầu nhập dữ liệu
+                        <button type="submit" class="btn btn-primary" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 20px; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-file-import"></i> Bắt đầu nhập dữ liệu
                         </button>
                     </div>
                 </form>
@@ -791,8 +790,7 @@ $isAllToas = $isAllToas ?? empty($filterToa);
             <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 1000px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
                 <!-- Header -->
                 <div style="padding: 16px 22px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc;">
-                    <div style="font-size: 1.1rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                        <i class="fa-solid fa-bed" style="color: var(--primary);"></i>
+                    <div style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">
                         <span>Chi tiết Giường & Sinh viên cư trú - Phòng <span id="modalBedRoomCode" style="color: var(--primary);"></span></span>
                     </div>
                     <button type="button" onclick="closeBedDetailModal()" style="background: none; border: none; font-size: 1.25rem; color: #64748b; cursor: pointer; padding: 4px;" title="Đóng">
@@ -872,8 +870,8 @@ $isAllToas = $isAllToas ?? empty($filterToa);
         <div id="modalDeleteRoom" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); z-index: 999999; align-items: center; justify-content: center; padding: 16px;">
             <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 480px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); overflow: hidden; margin: auto;">
                 <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #fef2f2;">
-                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #991b1b; display: flex; align-items: center; gap: 8px;">
-                        <i class="fa-solid fa-triangle-exclamation"></i> Xác nhận Xóa Phòng
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #991b1b;">
+                        Xác nhận Xóa Phòng
                     </h3>
                     <button type="button" onclick="closeModal('modalDeleteRoom')" style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #64748b;">&times;</button>
                 </div>
@@ -891,9 +889,9 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     </div>
 
                     <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                        <button type="button" class="btn btn-outline" onclick="closeModal('modalDeleteRoom')" style="border-radius: 6px; padding: 8px 16px;">Hủy</button>
-                        <button type="submit" class="btn btn-danger" style="border-radius: 6px; padding: 8px 18px; font-weight: 600; background: #dc2626; color: #fff;">
-                            <i class="fa-solid fa-trash-can" style="margin-right: 6px;"></i> Xác nhận Xóa
+                        <button type="button" class="btn btn-outline" onclick="closeModal('modalDeleteRoom')" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px;">Hủy</button>
+                        <button type="submit" class="btn btn-danger" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 18px; background: #dc2626; color: #fff; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-trash-can"></i> Xác nhận Xóa
                         </button>
                     </div>
                 </form>
@@ -904,8 +902,8 @@ $isAllToas = $isAllToas ?? empty($filterToa);
         <div id="modalRemoveStudent" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(2px); z-index: 1000001; align-items: center; justify-content: center; padding: 16px;">
             <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); overflow: hidden; margin: auto; border: 1px solid #fecaca;">
                 <div style="padding: 16px 20px; border-bottom: 1px solid #fee2e2; display: flex; justify-content: space-between; align-items: center; background: #fef2f2;">
-                    <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #991b1b; display: flex; align-items: center; gap: 8px;">
-                        <i class="fa-solid fa-user-xmark" style="color: #dc2626;"></i> Xác nhận Xóa Sinh viên khỏi Giường
+                    <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #991b1b;">
+                        Xác nhận Xóa Sinh viên khỏi Giường
                     </h3>
                     <button type="button" onclick="closeModal('modalRemoveStudent')" style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #64748b; line-height: 1;">&times;</button>
                 </div>
@@ -939,11 +937,11 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     </div>
 
                     <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                        <button type="button" class="btn btn-outline" onclick="closeModal('modalRemoveStudent')" style="border-radius: 6px; padding: 8px 16px;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('modalRemoveStudent')" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px;">
                             Hủy bỏ
                         </button>
-                        <button type="submit" class="btn btn-danger" style="border-radius: 6px; padding: 8px 18px; font-weight: 600; background: #dc2626; color: #fff;">
-                            <i class="fa-solid fa-user-minus" style="margin-right: 6px;"></i> Xác nhận Xóa SV
+                        <button type="submit" class="btn btn-danger" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 18px; background: #dc2626; color: #fff; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-user-minus"></i> Xác nhận Xóa SV
                         </button>
                     </div>
                 </form>
@@ -956,8 +954,7 @@ $isAllToas = $isAllToas ?? empty($filterToa);
         <div id="modalUpdateToa" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 20px 16px; box-sizing: border-box;">
             <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 540px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
                 <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc;">
-                    <div style="font-size: 1.05rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                        <i class="fa-solid fa-building" style="color: #4f46e5; margin-right: 6px;"></i>
+                    <div style="font-size: 1.05rem; font-weight: 700; color: #1e293b;">
                         <span>Cập nhật Thông tin Tòa nhà</span>
                     </div>
                     <button type="button" onclick="closeModal('modalUpdateToa')" style="background: none; border: none; font-size: 1.25rem; color: #64748b; cursor: pointer; padding: 4px;" title="Đóng">
@@ -1019,11 +1016,11 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     </div>
 
                     <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                        <button type="button" class="btn btn-outline" onclick="closeModal('modalUpdateToa')" style="border-radius: 6px; padding: 9px 18px;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('modalUpdateToa')" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 18px;">
                             Hủy bỏ
                         </button>
-                        <button type="submit" class="btn btn-primary" style="border-radius: 6px; padding: 9px 20px; font-weight: 600;">
-                            <i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i> Lưu cập nhật Tòa nhà
+                        <button type="submit" class="btn btn-primary" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 20px; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-floppy-disk"></i> Lưu cập nhật Tòa nhà
                         </button>
                     </div>
                 </form>

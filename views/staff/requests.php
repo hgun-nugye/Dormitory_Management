@@ -59,13 +59,13 @@ function renderRequestReason(?string $rawReason): void
             <!-- CÁC NÚT THAO TÁC HEADER (ĐỒNG BỘ ADMIN & ROOMS) -->
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                 <?php if (!empty($isAllowed)): ?>
-                    <button type="button" class="btn btn-outline" onclick="exportRequests()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; color: #15803d; border-color: #86efac; background: #f0fdf4; cursor: pointer;" title="Xuất dữ liệu theo tab đang xem ra Excel/CSV">
+                    <button type="button" class="btn btn-outline" onclick="exportRequests()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #15803d; border-color: #86efac; background: #f0fdf4; cursor: pointer;" title="Xuất dữ liệu theo tab đang xem ra Excel/CSV">
                         <i class="fa-solid fa-file-excel" style="color: #16a34a;"></i> <span id="btnExportText">Xuất Excel (<?= count($pendingRequests ?? []) ?>)</span>
                     </button>
                 <?php endif; ?>
 
-                <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 6px 14px;">
-                    <i class="fa-solid fa-arrow-left" style="margin-right: 6px;"></i> Về Dashboard
+                <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="fa-solid fa-arrow-left"></i> Về Dashboard
                 </a>
             </div>
         </div>
@@ -262,12 +262,9 @@ function renderRequestReason(?string $rawReason): void
                     </select>
 
                     <!-- Nút Lọc & Nút Xóa bộ lọc -->
-                    <button type="submit" class="btn btn-primary btn-sm" style="border-radius: 6px; height: 38px; padding: 0 16px; font-weight: 600;">
-                        Lọc
-                    </button>
                     <?php if (!empty($searchTerm) || $selectedType !== 'all' || $selectedStatus !== 'all' || !empty($selectedKhu) || !empty($selectedCum) || !empty($selectedToa) || !empty($selectedTang)): ?>
                         <a href="<?= url('staff/requests?tab=' . urlencode($activeTab)) ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; height: 38px; padding: 0 14px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; color: #dc2626; border-color: #fca5a5; background: #fff5f5; font-weight: 600;" title="Xóa toàn bộ bộ lọc và trở về mặc định">
-                            <i class="fa-solid fa-filter-circle-xmark"></i> Xóa lọc
+                            <i class="fa-solid fa-filter-circle-xmark"></i> Xóa bộ lọc
                         </a>
                     <?php endif; ?>
                 </div>
@@ -278,25 +275,25 @@ function renderRequestReason(?string $rawReason): void
         <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; flex-wrap: wrap;">
             <button type="button" class="tab-btn <?= ($activeTab === 'pending') ? 'active' : '' ?>" id="tabBtnPending" onclick="switchRequestTab('pending')"
                 style="background: <?= ($activeTab === 'pending') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'pending') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'pending') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
-                <i class="fa-solid fa-clock" style="margin-right: 6px;"></i> 1. Chờ xét duyệt (24h)
+                Chờ xét duyệt (24h)
                 <span class="badge" style="font-size: 0.75rem; margin-left: 6px; padding: 3px 8px; background: #fef3c7; color: #92400e; border: none; font-weight: 700;"><?= count($pendingRequests ?? []) ?></span>
             </button>
 
             <button type="button" class="tab-btn <?= ($activeTab === 'transfer') ? 'active' : '' ?>" id="tabBtnTransfer" onclick="switchRequestTab('transfer')"
                 style="background: <?= ($activeTab === 'transfer') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'transfer') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'transfer') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
-                <i class="fa-solid fa-right-left" style="margin-right: 6px;"></i> 2. Xin chuyển phòng
+                Xin chuyển phòng
                 <span class="badge" style="font-size: 0.75rem; margin-left: 6px; padding: 3px 8px; background: #dbeafe; color: #1e40af; border: none; font-weight: 700;"><?= count($transferRequests ?? []) ?></span>
             </button>
 
             <button type="button" class="tab-btn <?= ($activeTab === 'checkout') ? 'active' : '' ?>" id="tabBtnCheckout" onclick="switchRequestTab('checkout')"
                 style="background: <?= ($activeTab === 'checkout') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'checkout') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'checkout') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
-                <i class="fa-solid fa-door-open" style="margin-right: 6px;"></i> 3. Trả phòng & Tạm vắng
+                Trả phòng & Tạm vắng
                 <span class="badge" style="font-size: 0.75rem; margin-left: 6px; padding: 3px 8px; background: #f3e8ff; color: #7e22ce; border: none; font-weight: 700;"><?= count($checkoutRequests ?? []) ?></span>
             </button>
 
             <button type="button" class="tab-btn <?= ($activeTab === 'history') ? 'active' : '' ?>" id="tabBtnHistory" onclick="switchRequestTab('history')"
                 style="background: <?= ($activeTab === 'history') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'history') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'history') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
-                <i class="fa-solid fa-clock-rotate-left" style="margin-right: 6px;"></i> 4. Lịch sử đã giải quyết
+                Lịch sử đã giải quyết
                 <span class="badge" style="font-size: 0.75rem; margin-left: 6px; padding: 3px 8px; background: #f1f5f9; color: #475569; border: none; font-weight: 700;"><?= count($historyRequests ?? []) ?></span>
             </button>
         </div>
@@ -512,8 +509,8 @@ function renderRequestReason(?string $rawReason): void
 <div id="modalApproveRequest" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 520px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h3 style="font-size: 1.15rem; font-weight: 700; color: #15803d; margin: 0; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-circle-check"></i> Xác nhận phê duyệt đơn
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #15803d; margin: 0;">
+                Xác nhận phê duyệt đơn
             </h3>
             <button type="button" onclick="closeApproveModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">&times;</button>
         </div>
@@ -546,8 +543,8 @@ function renderRequestReason(?string $rawReason): void
             <input type="hidden" name="tab" id="approveModalTab" value="<?= htmlspecialchars($activeTab ?? 'pending') ?>">
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="btn btn-outline" onclick="closeApproveModal()" style="border-radius: 6px; padding: 8px 16px; font-weight: 500;">Hủy bỏ</button>
-                <button type="submit" class="btn btn-primary" style="border-radius: 6px; padding: 8px 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                <button type="button" class="btn btn-outline" onclick="closeApproveModal()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px;">Hủy bỏ</button>
+                <button type="submit" class="btn btn-primary" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 18px; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="fa-solid fa-check"></i> Xác nhận phê duyệt
                 </button>
             </div>
@@ -561,8 +558,8 @@ function renderRequestReason(?string $rawReason): void
 <div id="modalRejectRequest" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 540px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h3 style="font-size: 1.15rem; font-weight: 700; color: #dc2626; margin: 0; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-circle-xmark"></i> Từ chối yêu cầu của Sinh viên
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #dc2626; margin: 0;">
+                Từ chối yêu cầu của Sinh viên
             </h3>
             <button type="button" onclick="closeRejectModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">&times;</button>
         </div>
@@ -597,10 +594,14 @@ function renderRequestReason(?string $rawReason): void
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="btn btn-outline" onclick="closeRejectModal()" style="border-radius: 6px; padding: 8px 16px; font-weight: 500;">Hủy</button>
-                <button type="submit" class="btn btn-primary" style="border-radius: 6px; padding: 8px 20px; font-weight: 600; background: #dc2626; border-color: #dc2626; display: inline-flex; align-items: center; gap: 6px;">
+                <button type="button" class="btn btn-outline" onclick="closeRejectModal()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px;">Hủy</button>
+                <button type="submit" class="btn btn-primary" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 18px; background: #dc2626; border-color: #dc2626; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="fa-solid fa-xmark"></i> Xác nhận từ chối
                 </button>
+            </div>
+        </form>
+    </div>
+</div>
             </div>
         </form>
     </div>
@@ -610,230 +611,242 @@ function renderRequestReason(?string $rawReason): void
 <!-- JAVASCRIPT: TABS, PHÂN TRANG CLIENT-SIDE, MODALS VÀ XUẤT EXCEL            -->
 <!-- ========================================================================= -->
 <script>
-// 1. Quản lý phân trang cho cả 4 tabs
-const requestPaginationState = {
-    pending: { page: 1, pageSize: 10 },
-    transfer: { page: 1, pageSize: 10 },
-    checkout: { page: 1, pageSize: 10 },
-    history: { page: 1, pageSize: 10 }
-};
-
-function renderRequestPagination(tabKey) {
-    const rowClass = `${tabKey}-row`;
-    const rows = document.querySelectorAll(`.${rowClass}`);
-    const total = rows.length;
-    const state = requestPaginationState[tabKey];
-    if (!state) return;
-
-    const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
-    if (state.page > totalPages) state.page = totalPages;
-
-    const startIdx = (state.page - 1) * state.pageSize;
-    const endIdx = startIdx + state.pageSize;
-
-    rows.forEach((row, idx) => {
-        if (idx >= startIdx && idx < endIdx) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
+    // 1. Quản lý phân trang cho cả 4 tabs
+    const requestPaginationState = {
+        pending: {
+            page: 1,
+            pageSize: 10
+        },
+        transfer: {
+            page: 1,
+            pageSize: 10
+        },
+        checkout: {
+            page: 1,
+            pageSize: 10
+        },
+        history: {
+            page: 1,
+            pageSize: 10
         }
-    });
+    };
 
-    const infoEl = document.getElementById(`${tabKey}PaginationInfo`);
-    if (infoEl) {
-        if (total === 0) {
-            infoEl.innerText = 'Không có bản ghi nào';
-        } else {
-            const curStart = startIdx + 1;
-            const curEnd = Math.min(endIdx, total);
-            infoEl.innerText = `Hiển thị ${curStart} - ${curEnd} trên tổng số ${total} hồ sơ (Trang ${state.page} / ${totalPages})`;
-        }
-    }
+    function renderRequestPagination(tabKey) {
+        const rowClass = `${tabKey}-row`;
+        const rows = document.querySelectorAll(`.${rowClass}`);
+        const total = rows.length;
+        const state = requestPaginationState[tabKey];
+        if (!state) return;
 
-    const navEl = document.getElementById(`${tabKey}PaginationNav`);
-    if (navEl) {
-        if (totalPages <= 1) {
-            navEl.innerHTML = '';
-            return;
-        }
+        const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
+        if (state.page > totalPages) state.page = totalPages;
 
-        let html = '';
-        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRequestPage('${tabKey}', ${state.page - 1})" ${state.page === 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} style="padding: 4px 10px; border-radius: 6px;">&laquo; Trước</button>`;
+        const startIdx = (state.page - 1) * state.pageSize;
+        const endIdx = startIdx + state.pageSize;
 
-        for (let p = 1; p <= totalPages; p++) {
-            if (p === 1 || p === totalPages || (p >= state.page - 1 && p <= state.page + 1)) {
-                const isActive = (p === state.page);
-                const btnStyle = isActive
-                    ? 'background: var(--primary); color: #fff; border-color: var(--primary);'
-                    : 'background: #fff; color: var(--text-primary); border-color: #cbd5e1;';
-                html += `<button type="button" class="btn btn-sm" onclick="goToRequestPage('${tabKey}', ${p})" style="padding: 4px 10px; border-radius: 6px; font-weight: 600; ${btnStyle}">${p}</button>`;
-            } else if (p === state.page - 2 || p === state.page + 2) {
-                html += `<span style="padding: 4px 6px; color: var(--text-muted);">&hellip;</span>`;
+        rows.forEach((row, idx) => {
+            if (idx >= startIdx && idx < endIdx) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        const infoEl = document.getElementById(`${tabKey}PaginationInfo`);
+        if (infoEl) {
+            if (total === 0) {
+                infoEl.innerText = 'Không có bản ghi nào';
+            } else {
+                const curStart = startIdx + 1;
+                const curEnd = Math.min(endIdx, total);
+                infoEl.innerText = `Hiển thị ${curStart} - ${curEnd} trên tổng số ${total} hồ sơ (Trang ${state.page} / ${totalPages})`;
             }
         }
 
-        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRequestPage('${tabKey}', ${state.page + 1})" ${state.page === totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} style="padding: 4px 10px; border-radius: 6px;">Sau &raquo;</button>`;
-        navEl.innerHTML = html;
+        const navEl = document.getElementById(`${tabKey}PaginationNav`);
+        if (navEl) {
+            if (totalPages <= 1) {
+                navEl.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRequestPage('${tabKey}', ${state.page - 1})" ${state.page === 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} style="padding: 4px 10px; border-radius: 6px;">&laquo; Trước</button>`;
+
+            for (let p = 1; p <= totalPages; p++) {
+                if (p === 1 || p === totalPages || (p >= state.page - 1 && p <= state.page + 1)) {
+                    const isActive = (p === state.page);
+                    const btnStyle = isActive ?
+                        'background: var(--primary); color: #fff; border-color: var(--primary);' :
+                        'background: #fff; color: var(--text-primary); border-color: #cbd5e1;';
+                    html += `<button type="button" class="btn btn-sm" onclick="goToRequestPage('${tabKey}', ${p})" style="padding: 4px 10px; border-radius: 6px; font-weight: 600; ${btnStyle}">${p}</button>`;
+                } else if (p === state.page - 2 || p === state.page + 2) {
+                    html += `<span style="padding: 4px 6px; color: var(--text-muted);">&hellip;</span>`;
+                }
+            }
+
+            html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRequestPage('${tabKey}', ${state.page + 1})" ${state.page === totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} style="padding: 4px 10px; border-radius: 6px;">Sau &raquo;</button>`;
+            navEl.innerHTML = html;
+        }
     }
-}
 
-function goToRequestPage(tabKey, targetPage) {
-    const rowClass = `${tabKey}-row`;
-    const rows = document.querySelectorAll(`.${rowClass}`);
-    const state = requestPaginationState[tabKey];
-    if (!state) return;
-    const totalPages = Math.max(1, Math.ceil(rows.length / state.pageSize));
+    function goToRequestPage(tabKey, targetPage) {
+        const rowClass = `${tabKey}-row`;
+        const rows = document.querySelectorAll(`.${rowClass}`);
+        const state = requestPaginationState[tabKey];
+        if (!state) return;
+        const totalPages = Math.max(1, Math.ceil(rows.length / state.pageSize));
 
-    if (targetPage < 1 || targetPage > totalPages) return;
-    state.page = targetPage;
-    renderRequestPagination(tabKey);
-}
+        if (targetPage < 1 || targetPage > totalPages) return;
+        state.page = targetPage;
+        renderRequestPagination(tabKey);
+    }
 
-function changeRequestPageSize(tabKey, newSize) {
-    if (!requestPaginationState[tabKey]) return;
-    requestPaginationState[tabKey].pageSize = parseInt(newSize, 10) || 10;
-    requestPaginationState[tabKey].page = 1;
-    renderRequestPagination(tabKey);
-}
+    function changeRequestPageSize(tabKey, newSize) {
+        if (!requestPaginationState[tabKey]) return;
+        requestPaginationState[tabKey].pageSize = parseInt(newSize, 10) || 10;
+        requestPaginationState[tabKey].page = 1;
+        renderRequestPagination(tabKey);
+    }
 
-// 2. Chuyển đổi Sub-Tabs & Cập nhật số đếm nút Xuất Excel
-function updateExportButtonCount(tabKey) {
-    const btnText = document.getElementById('btnExportText');
-    if (!btnText) return;
+    // 2. Chuyển đổi Sub-Tabs & Cập nhật số đếm nút Xuất Excel
+    function updateExportButtonCount(tabKey) {
+        const btnText = document.getElementById('btnExportText');
+        if (!btnText) return;
 
-    let count = 0;
-    const rows = document.querySelectorAll(`.${tabKey}-row`);
-    count = rows.length;
-    btnText.innerText = `Xuất Excel (${count})`;
-}
+        let count = 0;
+        const rows = document.querySelectorAll(`.${tabKey}-row`);
+        count = rows.length;
+        btnText.innerText = `Xuất Excel (${count})`;
+    }
 
-function switchRequestTab(tabKey) {
-    const input = document.getElementById('currentActiveTab');
-    if (input) input.value = tabKey;
+    function switchRequestTab(tabKey) {
+        const input = document.getElementById('currentActiveTab');
+        if (input) input.value = tabKey;
 
-    document.querySelectorAll('.tab-btn').forEach(b => {
-        b.style.color = 'var(--text-secondary)';
-        b.style.background = 'transparent';
-        b.style.fontWeight = '600';
-        b.classList.remove('active');
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.style.color = 'var(--text-secondary)';
+            b.style.background = 'transparent';
+            b.style.fontWeight = '600';
+            b.classList.remove('active');
+        });
+
+        ['pending', 'transfer', 'checkout', 'history'].forEach(k => {
+            const el = document.getElementById(`tabContent_${k}`);
+            if (el) el.style.display = 'none';
+        });
+
+        const activeBtn = document.getElementById(`tabBtn${tabKey.charAt(0).toUpperCase() + tabKey.slice(1)}`);
+        if (activeBtn) {
+            activeBtn.style.color = 'var(--primary)';
+            activeBtn.style.background = '#eff6ff';
+            activeBtn.style.fontWeight = '700';
+            activeBtn.classList.add('active');
+        }
+
+        const activeEl = document.getElementById(`tabContent_${tabKey}`);
+        if (activeEl) activeEl.style.display = 'block';
+
+        updateExportButtonCount(tabKey);
+    }
+
+    // 3. Cascading Dropdown Handlers
+    function onKhuChange(khuVal) {
+        const cumSelect = document.getElementById('filterCumSelect');
+        const toaSelect = document.getElementById('filterToaSelect');
+        if (cumSelect) cumSelect.value = '';
+        if (toaSelect) toaSelect.value = '';
+        document.getElementById('filterFormRequests').submit();
+    }
+
+    function onCumChange(cumVal) {
+        const toaSelect = document.getElementById('filterToaSelect');
+        if (toaSelect) toaSelect.value = '';
+        document.getElementById('filterFormRequests').submit();
+    }
+
+    // 4. Xuất Excel
+    function exportRequests() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const input = document.getElementById('currentActiveTab');
+        const currentTab = input ? input.value : 'pending';
+        urlParams.set('tab', currentTab);
+        window.location.href = '<?= url('staff/requests/export') ?>?' + urlParams.toString();
+    }
+
+    // 5. Modals: Duyệt & Từ chối
+    function openApproveModal(maDon, loaiDon, studentName, detailInfo) {
+        document.getElementById('approveModalMaDon').value = maDon;
+        document.getElementById('approveModalMaDonText').innerText = maDon;
+        document.getElementById('approveModalStudentName').innerText = studentName;
+        document.getElementById('approveModalLoaiDon').innerText = loaiDon;
+
+        const rowDetail = document.getElementById('approveModalDetailRow');
+        if (detailInfo) {
+            document.getElementById('approveModalDetailText').innerText = detailInfo;
+            rowDetail.style.display = 'flex';
+        } else {
+            rowDetail.style.display = 'none';
+        }
+
+        const curTab = document.getElementById('currentActiveTab');
+        document.getElementById('approveModalTab').value = curTab ? curTab.value : 'pending';
+        document.getElementById('modalApproveRequest').style.display = 'flex';
+    }
+
+    function closeApproveModal() {
+        document.getElementById('modalApproveRequest').style.display = 'none';
+    }
+
+    function openRejectModal(maDon, studentName) {
+        document.getElementById('rejectModalMaDon').value = maDon;
+        document.getElementById('rejectModalMaDonText').innerText = maDon;
+        document.getElementById('rejectModalStudentName').innerText = studentName;
+        document.getElementById('inputRejectReason').value = '';
+        document.getElementById('selectQuickReason').value = '';
+
+        const curTab = document.getElementById('currentActiveTab');
+        document.getElementById('rejectModalTab').value = curTab ? curTab.value : 'pending';
+        document.getElementById('modalRejectRequest').style.display = 'flex';
+    }
+
+    function closeRejectModal() {
+        document.getElementById('modalRejectRequest').style.display = 'none';
+    }
+
+    function onQuickReasonChange(val) {
+        if (val) {
+            document.getElementById('inputRejectReason').value = val;
+        }
+    }
+
+    // Khởi chạy khi DOM sẵn sàng
+    document.addEventListener('DOMContentLoaded', function() {
+        renderRequestPagination('pending');
+        renderRequestPagination('transfer');
+        renderRequestPagination('checkout');
+        renderRequestPagination('history');
+
+        const input = document.getElementById('currentActiveTab');
+        const initialTab = input ? input.value : 'pending';
+        updateExportButtonCount(initialTab);
     });
 
-    ['pending', 'transfer', 'checkout', 'history'].forEach(k => {
-        const el = document.getElementById(`tabContent_${k}`);
-        if (el) el.style.display = 'none';
+    // ESC & Backdrop close
+    window.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeApproveModal();
+            closeRejectModal();
+        }
     });
 
-    const activeBtn = document.getElementById(`tabBtn${tabKey.charAt(0).toUpperCase() + tabKey.slice(1)}`);
-    if (activeBtn) {
-        activeBtn.style.color = 'var(--primary)';
-        activeBtn.style.background = '#eff6ff';
-        activeBtn.style.fontWeight = '700';
-        activeBtn.classList.add('active');
-    }
+    window.addEventListener('click', function(e) {
+        const modalApprove = document.getElementById('modalApproveRequest');
+        if (e.target === modalApprove) closeApproveModal();
 
-    const activeEl = document.getElementById(`tabContent_${tabKey}`);
-    if (activeEl) activeEl.style.display = 'block';
-
-    updateExportButtonCount(tabKey);
-}
-
-// 3. Cascading Dropdown Handlers
-function onKhuChange(khuVal) {
-    const cumSelect = document.getElementById('filterCumSelect');
-    const toaSelect = document.getElementById('filterToaSelect');
-    if (cumSelect) cumSelect.value = '';
-    if (toaSelect) toaSelect.value = '';
-    document.getElementById('filterFormRequests').submit();
-}
-
-function onCumChange(cumVal) {
-    const toaSelect = document.getElementById('filterToaSelect');
-    if (toaSelect) toaSelect.value = '';
-    document.getElementById('filterFormRequests').submit();
-}
-
-// 4. Xuất Excel
-function exportRequests() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const input = document.getElementById('currentActiveTab');
-    const currentTab = input ? input.value : 'pending';
-    urlParams.set('tab', currentTab);
-    window.location.href = '<?= url('staff/requests/export') ?>?' + urlParams.toString();
-}
-
-// 5. Modals: Duyệt & Từ chối
-function openApproveModal(maDon, loaiDon, studentName, detailInfo) {
-    document.getElementById('approveModalMaDon').value = maDon;
-    document.getElementById('approveModalMaDonText').innerText = maDon;
-    document.getElementById('approveModalStudentName').innerText = studentName;
-    document.getElementById('approveModalLoaiDon').innerText = loaiDon;
-
-    const rowDetail = document.getElementById('approveModalDetailRow');
-    if (detailInfo) {
-        document.getElementById('approveModalDetailText').innerText = detailInfo;
-        rowDetail.style.display = 'flex';
-    } else {
-        rowDetail.style.display = 'none';
-    }
-
-    const curTab = document.getElementById('currentActiveTab');
-    document.getElementById('approveModalTab').value = curTab ? curTab.value : 'pending';
-    document.getElementById('modalApproveRequest').style.display = 'flex';
-}
-
-function closeApproveModal() {
-    document.getElementById('modalApproveRequest').style.display = 'none';
-}
-
-function openRejectModal(maDon, studentName) {
-    document.getElementById('rejectModalMaDon').value = maDon;
-    document.getElementById('rejectModalMaDonText').innerText = maDon;
-    document.getElementById('rejectModalStudentName').innerText = studentName;
-    document.getElementById('inputRejectReason').value = '';
-    document.getElementById('selectQuickReason').value = '';
-
-    const curTab = document.getElementById('currentActiveTab');
-    document.getElementById('rejectModalTab').value = curTab ? curTab.value : 'pending';
-    document.getElementById('modalRejectRequest').style.display = 'flex';
-}
-
-function closeRejectModal() {
-    document.getElementById('modalRejectRequest').style.display = 'none';
-}
-
-function onQuickReasonChange(val) {
-    if (val) {
-        document.getElementById('inputRejectReason').value = val;
-    }
-}
-
-// Khởi chạy khi DOM sẵn sàng
-document.addEventListener('DOMContentLoaded', function() {
-    renderRequestPagination('pending');
-    renderRequestPagination('transfer');
-    renderRequestPagination('checkout');
-    renderRequestPagination('history');
-
-    const input = document.getElementById('currentActiveTab');
-    const initialTab = input ? input.value : 'pending';
-    updateExportButtonCount(initialTab);
-});
-
-// ESC & Backdrop close
-window.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeApproveModal();
-        closeRejectModal();
-    }
-});
-
-window.addEventListener('click', function(e) {
-    const modalApprove = document.getElementById('modalApproveRequest');
-    if (e.target === modalApprove) closeApproveModal();
-
-    const modalReject = document.getElementById('modalRejectRequest');
-    if (e.target === modalReject) closeRejectModal();
-});
+        const modalReject = document.getElementById('modalRejectRequest');
+        if (e.target === modalReject) closeRejectModal();
+    });
 </script>
 
 <?php

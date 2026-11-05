@@ -60,19 +60,19 @@ function renderMaintenanceNote(?string $note): void
             <!-- CÁC NÚT THAO TÁC HEADER (ĐỒNG BỘ ADMIN & ROOMS) -->
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                 <?php if (!empty($scope['canCreateStaffTicket'])): ?>
-                    <button type="button" class="btn btn-primary" onclick="openStaffTicketModal()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;">
+                    <button type="button" class="btn btn-primary" onclick="openStaffTicketModal()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
                         <i class="fa-solid fa-plus"></i> Lập phiếu sự cố hạ tầng
                     </button>
                 <?php endif; ?>
 
                 <?php if (!empty($isAllowed)): ?>
-                    <button type="button" class="btn btn-outline" onclick="exportMaintenance()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; color: #15803d; border-color: #86efac; background: #f0fdf4; cursor: pointer;" title="Xuất dữ liệu theo tab đang xem ra Excel/CSV">
+                    <button type="button" class="btn btn-outline" onclick="exportMaintenance()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #15803d; border-color: #86efac; background: #f0fdf4; cursor: pointer;" title="Xuất dữ liệu theo tab đang xem ra Excel/CSV">
                         <i class="fa-solid fa-file-excel" style="color: #16a34a;"></i> <span id="btnExportText">Xuất Excel (<?= count($pendingTickets ?? []) ?>)</span>
                     </button>
                 <?php endif; ?>
 
-                <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 6px 14px;">
-                    <i class="fa-solid fa-arrow-left" style="margin-right: 6px;"></i> Về Dashboard
+                <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="fa-solid fa-arrow-left"></i> Về Dashboard
                 </a>
             </div>
         </div>
@@ -285,12 +285,9 @@ function renderMaintenanceNote(?string $note): void
                     </select>
 
                     <!-- Nút Lọc & Nút Xóa bộ lọc -->
-                    <button type="submit" class="btn btn-primary btn-sm" style="border-radius: 6px; height: 38px; padding: 0 16px; font-weight: 600;">
-                        Lọc
-                    </button>
                     <?php if (!empty($searchTerm) || $selectedType !== 'all' || $selectedStatus !== 'all' || !empty($selectedKhu) || !empty($selectedCum) || !empty($selectedToa) || !empty($selectedTang) || !empty($selectedTech)): ?>
                         <a href="<?= url('staff/maintenance?tab=' . urlencode($activeTab)) ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; height: 38px; padding: 0 14px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; color: #dc2626; border-color: #fca5a5; background: #fff5f5; font-weight: 600;" title="Xóa toàn bộ bộ lọc và trở về mặc định">
-                            <i class="fa-solid fa-filter-circle-xmark"></i> Xóa lọc
+                            <i class="fa-solid fa-filter-circle-xmark"></i> Xóa bộ lọc
                         </a>
                     <?php endif; ?>
                 </div>
@@ -301,31 +298,31 @@ function renderMaintenanceNote(?string $note): void
         <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; flex-wrap: wrap;">
             <button type="button" class="tab-btn <?= ($activeTab === 'pending') ? 'active' : '' ?>" id="tabBtnPending" onclick="switchMaintenanceTab('pending')"
                 style="background: <?= ($activeTab === 'pending') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'pending') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'pending') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
-                <i class="fa-solid fa-clock" style="margin-right: 6px;"></i> 1. Chờ xử lý & Điều phối
+                Chờ xử lý & Điều phối
                 <span class="badge" style="font-size: 0.75rem; margin-left: 6px; padding: 3px 8px; background: #fee2e2; color: #991b1b; border: none; font-weight: 700;"><?= count($pendingTickets ?? []) ?></span>
             </button>
 
             <button type="button" class="tab-btn <?= ($activeTab === 'fixing') ? 'active' : '' ?>" id="tabBtnFixing" onclick="switchMaintenanceTab('fixing')"
                 style="background: <?= ($activeTab === 'fixing') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'fixing') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'fixing') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
-                <i class="fa-solid fa-screwdriver-wrench" style="margin-right: 6px;"></i> 2. Đang sửa chữa
+                Đang sửa chữa
                 <span class="badge" style="font-size: 0.75rem; margin-left: 6px; padding: 3px 8px; background: #dbeafe; color: #1e40af; border: none; font-weight: 700;"><?= count($fixingTickets ?? []) ?></span>
             </button>
 
             <button type="button" class="tab-btn <?= ($activeTab === 'infra') ? 'active' : '' ?>" id="tabBtnInfra" onclick="switchMaintenanceTab('infra')"
                 style="background: <?= ($activeTab === 'infra') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'infra') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'infra') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
-                <i class="fa-solid fa-building" style="margin-right: 6px;"></i> 3. Sự cố Hạ tầng chung
+                Sự cố Hạ tầng chung
                 <span class="badge" style="font-size: 0.75rem; margin-left: 6px; padding: 3px 8px; background: #f3e8ff; color: #7e22ce; border: none; font-weight: 700;"><?= count($infraTickets ?? []) ?></span>
             </button>
 
             <button type="button" class="tab-btn <?= ($activeTab === 'completed') ? 'active' : '' ?>" id="tabBtnCompleted" onclick="switchMaintenanceTab('completed')"
                 style="background: <?= ($activeTab === 'completed') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'completed') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'completed') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
-                <i class="fa-solid fa-circle-check" style="margin-right: 6px;"></i> 4. Đã hoàn tất & Nghiệm thu
+                Đã hoàn tất & Nghiệm thu
                 <span class="badge" style="font-size: 0.75rem; margin-left: 6px; padding: 3px 8px; background: #dcfce7; color: #166534; border: none; font-weight: 700;"><?= count($completedTickets ?? []) ?></span>
             </button>
 
             <button type="button" class="tab-btn <?= ($activeTab === 'cancelled') ? 'active' : '' ?>" id="tabBtnCancelled" onclick="switchMaintenanceTab('cancelled')"
                 style="background: <?= ($activeTab === 'cancelled') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'cancelled') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'cancelled') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
-                <i class="fa-solid fa-ban" style="margin-right: 6px;"></i> 5. Đã hủy / Đóng
+                Đã hủy / Đóng
                 <span class="badge" style="font-size: 0.75rem; margin-left: 6px; padding: 3px 8px; background: #f1f5f9; color: #475569; border: none; font-weight: 700;"><?= count($cancelledTickets ?? []) ?></span>
             </button>
         </div>
@@ -516,7 +513,7 @@ function renderMaintenanceNote(?string $note): void
                                                             <i class="fa-solid fa-xmark"></i> Hủy
                                                         </button>
 
-                                                    <!-- B. DÀNH CHO KỸ THUẬT VIÊN (TIẾP NHẬN, CẬP NHẬT & NGHIỆM THU) -->
+                                                        <!-- B. DÀNH CHO KỸ THUẬT VIÊN (TIẾP NHẬN, CẬP NHẬT & NGHIỆM THU) -->
                                                     <?php elseif ($canTechAct && ($isPending || $isFixing)): ?>
                                                         <?php if ($isPending): ?>
                                                             <form action="<?= url('staff/maintenance/update-progress') ?>" method="POST" style="margin: 0; display: inline-flex;">
@@ -537,7 +534,7 @@ function renderMaintenanceNote(?string $note): void
                                                             </button>
                                                         <?php endif; ?>
 
-                                                    <!-- C. PHIẾU ĐÃ HOÀN TẤT HOẶC ĐÃ HỦY -->
+                                                        <!-- C. PHIẾU ĐÃ HOÀN TẤT HOẶC ĐÃ HỦY -->
                                                     <?php else: ?>
                                                         <?php if ($isCompleted): ?>
                                                             <span class="badge" style="background: #dcfce7; color: #166534; border: none; font-size: 0.78rem; font-weight: 600; padding: 4px 10px; border-radius: 6px;">
@@ -592,8 +589,8 @@ function renderMaintenanceNote(?string $note): void
 <div id="modalAssignTech" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 520px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h3 style="font-size: 1.15rem; font-weight: 700; color: #1e40af; margin: 0; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-user-gear"></i> Phân công Kỹ thuật viên sửa chữa
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #1e40af; margin: 0;">
+                Phân công Kỹ thuật viên sửa chữa
             </h3>
             <button type="button" onclick="closeAssignModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">&times;</button>
         </div>
@@ -620,7 +617,7 @@ function renderMaintenanceNote(?string $note): void
                     <option value="">-- Chọn kỹ thuật viên --</option>
                     <?php foreach ($technicians ?? [] as $tc): ?>
                         <option value="<?= htmlspecialchars($tc['MaTaiKhoan']) ?>">
-                            👨‍🔧 <?= htmlspecialchars($tc['HoVaTen']) ?> - SĐT: <?= htmlspecialchars($tc['SoDienThoai'] ?? '---') ?> (Khu <?= htmlspecialchars($tc['MaCumQuanLy'] ?? 'A') ?>)
+                            <?= htmlspecialchars($tc['HoVaTen']) ?> - SĐT: <?= htmlspecialchars($tc['SoDienThoai'] ?? '---') ?> (Khu <?= htmlspecialchars($tc['MaCumQuanLy'] ?? 'A') ?>)
                         </option>
                     <?php endforeach; ?>
                 </select>
@@ -634,17 +631,17 @@ function renderMaintenanceNote(?string $note): void
                     Chuyển trạng thái phiếu:
                 </label>
                 <select name="trangThai" class="btn-outline" style="width: 100%; height: 38px; padding: 0 12px; border-radius: 6px; font-size: 0.85rem; background: #fff;">
-                    <option value="Đang sửa chữa" selected>🛠️ Đang sửa chữa (Đang thi công)</option>
-                    <option value="Chờ xử lý">⏳ Chờ xử lý (Chờ thợ sắp xếp lịch)</option>
+                    <option value="Đang sửa chữa" selected>Đang sửa chữa (Đang thi công)</option>
+                    <option value="Chờ xử lý">Chờ xử lý (Chờ thợ sắp xếp lịch)</option>
                 </select>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="btn btn-outline" onclick="closeAssignModal()" style="border-radius: 6px; font-weight: 600;">
+                <button type="button" class="btn btn-outline" onclick="closeAssignModal()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px;">
                     Đóng
                 </button>
-                <button type="submit" class="btn btn-primary" style="border-radius: 6px; font-weight: 600;">
-                    <i class="fa-solid fa-check" style="margin-right: 6px;"></i> Xác nhận phân công
+                <button type="submit" class="btn btn-primary" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-check"></i> Xác nhận phân công
                 </button>
             </div>
         </form>
@@ -657,8 +654,8 @@ function renderMaintenanceNote(?string $note): void
 <div id="modalProgress" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 520px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h3 style="font-size: 1.15rem; font-weight: 700; color: #0284c7; margin: 0; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-pen-to-square"></i> Cập nhật tiến độ & Vật tư sửa chữa
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #0284c7; margin: 0;">
+                Cập nhật tiến độ & Vật tư sửa chữa
             </h3>
             <button type="button" onclick="closeProgressModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">&times;</button>
         </div>
@@ -682,9 +679,9 @@ function renderMaintenanceNote(?string $note): void
                     Trạng thái công việc:
                 </label>
                 <select name="trangThai" id="selectProgressTrangThai" class="btn-outline" style="width: 100%; height: 38px; padding: 0 12px; border-radius: 6px; font-size: 0.85rem; background: #fff;">
-                    <option value="Đang sửa chữa" selected>🛠️ Đang sửa chữa (Đang thi công khắc phục)</option>
-                    <option value="Đã hoàn thành">✓ Đã hoàn thành (Nghiệm thu sửa xong)</option>
-                    <option value="Chờ xử lý">⏳ Chờ xử lý (Chờ vật tư phụ tùng)</option>
+                    <option value="Đang sửa chữa" selected>Đang sửa chữa (Đang thi công khắc phục)</option>
+                    <option value="Đã hoàn thành">Đã hoàn thành (Nghiệm thu sửa xong)</option>
+                    <option value="Chờ xử lý">Chờ xử lý (Chờ vật tư phụ tùng)</option>
                 </select>
             </div>
 
@@ -696,11 +693,11 @@ function renderMaintenanceNote(?string $note): void
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="btn btn-outline" onclick="closeProgressModal()" style="border-radius: 6px; font-weight: 600;">
+                <button type="button" class="btn btn-outline" onclick="closeProgressModal()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px;">
                     Đóng
                 </button>
-                <button type="submit" class="btn btn-primary" style="border-radius: 6px; font-weight: 600;">
-                    <i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i> Lưu cập nhật
+                <button type="submit" class="btn btn-primary" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-floppy-disk"></i> Lưu cập nhật
                 </button>
             </div>
         </form>
@@ -713,8 +710,8 @@ function renderMaintenanceNote(?string $note): void
 <div id="modalComplete" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 500px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h3 style="font-size: 1.15rem; font-weight: 700; color: #15803d; margin: 0; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-circle-check"></i> Xác nhận hoàn thành sửa chữa
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #15803d; margin: 0;">
+                Xác nhận hoàn thành sửa chữa
             </h3>
             <button type="button" onclick="closeCompleteModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">&times;</button>
         </div>
@@ -735,11 +732,11 @@ function renderMaintenanceNote(?string $note): void
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="btn btn-outline" onclick="closeCompleteModal()" style="border-radius: 6px; font-weight: 600;">
+                <button type="button" class="btn btn-outline" onclick="closeCompleteModal()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px;">
                     Hủy bỏ
                 </button>
-                <button type="submit" class="btn btn-primary" style="border-radius: 6px; font-weight: 600; background: #16a34a; border-color: #16a34a;">
-                    <i class="fa-solid fa-check" style="margin-right: 6px;"></i> Xác nhận hoàn thành
+                <button type="submit" class="btn btn-primary" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px; background: #16a34a; border-color: #16a34a; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-check"></i> Xác nhận hoàn thành
                 </button>
             </div>
         </form>
@@ -752,8 +749,8 @@ function renderMaintenanceNote(?string $note): void
 <div id="modalStaffTicket" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 560px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h3 style="font-size: 1.15rem; font-weight: 700; color: #1e40af; margin: 0; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-building-circle-exclamation"></i> Lập phiếu sự cố hạ tầng công cộng
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #1e40af; margin: 0;">
+                Lập phiếu sự cố hạ tầng công cộng
             </h3>
             <button type="button" onclick="closeStaffTicketModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">&times;</button>
         </div>
@@ -795,11 +792,11 @@ function renderMaintenanceNote(?string $note): void
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="btn btn-outline" onclick="closeStaffTicketModal()" style="border-radius: 6px; font-weight: 600;">
+                <button type="button" class="btn btn-outline" onclick="closeStaffTicketModal()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px;">
                     Đóng
                 </button>
-                <button type="submit" class="btn btn-primary" style="border-radius: 6px; font-weight: 600;">
-                    <i class="fa-solid fa-paper-plane" style="margin-right: 6px;"></i> Gửi phiếu sự cố
+                <button type="submit" class="btn btn-primary" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-paper-plane"></i> Gửi phiếu sự cố
                 </button>
             </div>
         </form>
@@ -812,8 +809,8 @@ function renderMaintenanceNote(?string $note): void
 <div id="modalCancelTicket" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 500px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h3 style="font-size: 1.15rem; font-weight: 700; color: #991b1b; margin: 0; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-ban"></i> Hủy phiếu sự cố bảo trì
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #991b1b; margin: 0;">
+                Hủy phiếu sự cố bảo trì
             </h3>
             <button type="button" onclick="closeCancelModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">&times;</button>
         </div>
@@ -853,11 +850,11 @@ function renderMaintenanceNote(?string $note): void
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="btn btn-outline" onclick="closeCancelModal()" style="border-radius: 6px; font-weight: 600;">
+                <button type="button" class="btn btn-outline" onclick="closeCancelModal()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px;">
                     Đóng
                 </button>
-                <button type="submit" class="btn btn-outline" style="border-radius: 6px; font-weight: 600; color: #dc2626; border-color: #fca5a5; background: #fff5f5;">
-                    <i class="fa-solid fa-trash-can" style="margin-right: 6px;"></i> Xác nhận hủy phiếu
+                <button type="submit" class="btn btn-danger" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px; color: #fff; background: #dc2626; border-color: #dc2626; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-trash-can"></i> Xác nhận hủy phiếu
                 </button>
             </div>
         </form>
@@ -868,252 +865,275 @@ function renderMaintenanceNote(?string $note): void
 <!-- JAVASCRIPT: PHÂN TRANG, CHUYỂN TAB, MODALS & XUẤT CSV                      -->
 <!-- ========================================================================= -->
 <script>
-// 1. Phân trang Client-side cho cả 5 tabs
-const maintenancePaginationState = {
-    pending: { page: 1, pageSize: 10 },
-    fixing: { page: 1, pageSize: 10 },
-    infra: { page: 1, pageSize: 10 },
-    completed: { page: 1, pageSize: 10 },
-    cancelled: { page: 1, pageSize: 10 }
-};
+    // 1. Phân trang Client-side cho cả 5 tabs
+    const maintenancePaginationState = {
+        pending: {
+            page: 1,
+            pageSize: 10
+        },
+        fixing: {
+            page: 1,
+            pageSize: 10
+        },
+        infra: {
+            page: 1,
+            pageSize: 10
+        },
+        completed: {
+            page: 1,
+            pageSize: 10
+        },
+        cancelled: {
+            page: 1,
+            pageSize: 10
+        }
+    };
 
-function renderMaintenancePagination(tabKey) {
-    const tbody = document.getElementById(`tbody_${tabKey}`);
-    if (!tbody) return;
-    const rows = Array.from(tbody.querySelectorAll(`.${tabKey}-row`));
-    const total = rows.length;
+    function renderMaintenancePagination(tabKey) {
+        const tbody = document.getElementById(`tbody_${tabKey}`);
+        if (!tbody) return;
+        const rows = Array.from(tbody.querySelectorAll(`.${tabKey}-row`));
+        const total = rows.length;
 
-    if (total === 0) return;
+        if (total === 0) return;
 
-    const state = maintenancePaginationState[tabKey] || { page: 1, pageSize: 10 };
-    const pageSize = state.pageSize;
-    const totalPages = Math.ceil(total / pageSize) || 1;
-    if (state.page > totalPages) state.page = totalPages;
-    const curPage = state.page;
+        const state = maintenancePaginationState[tabKey] || {
+            page: 1,
+            pageSize: 10
+        };
+        const pageSize = state.pageSize;
+        const totalPages = Math.ceil(total / pageSize) || 1;
+        if (state.page > totalPages) state.page = totalPages;
+        const curPage = state.page;
 
-    const startIdx = (curPage - 1) * pageSize;
-    const endIdx = startIdx + pageSize;
+        const startIdx = (curPage - 1) * pageSize;
+        const endIdx = startIdx + pageSize;
 
-    rows.forEach((row, i) => {
-        row.style.display = (i >= startIdx && i < endIdx) ? '' : 'none';
-    });
+        rows.forEach((row, i) => {
+            row.style.display = (i >= startIdx && i < endIdx) ? '' : 'none';
+        });
 
-    const info = document.getElementById(`${tabKey}PaginationInfo`);
-    if (info) {
-        const toShow = Math.min(endIdx, total);
-        info.innerText = `Hiển thị ${startIdx + 1} - ${toShow} trên tổng số ${total} phiếu`;
-    }
-
-    const nav = document.getElementById(`${tabKey}PaginationNav`);
-    if (nav) {
-        let html = '';
-        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToMaintenancePage('${tabKey}', ${curPage - 1})" ${curPage <= 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}><i class="fa-solid fa-chevron-left"></i></button>`;
-
-        let startP = Math.max(1, curPage - 2);
-        let endP = Math.min(totalPages, curPage + 2);
-
-        if (startP > 1) {
-            html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToMaintenancePage('${tabKey}', 1)">1</button>`;
-            if (startP > 2) html += `<span style="padding: 0 4px; color: var(--text-muted);">&hellip;</span>`;
+        const info = document.getElementById(`${tabKey}PaginationInfo`);
+        if (info) {
+            const toShow = Math.min(endIdx, total);
+            info.innerText = `Hiển thị ${startIdx + 1} - ${toShow} trên tổng số ${total} phiếu`;
         }
 
-        for (let p = startP; p <= endP; p++) {
-            const isActive = (p === curPage);
-            html += `<button type="button" class="btn btn-sm ${isActive ? 'btn-primary' : 'btn-outline'}" onclick="goToMaintenancePage('${tabKey}', ${p})" style="min-width: 32px; ${isActive ? 'font-weight: 700;' : ''}">${p}</button>`;
+        const nav = document.getElementById(`${tabKey}PaginationNav`);
+        if (nav) {
+            let html = '';
+            html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToMaintenancePage('${tabKey}', ${curPage - 1})" ${curPage <= 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}><i class="fa-solid fa-chevron-left"></i></button>`;
+
+            let startP = Math.max(1, curPage - 2);
+            let endP = Math.min(totalPages, curPage + 2);
+
+            if (startP > 1) {
+                html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToMaintenancePage('${tabKey}', 1)">1</button>`;
+                if (startP > 2) html += `<span style="padding: 0 4px; color: var(--text-muted);">&hellip;</span>`;
+            }
+
+            for (let p = startP; p <= endP; p++) {
+                const isActive = (p === curPage);
+                html += `<button type="button" class="btn btn-sm ${isActive ? 'btn-primary' : 'btn-outline'}" onclick="goToMaintenancePage('${tabKey}', ${p})" style="min-width: 32px; ${isActive ? 'font-weight: 700;' : ''}">${p}</button>`;
+            }
+
+            if (endP < totalPages) {
+                if (endP < totalPages - 1) html += `<span style="padding: 0 4px; color: var(--text-muted);">&hellip;</span>`;
+                html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToMaintenancePage('${tabKey}', ${totalPages})">${totalPages}</button>`;
+            }
+
+            html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToMaintenancePage('${tabKey}', ${curPage + 1})" ${curPage >= totalPages ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}><i class="fa-solid fa-chevron-right"></i></button>`;
+            nav.innerHTML = html;
+        }
+    }
+
+    function goToMaintenancePage(tabKey, p) {
+        if (p < 1) return;
+        maintenancePaginationState[tabKey].page = p;
+        renderMaintenancePagination(tabKey);
+    }
+
+    function changeMaintenancePageSize(tabKey, newSize) {
+        maintenancePaginationState[tabKey].pageSize = parseInt(newSize, 10);
+        maintenancePaginationState[tabKey].page = 1;
+        renderMaintenancePagination(tabKey);
+    }
+
+    // 2. Chuyển Tab Client-side mượt mà
+    function updateExportButtonCount(tabKey) {
+        const tbody = document.getElementById(`tbody_${tabKey}`);
+        const rows = tbody ? tbody.querySelectorAll(`.${tabKey}-row`).length : 0;
+        const btnText = document.getElementById('btnExportText');
+        if (btnText) {
+            btnText.innerText = `Xuất Excel (${rows})`;
+        }
+    }
+
+    function switchMaintenanceTab(tabKey) {
+        const input = document.getElementById('currentActiveTab');
+        if (input) input.value = tabKey;
+
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', tabKey);
+        window.history.replaceState({}, '', url.toString());
+
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.style.color = 'var(--text-secondary)';
+            b.style.background = 'transparent';
+            b.style.fontWeight = '600';
+            b.classList.remove('active');
+        });
+
+        ['pending', 'fixing', 'infra', 'completed', 'cancelled'].forEach(k => {
+            const el = document.getElementById(`tabContent_${k}`);
+            if (el) el.style.display = 'none';
+        });
+
+        const activeBtn = document.getElementById(`tabBtn${tabKey.charAt(0).toUpperCase() + tabKey.slice(1)}`);
+        if (activeBtn) {
+            activeBtn.style.color = 'var(--primary)';
+            activeBtn.style.background = '#eff6ff';
+            activeBtn.style.fontWeight = '700';
+            activeBtn.classList.add('active');
         }
 
-        if (endP < totalPages) {
-            if (endP < totalPages - 1) html += `<span style="padding: 0 4px; color: var(--text-muted);">&hellip;</span>`;
-            html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToMaintenancePage('${tabKey}', ${totalPages})">${totalPages}</button>`;
+        const activeEl = document.getElementById(`tabContent_${tabKey}`);
+        if (activeEl) activeEl.style.display = 'block';
+
+        updateExportButtonCount(tabKey);
+    }
+
+    // 3. Dropdown liên hoàn (Cascading Dropdowns)
+    function onKhuChange(khuVal) {
+        const cumSelect = document.getElementById('filterCumSelect');
+        const toaSelect = document.getElementById('filterToaSelect');
+        if (cumSelect) cumSelect.value = '';
+        if (toaSelect) toaSelect.value = '';
+        document.getElementById('filterFormMaintenance').submit();
+    }
+
+    function onCumChange(cumVal) {
+        const toaSelect = document.getElementById('filterToaSelect');
+        if (toaSelect) toaSelect.value = '';
+        document.getElementById('filterFormMaintenance').submit();
+    }
+
+    // 4. Xuất Excel / CSV
+    function exportMaintenance() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const input = document.getElementById('currentActiveTab');
+        const currentTab = input ? input.value : 'pending';
+        urlParams.set('tab', currentTab);
+        window.location.href = '<?= url('staff/maintenance/export') ?>?' + urlParams.toString();
+    }
+
+    // 5. Xử lý Modals
+    // Modal Phân công
+    function openAssignModal(maPhieu, tenThietBi, currentTechId, maKhu) {
+        document.getElementById('assignModalMaPhieu').value = maPhieu;
+        document.getElementById('assignModalMaPhieuText').innerText = maPhieu;
+        document.getElementById('assignModalTenThietBi').innerText = tenThietBi;
+
+        const select = document.getElementById('selectAssignTho');
+        if (select) {
+            select.value = currentTechId || '';
         }
-
-        html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToMaintenancePage('${tabKey}', ${curPage + 1})" ${curPage >= totalPages ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}><i class="fa-solid fa-chevron-right"></i></button>`;
-        nav.innerHTML = html;
+        document.getElementById('modalAssignTech').style.display = 'flex';
     }
-}
 
-function goToMaintenancePage(tabKey, p) {
-    if (p < 1) return;
-    maintenancePaginationState[tabKey].page = p;
-    renderMaintenancePagination(tabKey);
-}
-
-function changeMaintenancePageSize(tabKey, newSize) {
-    maintenancePaginationState[tabKey].pageSize = parseInt(newSize, 10);
-    maintenancePaginationState[tabKey].page = 1;
-    renderMaintenancePagination(tabKey);
-}
-
-// 2. Chuyển Tab Client-side mượt mà
-function updateExportButtonCount(tabKey) {
-    const tbody = document.getElementById(`tbody_${tabKey}`);
-    const rows = tbody ? tbody.querySelectorAll(`.${tabKey}-row`).length : 0;
-    const btnText = document.getElementById('btnExportText');
-    if (btnText) {
-        btnText.innerText = `Xuất Excel (${rows})`;
+    function closeAssignModal() {
+        document.getElementById('modalAssignTech').style.display = 'none';
     }
-}
 
-function switchMaintenanceTab(tabKey) {
-    const input = document.getElementById('currentActiveTab');
-    if (input) input.value = tabKey;
+    // Modal Cập nhật tiến độ
+    function openProgressModal(maPhieu, moTa, currentNote) {
+        document.getElementById('progressModalMaPhieu').value = maPhieu;
+        document.getElementById('progressModalMaPhieuText').innerText = maPhieu;
+        document.getElementById('progressModalMoTa').innerText = moTa || 'Không có mô tả chi tiết';
+        document.getElementById('textareaProgressGhiChu').value = currentNote || '';
+        document.getElementById('modalProgress').style.display = 'flex';
+    }
 
-    const url = new URL(window.location.href);
-    url.searchParams.set('tab', tabKey);
-    window.history.replaceState({}, '', url.toString());
+    function closeProgressModal() {
+        document.getElementById('modalProgress').style.display = 'none';
+    }
 
-    document.querySelectorAll('.tab-btn').forEach(b => {
-        b.style.color = 'var(--text-secondary)';
-        b.style.background = 'transparent';
-        b.style.fontWeight = '600';
-        b.classList.remove('active');
+    // Modal Hoàn thành
+    function openCompleteModal(maPhieu, tenThietBi) {
+        document.getElementById('completeModalMaPhieu').value = maPhieu;
+        document.getElementById('completeModalMaPhieuText').innerText = maPhieu;
+        document.getElementById('modalComplete').style.display = 'flex';
+    }
+
+    function closeCompleteModal() {
+        document.getElementById('modalComplete').style.display = 'none';
+    }
+
+    // Modal Lập phiếu sự cố hạ tầng
+    function openStaffTicketModal() {
+        document.getElementById('modalStaffTicket').style.display = 'flex';
+    }
+
+    function closeStaffTicketModal() {
+        document.getElementById('modalStaffTicket').style.display = 'none';
+    }
+
+    // Modal Hủy phiếu
+    function openCancelModal(maPhieu, tenThietBi) {
+        document.getElementById('cancelModalMaPhieu').value = maPhieu;
+        document.getElementById('cancelModalMaPhieuText').innerText = maPhieu;
+        document.getElementById('cancelModalTenThietBi').innerText = tenThietBi;
+        document.getElementById('inputCancelReason').value = '';
+        document.getElementById('selectQuickCancelReason').value = '';
+        document.getElementById('modalCancelTicket').style.display = 'flex';
+    }
+
+    function closeCancelModal() {
+        document.getElementById('modalCancelTicket').style.display = 'none';
+    }
+
+    function onQuickCancelChange(val) {
+        if (val) {
+            document.getElementById('inputCancelReason').value = val;
+        }
+    }
+
+    // Khởi chạy khi DOM sẵn sàng
+    document.addEventListener('DOMContentLoaded', function() {
+        ['pending', 'fixing', 'infra', 'completed', 'cancelled'].forEach(k => {
+            renderMaintenancePagination(k);
+        });
+
+        const input = document.getElementById('currentActiveTab');
+        const initialTab = input ? input.value : 'pending';
+        updateExportButtonCount(initialTab);
     });
 
-    ['pending', 'fixing', 'infra', 'completed', 'cancelled'].forEach(k => {
-        const el = document.getElementById(`tabContent_${k}`);
-        if (el) el.style.display = 'none';
-    });
-
-    const activeBtn = document.getElementById(`tabBtn${tabKey.charAt(0).toUpperCase() + tabKey.slice(1)}`);
-    if (activeBtn) {
-        activeBtn.style.color = 'var(--primary)';
-        activeBtn.style.background = '#eff6ff';
-        activeBtn.style.fontWeight = '700';
-        activeBtn.classList.add('active');
-    }
-
-    const activeEl = document.getElementById(`tabContent_${tabKey}`);
-    if (activeEl) activeEl.style.display = 'block';
-
-    updateExportButtonCount(tabKey);
-}
-
-// 3. Dropdown liên hoàn (Cascading Dropdowns)
-function onKhuChange(khuVal) {
-    const cumSelect = document.getElementById('filterCumSelect');
-    const toaSelect = document.getElementById('filterToaSelect');
-    if (cumSelect) cumSelect.value = '';
-    if (toaSelect) toaSelect.value = '';
-    document.getElementById('filterFormMaintenance').submit();
-}
-
-function onCumChange(cumVal) {
-    const toaSelect = document.getElementById('filterToaSelect');
-    if (toaSelect) toaSelect.value = '';
-    document.getElementById('filterFormMaintenance').submit();
-}
-
-// 4. Xuất Excel / CSV
-function exportMaintenance() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const input = document.getElementById('currentActiveTab');
-    const currentTab = input ? input.value : 'pending';
-    urlParams.set('tab', currentTab);
-    window.location.href = '<?= url('staff/maintenance/export') ?>?' + urlParams.toString();
-}
-
-// 5. Xử lý Modals
-// Modal Phân công
-function openAssignModal(maPhieu, tenThietBi, currentTechId, maKhu) {
-    document.getElementById('assignModalMaPhieu').value = maPhieu;
-    document.getElementById('assignModalMaPhieuText').innerText = maPhieu;
-    document.getElementById('assignModalTenThietBi').innerText = tenThietBi;
-
-    const select = document.getElementById('selectAssignTho');
-    if (select) {
-        select.value = currentTechId || '';
-    }
-    document.getElementById('modalAssignTech').style.display = 'flex';
-}
-function closeAssignModal() {
-    document.getElementById('modalAssignTech').style.display = 'none';
-}
-
-// Modal Cập nhật tiến độ
-function openProgressModal(maPhieu, moTa, currentNote) {
-    document.getElementById('progressModalMaPhieu').value = maPhieu;
-    document.getElementById('progressModalMaPhieuText').innerText = maPhieu;
-    document.getElementById('progressModalMoTa').innerText = moTa || 'Không có mô tả chi tiết';
-    document.getElementById('textareaProgressGhiChu').value = currentNote || '';
-    document.getElementById('modalProgress').style.display = 'flex';
-}
-function closeProgressModal() {
-    document.getElementById('modalProgress').style.display = 'none';
-}
-
-// Modal Hoàn thành
-function openCompleteModal(maPhieu, tenThietBi) {
-    document.getElementById('completeModalMaPhieu').value = maPhieu;
-    document.getElementById('completeModalMaPhieuText').innerText = maPhieu;
-    document.getElementById('modalComplete').style.display = 'flex';
-}
-function closeCompleteModal() {
-    document.getElementById('modalComplete').style.display = 'none';
-}
-
-// Modal Lập phiếu sự cố hạ tầng
-function openStaffTicketModal() {
-    document.getElementById('modalStaffTicket').style.display = 'flex';
-}
-function closeStaffTicketModal() {
-    document.getElementById('modalStaffTicket').style.display = 'none';
-}
-
-// Modal Hủy phiếu
-function openCancelModal(maPhieu, tenThietBi) {
-    document.getElementById('cancelModalMaPhieu').value = maPhieu;
-    document.getElementById('cancelModalMaPhieuText').innerText = maPhieu;
-    document.getElementById('cancelModalTenThietBi').innerText = tenThietBi;
-    document.getElementById('inputCancelReason').value = '';
-    document.getElementById('selectQuickCancelReason').value = '';
-    document.getElementById('modalCancelTicket').style.display = 'flex';
-}
-function closeCancelModal() {
-    document.getElementById('modalCancelTicket').style.display = 'none';
-}
-
-function onQuickCancelChange(val) {
-    if (val) {
-        document.getElementById('inputCancelReason').value = val;
-    }
-}
-
-// Khởi chạy khi DOM sẵn sàng
-document.addEventListener('DOMContentLoaded', function() {
-    ['pending', 'fixing', 'infra', 'completed', 'cancelled'].forEach(k => {
-        renderMaintenancePagination(k);
-    });
-
-    const input = document.getElementById('currentActiveTab');
-    const initialTab = input ? input.value : 'pending';
-    updateExportButtonCount(initialTab);
-});
-
-// ESC & Backdrop close
-window.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeAssignModal();
-        closeProgressModal();
-        closeCompleteModal();
-        closeStaffTicketModal();
-        closeCancelModal();
-    }
-});
-
-window.addEventListener('click', function(e) {
-    const modals = [
-        document.getElementById('modalAssignTech'),
-        document.getElementById('modalProgress'),
-        document.getElementById('modalComplete'),
-        document.getElementById('modalStaffTicket'),
-        document.getElementById('modalCancelTicket')
-    ];
-    modals.forEach(m => {
-        if (m && e.target === m) {
-            m.style.display = 'none';
+    // ESC & Backdrop close
+    window.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeAssignModal();
+            closeProgressModal();
+            closeCompleteModal();
+            closeStaffTicketModal();
+            closeCancelModal();
         }
     });
-});
+
+    window.addEventListener('click', function(e) {
+        const modals = [
+            document.getElementById('modalAssignTech'),
+            document.getElementById('modalProgress'),
+            document.getElementById('modalComplete'),
+            document.getElementById('modalStaffTicket'),
+            document.getElementById('modalCancelTicket')
+        ];
+        modals.forEach(m => {
+            if (m && e.target === m) {
+                m.style.display = 'none';
+            }
+        });
+    });
 </script>
 
 <?php

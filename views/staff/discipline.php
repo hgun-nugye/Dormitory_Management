@@ -24,8 +24,8 @@ ob_start();
                 </p>
             </div>
             <div style="display: flex; gap: 8px;">
-                <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline" style="border-radius: 8px; font-size: 0.85rem;">
-                    &larr; Về Dashboard
+                <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
+                    <i class="fa-solid fa-arrow-left"></i> Về Dashboard
                 </a>
             </div>
         </div>
@@ -34,19 +34,19 @@ ob_start();
     <!-- Thông báo Flash Messages -->
     <?php if (!empty($flashSuccess)): ?>
         <div style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 0.875rem; display: flex; align-items: center; gap: 8px;">
-            <span>✓</span> <strong>Thành công:</strong> <?= htmlspecialchars($flashSuccess) ?>
+            <strong>Thành công:</strong> <?= htmlspecialchars($flashSuccess) ?>
         </div>
     <?php endif; ?>
 
     <?php if (!empty($flashError)): ?>
         <div style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 0.875rem; display: flex; align-items: center; gap: 8px;">
-            <span>✕</span> <strong>Lỗi:</strong> <?= htmlspecialchars($flashError) ?>
+            <strong>Lỗi:</strong> <?= htmlspecialchars($flashError) ?>
         </div>
     <?php endif; ?>
 
     <?php if (!empty($flashWarning)): ?>
         <div style="background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 0.875rem; display: flex; align-items: center; gap: 8px;">
-            <span>⚠️</span> <strong>Lưu ý:</strong> <?= htmlspecialchars($flashWarning) ?>
+            <strong>Lưu ý:</strong> <?= htmlspecialchars($flashWarning) ?>
         </div>
     <?php endif; ?>
 
@@ -98,7 +98,7 @@ ob_start();
             <div style="display: flex; gap: 6px; background: #f1f5f9; padding: 4px; border-radius: 8px;">
                 <a href="<?= url('staff/discipline?tab=canh-bao&namHoc=' . urlencode($namHoc) . '&hocKy=' . $hocKy . '&cum=' . urlencode($selectedCum)) ?>"
                    style="padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 6px; <?= ($activeTab === 'canh-bao') ? 'background: #fff; color: #dc2626; box-shadow: 0 1px 3px rgba(0,0,0,0.1);' : 'color: #64748b;' ?>">
-                    <span>🚨</span> Cảnh báo Vắng mặt > 30 ngày
+                    Cảnh báo Vắng mặt > 30 ngày
                     <?php if ($stats['absenceWarnings'] > 0): ?>
                         <span style="background: #dc2626; color: #fff; border-radius: 10px; padding: 1px 6px; font-size: 0.7rem;">
                             <?= $stats['absenceWarnings'] ?>
@@ -108,12 +108,12 @@ ob_start();
 
                 <a href="<?= url('staff/discipline?tab=barrier&namHoc=' . urlencode($namHoc) . '&hocKy=' . $hocKy . '&cum=' . urlencode($selectedCum)) ?>"
                    style="padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 6px; <?= ($activeTab === 'barrier') ? 'background: #fff; color: #2563eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1);' : 'color: #64748b;' ?>">
-                    <span>🛡️</span> Giám sát Quét thẻ Barrier (<?= $stats['totalBarrierScans'] ?>)
+                    Giám sát Quét thẻ Barrier (<?= $stats['totalBarrierScans'] ?>)
                 </a>
 
                 <a href="<?= url('staff/discipline?tab=ren-luyen&namHoc=' . urlencode($namHoc) . '&hocKy=' . $hocKy . '&cum=' . urlencode($selectedCum)) ?>"
                    style="padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 6px; <?= ($activeTab === 'ren-luyen') ? 'background: #fff; color: #16a34a; box-shadow: 0 1px 3px rgba(0,0,0,0.1);' : 'color: #64748b;' ?>">
-                    <span>⭐</span> Điểm Rèn luyện & Kỷ luật (<?= $stats['totalResident'] ?>)
+                    Điểm Rèn luyện & Kỷ luật (<?= $stats['totalResident'] ?>)
                 </a>
             </div>
 
@@ -135,8 +135,8 @@ ob_start();
                 <?php if ($scope['canFilterAll']): ?>
                     <select name="cum" onchange="this.form.submit()" style="padding: 7px 10px; border-radius: 6px; font-size: 0.82rem; border: 1px solid #cbd5e1; background: #fff;">
                         <option value="all" <?= ($selectedCum === 'all') ? 'selected' : '' ?>>-- Toàn bộ KTX --</option>
-                        <option value="khu-A" <?= ($selectedCum === 'khu-A') ? 'selected' : '' ?>>🏢 Toàn bộ Khu A</option>
-                        <option value="khu-B" <?= ($selectedCum === 'khu-B') ? 'selected' : '' ?>>🏢 Toàn bộ Khu B</option>
+                        <option value="khu-A" <?= ($selectedCum === 'khu-A') ? 'selected' : '' ?>>Toàn bộ Khu A</option>
+                        <option value="khu-B" <?= ($selectedCum === 'khu-B') ? 'selected' : '' ?>>Toàn bộ Khu B</option>
                         <?php foreach ($clusters as $c): ?>
                             <option value="<?= htmlspecialchars($c['MaCum']) ?>" <?= ($selectedCum === $c['MaCum']) ? 'selected' : '' ?>>
                                 Cụm <?= htmlspecialchars($c['MaCum']) ?> - <?= htmlspecialchars($c['TenCum']) ?> (Khu <?= htmlspecialchars($c['MaKhu']) ?>)
@@ -166,8 +166,8 @@ ob_start();
         <div style="background: #fff; border: 1px solid #e2e8f0; border-left: 5px solid #dc2626; border-radius: 10px; padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
                 <div>
-                    <h2 style="margin: 0; font-size: 1.15rem; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                        <span>🚨</span> Danh Sách Cảnh Báo Sinh Viên Vắng Mặt Quá 30 Ngày Không Phép
+                    <h2 style="margin: 0; font-size: 1.15rem; color: #1e293b;">
+                        Danh Sách Cảnh Báo Sinh Viên Vắng Mặt Quá 30 Ngày Không Phép
                     </h2>
                     <p style="margin: 4px 0 0 0; font-size: 0.82rem; color: #64748b;">
                         Đối soát tự động giữa lần quét cổng barrier gần nhất và bảng đơn từ trực tuyến <code>DonTuMotCua</code>. Các trường hợp không có đơn tạm vắng hợp lệ được liệt kê dưới đây:
@@ -238,13 +238,13 @@ ob_start();
                                     </td>
                                     <td style="padding: 12px 10px; text-align: right;">
                                         <div style="display: flex; gap: 6px; justify-content: flex-end;">
-                                            <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px; font-size: 0.75rem; padding: 4px 8px;"
+                                            <button type="button" class="btn btn-outline btn-sm" style="height: 30px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;"
                                                     onclick="openAbsenceActionModal('<?= htmlspecialchars($w['maSinhVien']) ?>', '<?= htmlspecialchars($w['hoVaTen']) ?>', '<?= htmlspecialchars($w['sdtPhuHuynh']) ?>', 'lien_he')">
-                                                📞 Liên hệ
+                                                <i class="fa-solid fa-phone"></i> Liên hệ
                                             </button>
-                                            <button type="button" class="btn btn-primary btn-sm" style="border-radius: 6px; font-size: 0.75rem; padding: 4px 8px; background: #dc2626; border-color: #dc2626;"
+                                            <button type="button" class="btn btn-danger btn-sm" style="height: 30px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px; background: #dc2626; border-color: #dc2626; color: #fff;"
                                                     onclick="openAbsenceActionModal('<?= htmlspecialchars($w['maSinhVien']) ?>', '<?= htmlspecialchars($w['hoVaTen']) ?>', '<?= htmlspecialchars($w['sdtPhuHuynh']) ?>', 'lap_bien_ban')">
-                                                📝 Lập biên bản (-25đ)
+                                                <i class="fa-solid fa-file-pen"></i> Lập biên bản (-25đ)
                                             </button>
                                         </div>
                                     </td>
@@ -264,17 +264,17 @@ ob_start();
         <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
                 <div>
-                    <h2 style="margin: 0; font-size: 1.15rem; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                        <span>🛡️</span> Nhật Ký Quét Thẻ Ra - Vào Cổng Barrier (Dữ Liệu Chỉ Đọc)
+                    <h2 style="margin: 0; font-size: 1.15rem; color: #1e293b;">
+                        Nhật Ký Quét Thẻ Ra - Vào Cổng Barrier (Dữ Liệu Chỉ Đọc)
                     </h2>
                     <p style="margin: 4px 0 0 0; font-size: 0.82rem; color: #64748b;">
                         Dữ liệu lưu vết thời gian thực tại các cổng barrier phân khu KTX. Dữ liệu chỉ đọc từ thiết bị đọc thẻ/FaceID.
                     </p>
                 </div>
                 <div style="display: flex; gap: 8px;">
-                    <button type="button" class="btn btn-primary btn-sm" style="border-radius: 6px; background: #0284c7; border: none; font-size: 0.82rem; display: flex; align-items: center; gap: 5px;"
+                    <button type="button" class="btn btn-primary btn-sm" style="height: 36px; border-radius: 8px; background: #0284c7; border: none; font-size: 0.85rem; font-weight: 600; padding: 7px 14px; display: inline-flex; align-items: center; gap: 6px;"
                             onclick="openSimulateScanModal()">
-                        <span>⚡</span> Giả lập quét thẻ Barrier (Demo)
+                        <i class="fa-solid fa-bolt"></i> Giả lập quét thẻ Barrier (Demo)
                     </button>
                 </div>
             </div>
@@ -373,8 +373,8 @@ ob_start();
         <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
                 <div>
-                    <h2 style="margin: 0; font-size: 1.15rem; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                        <span>⭐</span> Bảng Tổng Kết Điểm Rèn Luyện & Kỷ Luật Nội Trú (Học kỳ <?= $hocKy ?> / Năm <?= htmlspecialchars($namHoc) ?>)
+                    <h2 style="margin: 0; font-size: 1.15rem; color: #1e293b;">
+                        Bảng Tổng Kết Điểm Rèn Luyện & Kỷ Luật Nội Trú (Học kỳ <?= $hocKy ?> / Năm <?= htmlspecialchars($namHoc) ?>)
                     </h2>
                     <p style="margin: 4px 0 0 0; font-size: 0.82rem; color: #64748b;">
                         Khởi điểm 100 điểm/kỳ; ghi nhận sự kiện khen thưởng (+) và vi phạm nội quy (-). Chốt gửi điểm về Trường thành viên để xét học bổng.
@@ -383,21 +383,21 @@ ob_start();
 
                 <!-- Các nút tác vụ nhanh -->
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button type="button" class="btn btn-primary btn-sm" style="border-radius: 6px; font-size: 0.82rem; background: #059669; border: none; display: flex; align-items: center; gap: 5px;"
+                    <button type="button" class="btn btn-primary btn-sm" style="height: 36px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; background: #059669; border: none; padding: 7px 14px; display: inline-flex; align-items: center; gap: 6px;"
                             onclick="openRecordModal()">
-                        <span>➕</span> Ghi nhận Vi phạm / Khen thưởng
+                        <i class="fa-solid fa-plus"></i> Ghi nhận Vi phạm / Khen thưởng
                     </button>
 
                     <?php if ($scope['canLockPoints']): ?>
-                        <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px; font-size: 0.82rem; border-color: #f59e0b; color: #b45309; display: flex; align-items: center; gap: 5px;"
+                        <button type="button" class="btn btn-outline btn-sm" style="height: 36px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; border-color: #f59e0b; color: #b45309; padding: 7px 14px; display: inline-flex; align-items: center; gap: 6px;"
                                 onclick="openLockSubmitModal()">
-                            <span>🔒</span> Chốt & Gửi điểm về Trường
+                            <i class="fa-solid fa-lock"></i> Chốt & Gửi điểm về Trường
                         </button>
                     <?php endif; ?>
 
                     <a href="<?= url('staff/discipline/export?namHoc=' . urlencode($namHoc) . '&hocKy=' . $hocKy) ?>"
-                       class="btn btn-outline btn-sm" style="border-radius: 6px; font-size: 0.82rem; display: flex; align-items: center; gap: 5px;">
-                        <span>📥</span> Xuất Excel/CSV
+                       class="btn btn-outline btn-sm" style="height: 36px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; padding: 7px 14px; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-file-excel"></i> Xuất Excel/CSV
                     </a>
                 </div>
             </div>
@@ -493,15 +493,15 @@ ob_start();
                                     </td>
                                     <td style="padding: 12px 10px; text-align: right;">
                                         <div style="display: flex; gap: 6px; justify-content: flex-end;">
-                                            <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px; font-size: 0.75rem; padding: 4px 8px;"
+                                            <button type="button" class="btn btn-outline btn-sm" style="height: 30px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;"
                                                     onclick="viewStudentHistory('<?= htmlspecialchars($row['MaSinhVien']) ?>')">
-                                                🔍 Lịch sử
+                                                <i class="fa-solid fa-clock-rotate-left"></i> Lịch sử
                                             </button>
 
                                             <?php if (!$isLocked): ?>
-                                                <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px; font-size: 0.75rem; padding: 4px 8px;"
+                                                <button type="button" class="btn btn-primary btn-sm" style="height: 30px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px; background: #059669; border-color: #059669; color: #fff;"
                                                         onclick="openRecordModalForStudent('<?= htmlspecialchars($row['MaSinhVien']) ?>', '<?= htmlspecialchars($row['HoVaTen']) ?>')">
-                                                    ➕ Ghi nhận
+                                                    <i class="fa-solid fa-plus"></i> Ghi nhận
                                                 </button>
                                             <?php else: ?>
                                                 <span style="font-size: 0.75rem; color: #94a3b8; font-style: italic; align-self: center;">Đã khóa</span>
@@ -524,8 +524,8 @@ ob_start();
 <div id="recordModal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); align-items: center; justify-content: center;">
     <div style="background: #fff; border-radius: 10px; max-width: 520px; width: 90%; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-            <h3 style="margin: 0; font-size: 1.15rem; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                <span>➕</span> Ghi Nhận Điểm Rèn Luyện / Vi Phạm
+            <h3 style="margin: 0; font-size: 1.15rem; color: #1e293b;">
+                Ghi Nhận Điểm Rèn Luyện / Vi Phạm
             </h3>
             <button type="button" onclick="closeRecordModal()" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b;">&times;</button>
         </div>
@@ -569,8 +569,10 @@ ob_start();
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" onclick="closeRecordModal()" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #475569; font-size: 0.85rem; cursor: pointer;">Hủy</button>
-                <button type="submit" style="padding: 8px 18px; border-radius: 6px; border: none; background: #059669; color: #fff; font-size: 0.85rem; font-weight: 600; cursor: pointer;">💾 Lưu ghi nhận</button>
+                <button type="button" onclick="closeRecordModal()" class="btn btn-outline" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px;">Hủy</button>
+                <button type="submit" class="btn btn-primary" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px; background: #059669; border-color: #059669; color: #fff; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-floppy-disk"></i> Lưu ghi nhận
+                </button>
             </div>
         </form>
     </div>
@@ -582,8 +584,8 @@ ob_start();
 <div id="absenceActionModal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); align-items: center; justify-content: center;">
     <div style="background: #fff; border-radius: 10px; max-width: 480px; width: 90%; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-            <h3 style="margin: 0; font-size: 1.15rem; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                <span>📝</span> Xử Lý Sinh Viên Vắng Mặt Kéo Dài
+            <h3 style="margin: 0; font-size: 1.15rem; color: #1e293b;">
+                Xử Lý Sinh Viên Vắng Mặt Kéo Dài
             </h3>
             <button type="button" onclick="closeAbsenceActionModal()" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b;">&times;</button>
         </div>
@@ -601,8 +603,8 @@ ob_start();
             <div style="margin-bottom: 14px;">
                 <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Biện pháp xử lý: <span style="color: #dc2626;">*</span></label>
                 <select name="hanhDong" id="absenceHanhDong" required style="width: 100%; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #cbd5e1; background: #fff;">
-                    <option value="lien_he">📞 Đã gọi điện phụ huynh / Trưởng phòng xác nhận tình trạng</option>
-                    <option value="lap_bien_ban">📝 Lập biên bản vi phạm nội quy vắng mặt không phép (Trừ 25 điểm)</option>
+                    <option value="lien_he">Đã gọi điện phụ huynh / Trưởng phòng xác nhận tình trạng</option>
+                    <option value="lap_bien_ban">Lập biên bản vi phạm nội quy vắng mặt không phép (Trừ 25 điểm)</option>
                 </select>
             </div>
 
@@ -612,8 +614,10 @@ ob_start();
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" onclick="closeAbsenceActionModal()" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #475569; font-size: 0.85rem; cursor: pointer;">Hủy</button>
-                <button type="submit" style="padding: 8px 18px; border-radius: 6px; border: none; background: #dc2626; color: #fff; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Xác nhận xử lý</button>
+                <button type="button" onclick="closeAbsenceActionModal()" class="btn btn-outline" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px;">Hủy</button>
+                <button type="submit" class="btn btn-danger" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 18px; background: #dc2626; border-color: #dc2626; color: #fff; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-check"></i> Xác nhận xử lý
+                </button>
             </div>
         </form>
     </div>
@@ -625,8 +629,8 @@ ob_start();
 <div id="simulateScanModal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); align-items: center; justify-content: center;">
     <div style="background: #fff; border-radius: 10px; max-width: 480px; width: 90%; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-            <h3 style="margin: 0; font-size: 1.15rem; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                <span>⚡</span> Giả Lập Quét Thẻ Cổng Barrier
+            <h3 style="margin: 0; font-size: 1.15rem; color: #1e293b;">
+                Giả Lập Quét Thẻ Cổng Barrier
             </h3>
             <button type="button" onclick="closeSimulateScanModal()" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b;">&times;</button>
         </div>
@@ -661,14 +665,16 @@ ob_start();
             <div style="margin-bottom: 18px;">
                 <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Hướng di chuyển: <span style="color: #dc2626;">*</span></label>
                 <select name="huongDi" required style="width: 100%; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #cbd5e1; background: #fff;">
-                    <option value="Vào">⬇️ Vào KTX</option>
-                    <option value="Ra">⬆️ Ra ngoài KTX</option>
+                    <option value="Vào">Vào KTX</option>
+                    <option value="Ra">Ra ngoài KTX</option>
                 </select>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" onclick="closeSimulateScanModal()" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #475569; font-size: 0.85rem; cursor: pointer;">Hủy</button>
-                <button type="submit" style="padding: 8px 18px; border-radius: 6px; border: none; background: #0284c7; color: #fff; font-size: 0.85rem; font-weight: 600; cursor: pointer;">⚡ Quét thẻ ngay</button>
+                <button type="button" onclick="closeSimulateScanModal()" class="btn btn-outline" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px;">Hủy</button>
+                <button type="submit" class="btn btn-primary" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 18px; background: #0284c7; border-color: #0284c7; color: #fff; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-bolt"></i> Quét thẻ ngay
+                </button>
             </div>
         </form>
     </div>
@@ -680,14 +686,14 @@ ob_start();
 <div id="lockSubmitModal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); align-items: center; justify-content: center;">
     <div style="background: #fff; border-radius: 10px; max-width: 500px; width: 90%; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-            <h3 style="margin: 0; font-size: 1.15rem; color: #b45309; display: flex; align-items: center; gap: 8px;">
-                <span>🔒</span> Chốt & Gửi Điểm Rèn Luyện Về Trường
+            <h3 style="margin: 0; font-size: 1.15rem; color: #b45309;">
+                Chốt & Gửi Điểm Rèn Luyện Về Trường
             </h3>
             <button type="button" onclick="closeLockSubmitModal()" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b;">&times;</button>
         </div>
 
         <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 0.82rem; color: #92400e; line-height: 1.55;">
-            <strong>⚠️ Lưu ý quan trọng:</strong><br>
+            <strong>Lưu ý quan trọng:</strong><br>
             Khi thực hiện thao tác này, toàn bộ điểm rèn luyện của sinh viên trong phạm vi quản lý sẽ được chuyển sang trạng thái <code>DaGuiVeTruong = 1</code>.
             Hệ thống sẽ <strong>KHÓA CỨNG</strong> chức năng thêm/sửa/xóa điểm rèn luyện của các sinh viên đó để bảo đảm tính pháp lý khi gửi cho Phòng Công tác Sinh viên các trường ĐH.
         </div>
@@ -709,8 +715,10 @@ ob_start();
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" onclick="closeLockSubmitModal()" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #475569; font-size: 0.85rem; cursor: pointer;">Hủy</button>
-                <button type="submit" style="padding: 8px 18px; border-radius: 6px; border: none; background: #b45309; color: #fff; font-size: 0.85rem; font-weight: 600; cursor: pointer;">🔒 Xác nhận Chốt & Khóa điểm</button>
+                <button type="button" onclick="closeLockSubmitModal()" class="btn btn-outline" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px;">Hủy</button>
+                <button type="submit" class="btn btn-primary" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 18px; background: #b45309; border-color: #b45309; color: #fff; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-lock"></i> Xác nhận Chốt & Khóa điểm
+                </button>
             </div>
         </form>
     </div>
@@ -722,8 +730,8 @@ ob_start();
 <div id="historyModal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); align-items: center; justify-content: center;">
     <div style="background: #fff; border-radius: 10px; max-width: 650px; width: 90%; max-height: 85vh; display: flex; flex-direction: column; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-            <h3 style="margin: 0; font-size: 1.15rem; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                <span>🔍</span> Lịch Sử Rèn Luyện Chi Tiết Của Sinh Viên
+            <h3 style="margin: 0; font-size: 1.15rem; color: #1e293b;">
+                Lịch Sử Rèn Luyện Chi Tiết Của Sinh Viên
             </h3>
             <button type="button" onclick="closeHistoryModal()" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b;">&times;</button>
         </div>
@@ -739,7 +747,7 @@ ob_start();
         </div>
 
         <div style="display: flex; justify-content: flex-end;">
-            <button type="button" onclick="closeHistoryModal()" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #475569; font-size: 0.85rem; cursor: pointer;">Đóng</button>
+            <button type="button" onclick="closeHistoryModal()" class="btn btn-outline" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 16px;">Đóng</button>
         </div>
     </div>
 </div>

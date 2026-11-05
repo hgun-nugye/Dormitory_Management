@@ -23,14 +23,14 @@ ob_start();
             </div>
             <!-- CÁC NÚT THAO TÁC HEADER (GIỐNG PHÒNG VÀ USERS: IMPORT, EXPORT, TEMPLATE) -->
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                <button type="button" class="btn btn-outline" onclick="openImportZoneModal()" style="border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; color: #2563eb; border-color: #bfdbfe; background: #eff6ff;" title="Nhập danh sách phòng từ file CSV">
-                    <i class="fa-solid fa-file-import" style="margin-right: 6px;"></i> Nhập file
+                <button type="button" class="btn btn-outline" onclick="openImportZoneModal()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #2563eb; border-color: #bfdbfe; background: #eff6ff;" title="Nhập danh sách phòng từ file CSV">
+                    <i class="fa-solid fa-file-import"></i> Nhập file
                 </button>
-                <button type="button" class="btn btn-outline" onclick="exportZoneData()" " style=" border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; color: #15803d; border-color: #86efac; background: #f0fdf4; cursor: pointer;" title="Xuất danh sách phòng theo kết quả lọc ra Excel/CSV">
-                    <i class="fa-solid fa-file-excel" style="margin-right: 6px; color: #16a34a;"></i> <span id="btnExportText">Xuất Excel</span>
+                <button type="button" class="btn btn-outline" onclick="exportZoneData()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #15803d; border-color: #86efac; background: #f0fdf4; cursor: pointer;" title="Xuất danh sách phòng theo kết quả lọc ra Excel/CSV">
+                    <i class="fa-solid fa-file-excel" style="color: #16a34a;"></i> <span id="btnExportText">Xuất Excel</span>
                 </button>
-                <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 6px 14px;">
-                    <i class="fa-solid fa-arrow-left" style="margin-right: 6px;"></i> Về Dashboard
+                <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="fa-solid fa-arrow-left"></i> Về Dashboard
                 </a>
             </div>
         </div>
@@ -58,7 +58,7 @@ ob_start();
     <!-- TABS ĐIỀU HƯỚNG SUB-TABS HẠ TẦNG -->
     <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; flex-wrap: wrap;">
         <button type="button" class="tab-btn active" id="tabBtnPhong" onclick="switchZoneTab('phong')" style="background:none; border:none; padding: 10px 18px; font-size: 0.95rem; font-weight: 700; cursor: pointer; border-radius: 8px; color: var(--primary); background: #eff6ff;">
-            <i class="fa-solid fa-door-open" style="margin-right: 6px;"></i> 1. Danh mục Phòng ở (<span id="tabCountPhong"><?= count($phongList ?? []) ?></span>)
+            Danh mục Phòng ở (<span id="tabCountPhong"><?= count($phongList ?? []) ?></span>)
             <?php if (!empty($scope['canCreatePhong']) && !empty($scope['canUpdatePhong'])): ?>
                 <span class="badge badge-success" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Toàn quyền</span>
             <?php elseif (!empty($scope['canCreatePhong']) || !empty($scope['canDeletePhong'])): ?>
@@ -71,7 +71,7 @@ ob_start();
         </button>
 
         <button type="button" class="tab-btn" id="tabBtnToa" onclick="switchZoneTab('toa')" style="background:none; border:none; padding: 10px 18px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 8px; color: var(--text-secondary);">
-            <i class="fa-solid fa-building" style="margin-right: 6px;"></i> 2. Danh mục Tòa nhà (<span id="tabCountToa"><?= count($toaList ?? []) ?></span>)
+            Danh mục Tòa nhà (<span id="tabCountToa"><?= count($toaList ?? []) ?></span>)
             <?php if (!empty($scope['canCreateToa']) && !empty($scope['canUpdateToa'])): ?>
                 <span class="badge badge-success" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Toàn quyền</span>
             <?php elseif (!empty($scope['canCreateToa']) || !empty($scope['canDeleteToa'])): ?>
@@ -84,7 +84,7 @@ ob_start();
         </button>
 
         <button type="button" class="tab-btn" id="tabBtnCum" onclick="switchZoneTab('cum')" style="background:none; border:none; padding: 10px 18px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 8px; color: var(--text-secondary);">
-            <i class="fa-solid fa-sitemap" style="margin-right: 6px;"></i> 3. Danh mục Cụm nhà (<span id="tabCountCum"><?= count($cumList ?? []) ?></span>)
+            Danh mục Cụm nhà (<span id="tabCountCum"><?= count($cumList ?? []) ?></span>)
             <?php if (!empty($scope['canCreateCum']) && !empty($scope['canUpdateCum'])): ?>
                 <span class="badge badge-success" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Toàn quyền</span>
             <?php elseif (!empty($scope['canCreateCum']) || !empty($scope['canDeleteCum'])): ?>
@@ -97,7 +97,7 @@ ob_start();
         </button>
 
         <button type="button" class="tab-btn" id="tabBtnKhu" onclick="switchZoneTab('khu')" style="background:none; border:none; padding: 10px 18px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 8px; color: var(--text-secondary);">
-            <i class="fa-solid fa-layer-group" style="margin-right: 6px;"></i> 4. Danh mục Khu KTX (<span id="tabCountKhu"><?= count($khuList ?? []) ?></span>)
+            Danh mục Khu KTX (<span id="tabCountKhu"><?= count($khuList ?? []) ?></span>)
             <?php if (!empty($scope['canCreateKhu']) && !empty($scope['canUpdateKhu'])): ?>
                 <span class="badge badge-success" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Toàn quyền</span>
             <?php elseif (!empty($scope['canCreateKhu']) || !empty($scope['canDeleteKhu'])): ?>
@@ -119,7 +119,6 @@ ob_start();
         <div class="card" id="cardFormRoom" style="display: none; margin-bottom: 24px; border: 2px solid #bfdbfe; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);">
             <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
                 <div id="titleFormRoom" style="font-weight: 700; color: #1e3a8a; font-size: 1.05rem;">
-                    <i class="fa-solid fa-plus-circle" style="color: var(--primary); margin-right: 8px;"></i>
                     <span id="titleFormRoomText">Thêm mới Phòng ở & Khởi tạo giường tự động</span>
                 </div>
                 <button type="button" class="btn btn-outline btn-sm" onclick="hideRoomForm()" style="border-radius: 6px; color: var(--text-muted); cursor: pointer;" title="Đóng biểu mẫu">
@@ -134,7 +133,7 @@ ob_start();
                 <div class="grid grid-cols-3" style="gap: 16px; margin-bottom: 16px;">
                     <div>
                         <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">
-                            1. Cụm nhà trực thuộc <span style="color:#dc2626;">*</span>
+                            Cụm nhà trực thuộc <span style="color:#dc2626;">*</span>
                         </label>
                         <select id="roomFormCum" class="btn-outline" style="width: 100%; padding: 10px; border-radius: 6px; font-size: 0.9rem;" onchange="onRoomFormCumChange()">
                             <option value="">-- Chọn Cụm nhà --</option>
@@ -147,7 +146,7 @@ ob_start();
                     </div>
                     <div>
                         <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">
-                            2. Tòa nhà lưu trú <span style="color:#dc2626;">*</span>
+                            Tòa nhà lưu trú <span style="color:#dc2626;">*</span>
                         </label>
                         <select id="roomFormToa" name="maToaNha" class="btn-outline" style="width: 100%; padding: 10px; border-radius: 6px; font-size: 0.9rem;" required onchange="autoSuggestRoomCode()">
                             <option value="">-- Chọn Tòa nhà --</option>
@@ -160,7 +159,7 @@ ob_start();
                     </div>
                     <div>
                         <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">
-                            3. Số phòng <span style="color:#dc2626;">*</span>
+                            Số phòng <span style="color:#dc2626;">*</span>
                         </label>
                         <input type="text" id="roomFormSoPhong" name="soPhong" class="btn-outline" style="width: 100%; padding: 10px; border-radius: 6px; font-size: 0.9rem;" placeholder="Ví dụ: 101, 102, 203..." required oninput="autoSuggestRoomCode()">
                     </div>
@@ -234,8 +233,8 @@ ob_start();
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <?php if (!empty($scope['canCreatePhong'])): ?>
-                        <button type="button" class="btn btn-primary btn-sm" onclick="showCreateRoomForm()" style="border-radius: 6px; font-weight: 600; padding: 7px 14px;">
-                            <i class="fa-solid fa-plus-circle" style="margin-right: 6px;"></i> + Thêm phòng mới
+                        <button type="button" class="btn btn-primary btn-sm" onclick="showCreateRoomForm()" style="height: 32px; border-radius: 6px; font-weight: 600; font-size: 0.825rem; padding: 5px 12px; display: inline-flex; align-items: center; gap: 5px;">
+                            <i class="fa-solid fa-plus"></i> Thêm phòng mới
                         </button>
                     <?php endif; ?>
                 </div>
@@ -623,7 +622,6 @@ ob_start();
         <div class="card" id="cardFormToa" style="display: none; margin-bottom: 24px; border: 2px solid #bfdbfe; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);">
             <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
                 <div id="titleFormToa" style="font-weight: 700; color: #1e3a8a; font-size: 1.05rem;">
-                    <i class="fa-solid fa-plus-circle" style="color: var(--primary); margin-right: 8px;"></i>
                     <span id="titleFormToaText">Thêm mới Tòa nhà lưu trú</span>
                 </div>
                 <button type="button" class="btn btn-outline btn-sm" onclick="hideToaForm()" style="border-radius: 6px; color: var(--text-muted); cursor: pointer;" title="Đóng biểu mẫu">
@@ -721,8 +719,8 @@ ob_start();
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <?php if (!empty($scope['canCreateToa'])): ?>
-                        <button type="button" class="btn btn-primary btn-sm" onclick="showCreateToaForm()" style="border-radius: 6px; font-weight: 600; padding: 7px 14px;">
-                            <i class="fa-solid fa-plus-circle" style="margin-right: 6px;"></i> + Thêm tòa nhà mới
+                        <button type="button" class="btn btn-primary btn-sm" onclick="showCreateToaForm()" style="height: 32px; border-radius: 6px; font-weight: 600; font-size: 0.825rem; padding: 5px 12px; display: inline-flex; align-items: center; gap: 5px;">
+                            <i class="fa-solid fa-plus"></i> Thêm tòa nhà mới
                         </button>
                     <?php endif; ?>
                 </div>
@@ -900,7 +898,6 @@ ob_start();
         <div class="card" id="cardFormCum" style="display: none; margin-bottom: 24px; border: 2px solid #bfdbfe; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);">
             <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
                 <div id="titleFormCum" style="font-weight: 700; color: #1e3a8a; font-size: 1.05rem;">
-                    <i class="fa-solid fa-plus-circle" style="color: var(--primary); margin-right: 8px;"></i>
                     <span id="titleFormCumText">Thêm mới Cụm nhà lưu trú</span>
                 </div>
                 <button type="button" class="btn btn-outline btn-sm" onclick="hideCumForm()" style="border-radius: 6px; color: var(--text-muted); cursor: pointer;" title="Đóng biểu mẫu">
@@ -985,8 +982,8 @@ ob_start();
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <?php if (!empty($scope['canCreateCum'])): ?>
-                        <button type="button" class="btn btn-primary btn-sm" onclick="showCreateCumForm()" style="border-radius: 6px; font-weight: 600; padding: 7px 14px;">
-                            <i class="fa-solid fa-plus-circle" style="margin-right: 6px;"></i> + Thêm cụm mới
+                        <button type="button" class="btn btn-primary btn-sm" onclick="showCreateCumForm()" style="height: 32px; border-radius: 6px; font-weight: 600; font-size: 0.825rem; padding: 5px 12px; display: inline-flex; align-items: center; gap: 5px;">
+                            <i class="fa-solid fa-plus"></i> Thêm cụm mới
                         </button>
                     <?php endif; ?>
                 </div>
@@ -1132,7 +1129,6 @@ ob_start();
         <div class="card" id="cardFormKhu" style="display: none; margin-bottom: 24px; border: 2px solid #bfdbfe; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);">
             <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
                 <div id="titleFormKhu" style="font-weight: 700; color: #1e3a8a; font-size: 1.05rem;">
-                    <i class="fa-solid fa-plus-circle" style="color: var(--primary); margin-right: 8px;"></i>
                     <span id="titleFormKhuText">Thêm mới Khu KTX</span>
                 </div>
                 <button type="button" class="btn btn-outline btn-sm" onclick="hideKhuForm()" style="border-radius: 6px; color: var(--text-muted); cursor: pointer;" title="Đóng biểu mẫu">
@@ -1196,8 +1192,8 @@ ob_start();
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <?php if (!empty($scope['canCreateKhu'])): ?>
-                        <button type="button" class="btn btn-primary btn-sm" onclick="showCreateKhuForm()" style="border-radius: 6px; font-weight: 600; padding: 7px 14px;">
-                            <i class="fa-solid fa-plus-circle" style="margin-right: 6px;"></i> + Thêm khu mới
+                        <button type="button" class="btn btn-primary btn-sm" onclick="showCreateKhuForm()" style="height: 32px; border-radius: 6px; font-weight: 600; font-size: 0.825rem; padding: 5px 12px; display: inline-flex; align-items: center; gap: 5px;">
+                            <i class="fa-solid fa-plus"></i> Thêm khu mới
                         </button>
                     <?php endif; ?>
                 </div>
@@ -1320,9 +1316,8 @@ ob_start();
 <div id="importZoneModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 20px 16px; box-sizing: border-box; overflow-y: auto;">
     <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 620px; max-height: calc(100vh - 40px); display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
         <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; flex-shrink: 0;">
-            <div style="font-size: 1.05rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-file-import" style="color: #2563eb; margin-right: 6px;"></i>
-                <span>Nhập danh sách Phòng ở Hạ tầng từ CSV</span>
+            <div style="font-size: 1.05rem; font-weight: 700; color: #1e293b;">
+                Nhập danh sách Phòng ở Hạ tầng từ CSV
             </div>
             <button type="button" onclick="closeImportZoneModal()" style="background: none; border: none; font-size: 1.25rem; color: #64748b; cursor: pointer; padding: 4px;" title="Đóng">
                 <i class="fa-solid fa-xmark"></i>
@@ -1343,8 +1338,8 @@ ob_start();
                         <li><i>Hệ thống tự động sinh các giường trống (G1, G2...) tương ứng theo đúng loại phòng đã chọn!</i></li>
                     </ul>
                     <div style="margin-top: 12px; display: flex; justify-content: flex-end;">
-                        <a href="<?= url('staff/zones/template') ?>" class="btn btn-outline btn-sm" style="background: #fff; color: #1e40af; border-color: #93c5fd; font-weight: 600; text-decoration: none; border-radius: 6px; padding: 6px 14px; display: inline-flex; align-items: center;">
-                            <i class="fa-solid fa-download" style="margin-right: 6px;"></i> Tải tệp CSV mẫu chuẩn
+                        <a href="<?= url('staff/zones/template') ?>" class="btn btn-outline btn-sm" style="background: #fff; color: #1e40af; border-color: #93c5fd; font-weight: 600; text-decoration: none; border-radius: 6px; padding: 6px 14px; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-download"></i> Tải tệp CSV mẫu chuẩn
                         </a>
                     </div>
                 </div>
@@ -1373,11 +1368,11 @@ ob_start();
             </div>
 
             <div style="padding: 14px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
-                <button type="button" class="btn btn-outline" onclick="closeImportZoneModal()" style="border-radius: 6px; padding: 8px 18px;">
+                <button type="button" class="btn btn-outline" onclick="closeImportZoneModal()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 18px;">
                     Hủy bỏ
                 </button>
-                <button type="submit" class="btn btn-primary" style="border-radius: 6px; padding: 8px 20px; font-weight: 600;">
-                    <i class="fa-solid fa-file-import" style="margin-right: 6px;"></i> Bắt đầu nhập dữ liệu
+                <button type="submit" class="btn btn-primary" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 20px; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-file-import"></i> Bắt đầu nhập dữ liệu
                 </button>
             </div>
         </form>
