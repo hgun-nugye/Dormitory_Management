@@ -44,12 +44,11 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                 <?php if (!empty($isAllowed)): ?>
                     <?php if (!empty($scope['canPublishCluster'])): ?>
-                        <form method="POST" action="<?= url('staff/utilities/publish-cluster') ?>" style="display: inline;"
-                            onsubmit="return confirm('Xác nhận chốt sổ và phát hành hóa đơn điện nước tháng <?= $currentMonth ?>/<?= $currentYear ?> cho tất cả các phòng trong phạm vi quản lý?');">
+                        <form method="POST" action="<?= url('staff/utilities/publish-cluster') ?>" style="display: inline;" onsubmit="return confirm('Xác nhận chốt sổ và phát hành hóa đơn điện nước tháng <?= $currentMonth ?>/<?= $currentYear ?> cho tất cả các phòng trong phạm vi quản lý?');">
                             <input type="hidden" name="thang" value="<?= $currentMonth ?>">
                             <input type="hidden" name="nam" value="<?= $currentYear ?>">
-                            <button type="submit" class="btn btn-primary" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-                                <i class="fa-solid fa-bullhorn"></i> Chốt sổ & Phát hành HĐ
+                            <button type="submit" class="btn btn-outline" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #c2410c; border-color: #fed7aa; background: #fff7ed;">
+                                <i class="fa-solid fa-bullhorn" style="color: #c2410c;"></i> Chốt sổ & Phát hành HĐ
                             </button>
                         </form>
                     <?php endif; ?>
@@ -404,7 +403,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                             <?php if (empty($readingList)): ?>
                                 <tr>
                                     <td colspan="10" style="text-align: center; padding: 40px 16px; color: var(--text-muted);">
-                                        <div style="font-size: 2.2rem; margin-bottom: 6px;">⚡</div>
                                         <div style="font-weight: 600; color: var(--text-secondary);">Chưa có chỉ số điện nước nào được ghi cho kỳ tháng <?= $currentMonth ?>/<?= $currentYear ?>.</div>
                                         <div style="font-size: 0.85rem; margin-top: 4px;">Sử dụng biểu mẫu phía trên hoặc bấm "Nhập file" để nạp dữ liệu.</div>
                                     </td>

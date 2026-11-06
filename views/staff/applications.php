@@ -26,7 +26,7 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
 
         <div class="page-header" style="align-items: center; flex-wrap: wrap; gap: 12px; display: flex; justify-content: space-between;">
             <div>
-                <h1 class="page-title">Xét duyệt Đăng ký Chỗ ở & Hạn định 72h</h1>
+                <h1 class="page-title">Xét duyệt Đăng ký Chỗ ở</h1>
                 <p class="page-subtitle" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
                     <span>Phạm vi cán bộ:</span>
                     <span class="badge <?= htmlspecialchars($scope['badgeClass'] ?? 'badge-primary') ?>" style="font-size: 0.8rem; padding: 4px 10px;">
@@ -1548,51 +1548,55 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
         const token = csrfInput ? csrfInput.value : '';
 
         fetch('<?= url('staff/applications/scan-release') ?>', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: 'ajax=1&csrf_token=' + encodeURIComponent(token)
-        })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            isAutoReleasing = false;
-            if (data.success && data.total_released > 0) {
-                // Tạo thông báo hiển thị cho cán bộ
-                const notiContainer = document.querySelector('.page-header') || document.querySelector('.content') || document.body;
-                const notiEl = document.createElement('div');
-                notiEl.className = 'alert alert-warning';
-                notiEl.style.cssText = 'background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;';
-                notiEl.innerHTML = `<i class="fa-solid fa-bolt" style="margin-right: 6px; color: #d97706;"></i> <b>Tự động xử lý:</b> Hệ thống vừa tự động hủy giữ chỗ và giải phóng <b>${data.total_released}</b> vị trí giường quá hạn 72h về lại quỹ phòng trống!`;
-                if (notiContainer && notiContainer.parentNode) {
-                    notiContainer.parentNode.insertBefore(notiEl, notiContainer.nextSibling);
-                }
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: 'ajax=1&csrf_token=' + encodeURIComponent(token)
+            })
+            .then(function(res) {
+                return res.json();
+            })
+            .then(function(data) {
+                isAutoReleasing = false;
+                if (data.success && data.total_released > 0) {
+                    // Tạo thông báo hiển thị cho cán bộ
+                    const notiContainer = document.querySelector('.page-header') || document.querySelector('.content') || document.body;
+                    const notiEl = document.createElement('div');
+                    notiEl.className = 'alert alert-warning';
+                    notiEl.style.cssText = 'background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;';
+                    notiEl.innerHTML = `<i class="fa-solid fa-bolt" style="margin-right: 6px; color: #d97706;"></i> <b>Tự động xử lý:</b> Hệ thống vừa tự động hủy giữ chỗ và giải phóng <b>${data.total_released}</b> vị trí giường quá hạn 72h về lại quỹ phòng trống!`;
+                    if (notiContainer && notiContainer.parentNode) {
+                        notiContainer.parentNode.insertBefore(notiEl, notiContainer.nextSibling);
+                    }
 
-                // Xóa các dòng đã hết hạn khỏi DOM với hiệu ứng mượt
-                if (data.released_records && data.released_records.length > 0) {
-                    data.released_records.forEach(function(rec) {
-                        const row = document.getElementById('row-active-' + rec.MaHoSo);
-                        if (row) {
-                            row.style.transition = 'all 0.4s ease';
-                            row.style.opacity = '0';
-                            row.style.transform = 'translateX(20px)';
-                            setTimeout(function() {
-                                if (row.parentNode) row.parentNode.removeChild(row);
-                                renderAppPagination('active72h');
-                                updateActiveCountBadge();
-                            }, 400);
-                        }
-                    });
-                } else {
-                    setTimeout(function() { window.location.reload(); }, 1500);
+                    // Xóa các dòng đã hết hạn khỏi DOM với hiệu ứng mượt
+                    if (data.released_records && data.released_records.length > 0) {
+                        data.released_records.forEach(function(rec) {
+                            const row = document.getElementById('row-active-' + rec.MaHoSo);
+                            if (row) {
+                                row.style.transition = 'all 0.4s ease';
+                                row.style.opacity = '0';
+                                row.style.transform = 'translateX(20px)';
+                                setTimeout(function() {
+                                    if (row.parentNode) row.parentNode.removeChild(row);
+                                    renderAppPagination('active72h');
+                                    updateActiveCountBadge();
+                                }, 400);
+                            }
+                        });
+                    } else {
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1500);
+                    }
                 }
-            }
-        })
-        .catch(function(err) {
-            isAutoReleasing = false;
-            console.error('Lỗi khi kích hoạt tự động hủy 72h:', err);
-        });
+            })
+            .catch(function(err) {
+                isAutoReleasing = false;
+                console.error('Lỗi khi kích hoạt tự động hủy 72h:', err);
+            });
     }
 
     function updateActiveCountBadge() {

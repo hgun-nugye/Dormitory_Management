@@ -145,7 +145,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Cảnh báo Vắng > 30 ngày</span>
-                    <span style="background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">Nguy cơ cao</span>
                 </div>
                 <div style="font-size: 1.8rem; font-weight: 700; color: #dc2626; margin: 4px 0;">
                     <?= number_format($stats['absenceWarnings'] ?? 0) ?> <span style="font-size: 0.95rem; font-weight: 500;">sinh viên</span>
@@ -157,7 +156,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Lượt quét Barrier</span>
-                    <span style="background: #dbeafe; color: #1e40af; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">Thời gian thực</span>
                 </div>
                 <div style="font-size: 1.8rem; font-weight: 700; color: #2563eb; margin: 4px 0;">
                     <?= number_format($stats['totalBarrierScans'] ?? 0) ?> <span style="font-size: 0.95rem; font-weight: 500;">lượt</span>
@@ -169,7 +167,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Sinh viên theo dõi</span>
-                    <span style="background: #ccfbf1; color: #0d9488; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">Đang lưu trú</span>
                 </div>
                 <div style="font-size: 1.8rem; font-weight: 700; color: #0d9488; margin: 4px 0;">
                     <?= number_format($stats['totalResident'] ?? 0) ?> <span style="font-size: 0.95rem; font-weight: 500;">sinh viên</span>
@@ -181,7 +178,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Tiến độ Gửi trường</span>
-                    <span style="background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">Hoàn tất</span>
                 </div>
                 <div style="font-size: 1.8rem; font-weight: 700; color: #166534; margin: 4px 0;">
                     <?= number_format($stats['lockedCount'] ?? 0) ?> <span style="font-size: 0.95rem; font-weight: 500;">/ <?= (int)($stats['totalResident'] ?? 0) ?></span>
@@ -287,11 +283,8 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                     </select>
 
                     <!-- Nút Lọc & Nút Xóa bộ lọc -->
-                    <button type="submit" class="btn btn-primary btn-sm" style="border-radius: 6px; height: 38px; padding: 0 16px; font-weight: 600;">
-                        <i class="fa-solid fa-filter" style="margin-right: 4px;"></i> Lọc
-                    </button>
-                    <a href="<?= url('staff/discipline') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; height: 38px; padding: 0 14px; display: inline-flex; align-items: center; color: var(--text-muted);" title="Xóa toàn bộ bộ lọc và đặt lại mặc định">
-                        <i class="fa-solid fa-arrow-rotate-left" style="margin-right: 4px;"></i> Xóa lọc
+                    <a href="<?= url('staff/discipline') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 8px 14px; color: #dc2626; border-color: #fecaca; background: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.8rem; font-weight: 600; text-decoration: none;">
+                        <i class="fa-solid fa-filter-circle-xmark"></i> Xóa bộ lọc
                     </a>
                 </div>
             </form>
@@ -301,7 +294,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
         <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; flex-wrap: wrap;">
             <button type="button" class="tab-btn <?= ($activeTab === 'canh-bao') ? 'active' : '' ?>" id="tabBtnCanhBao" onclick="switchDisciplineTab('canh-bao')"
                 style="background: <?= ($activeTab === 'canh-bao') ? '#fee2e2' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'canh-bao') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'canh-bao') ? '#dc2626' : 'var(--text-secondary)' ?>; display: inline-flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-triangle-exclamation"></i>
                 <span>Cảnh báo Vắng mặt > 30 ngày</span>
                 <span class="badge" style="background: <?= ($activeTab === 'canh-bao') ? '#dc2626' : '#e2e8f0' ?>; color: <?= ($activeTab === 'canh-bao') ? '#ffffff' : '#64748b' ?>; font-size: 0.75rem; border-radius: 12px; padding: 2px 8px; border: none;">
                     <?= count($absenceWarnings) ?>
@@ -310,7 +302,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
 
             <button type="button" class="tab-btn <?= ($activeTab === 'barrier') ? 'active' : '' ?>" id="tabBtnBarrier" onclick="switchDisciplineTab('barrier')"
                 style="background: <?= ($activeTab === 'barrier') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'barrier') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'barrier') ? 'var(--primary)' : 'var(--text-secondary)' ?>; display: inline-flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-shield-halved"></i>
                 <span>Nhật ký Quét thẻ Barrier</span>
                 <span class="badge" style="background: <?= ($activeTab === 'barrier') ? 'var(--primary)' : '#e2e8f0' ?>; color: <?= ($activeTab === 'barrier') ? '#ffffff' : '#64748b' ?>; font-size: 0.75rem; border-radius: 12px; padding: 2px 8px; border: none;">
                     <?= count($barrierLogs) ?>
@@ -319,7 +310,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
 
             <button type="button" class="tab-btn <?= ($activeTab === 'ren-luyen') ? 'active' : '' ?>" id="tabBtnRenLuyen" onclick="switchDisciplineTab('ren-luyen')"
                 style="background: <?= ($activeTab === 'ren-luyen') ? '#f0fdf4' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'ren-luyen') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'ren-luyen') ? '#16a34a' : 'var(--text-secondary)' ?>; display: inline-flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-star"></i>
                 <span>Điểm Rèn luyện & Kỷ luật</span>
                 <span class="badge" style="background: <?= ($activeTab === 'ren-luyen') ? '#16a34a' : '#e2e8f0' ?>; color: <?= ($activeTab === 'ren-luyen') ? '#ffffff' : '#64748b' ?>; font-size: 0.75rem; border-radius: 12px; padding: 2px 8px; border: none;">
                     <?= count($summaryList) ?>
