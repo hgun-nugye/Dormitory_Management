@@ -334,8 +334,14 @@ class RequestController extends Controller
 
         // Tìm kiếm thông minh
         if (!empty($searchTerm)) {
-            $where[] = "(d.MaDon LIKE :kw OR sv.HoVaTen LIKE :kw OR sv.MSSVTaiTruong LIKE :kw OR sv.SoDienThoai LIKE :kw OR pCur.SoPhong LIKE :kw OR d.MaSinhVien LIKE :kw)";
-            $params['kw'] = "%{$searchTerm}%";
+            $where[] = "(d.MaDon LIKE :kw1 OR sv.HoVaTen LIKE :kw2 OR sv.MSSVTaiTruong LIKE :kw3 OR sv.SoDienThoai LIKE :kw4 OR pCur.SoPhong LIKE :kw5 OR d.MaSinhVien LIKE :kw6)";
+            $kwVal = "%{$searchTerm}%";
+            $params['kw1'] = $kwVal;
+            $params['kw2'] = $kwVal;
+            $params['kw3'] = $kwVal;
+            $params['kw4'] = $kwVal;
+            $params['kw5'] = $kwVal;
+            $params['kw6'] = $kwVal;
         }
 
         $sql = "

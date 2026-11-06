@@ -413,8 +413,11 @@ class ApplicationController extends Controller
                 $mgParams['mg_khu'] = $filterKhu;
             }
             if (!empty($search)) {
-                $mgScopeWhere .= " AND (mg.MaSinhVien LIKE :mg_kw OR sv.HoVaTen LIKE :mg_kw OR sv.MSSVTaiTruong LIKE :mg_kw)";
-                $mgParams['mg_kw'] = "%{$search}%";
+                $mgScopeWhere .= " AND (mg.MaSinhVien LIKE :mg_kw1 OR sv.HoVaTen LIKE :mg_kw2 OR sv.MSSVTaiTruong LIKE :mg_kw3)";
+                $mgKw = "%{$search}%";
+                $mgParams['mg_kw1'] = $mgKw;
+                $mgParams['mg_kw2'] = $mgKw;
+                $mgParams['mg_kw3'] = $mgKw;
             }
 
             $sqlMienGiam = "
@@ -918,8 +921,11 @@ class ApplicationController extends Controller
                 $mgParams['mg_khu'] = $queryParams['f_khu'];
             }
             if (!empty($search)) {
-                $mgScopeWhere .= " AND (mg.MaSinhVien LIKE :mg_kw OR sv.HoVaTen LIKE :mg_kw OR sv.MSSVTaiTruong LIKE :mg_kw)";
-                $mgParams['mg_kw'] = "%{$search}%";
+                $mgScopeWhere .= " AND (mg.MaSinhVien LIKE :mg_kw1 OR sv.HoVaTen LIKE :mg_kw2 OR sv.MSSVTaiTruong LIKE :mg_kw3)";
+                $mgKw = "%{$search}%";
+                $mgParams['mg_kw1'] = $mgKw;
+                $mgParams['mg_kw2'] = $mgKw;
+                $mgParams['mg_kw3'] = $mgKw;
             }
 
             $sqlMienGiam = "

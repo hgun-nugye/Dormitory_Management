@@ -487,8 +487,12 @@ class UserController extends Controller
                     $isFiltered = true;
                 }
                 if (!empty($keyword)) {
-                    $whereClause .= " AND (tk.TenDangNhap LIKE :kw OR nv.HoVaTen LIKE :kw OR nv.SoDienThoai LIKE :kw OR nv.Email LIKE :kw)";
-                    $params['kw'] = "%{$keyword}%";
+                    $whereClause .= " AND (tk.TenDangNhap LIKE :kw1 OR nv.HoVaTen LIKE :kw2 OR nv.SoDienThoai LIKE :kw3 OR nv.Email LIKE :kw4)";
+                    $kwVal = "%{$keyword}%";
+                    $params['kw1'] = $kwVal;
+                    $params['kw2'] = $kwVal;
+                    $params['kw3'] = $kwVal;
+                    $params['kw4'] = $kwVal;
                     $isFiltered = true;
                 }
             }

@@ -459,8 +459,11 @@ class UtilityController extends Controller
         }
 
         if (!empty($searchTerm)) {
-            $readWhere[] = "(p.MaPhong LIKE :rd_kw OR p.SoPhong LIKE :rd_kw OR tn.TenToaNha LIKE :rd_kw)";
-            $readParams['rd_kw'] = "%{$searchTerm}%";
+            $readWhere[] = "(p.MaPhong LIKE :rd_kw1 OR p.SoPhong LIKE :rd_kw2 OR tn.TenToaNha LIKE :rd_kw3)";
+            $rdKw = "%{$searchTerm}%";
+            $readParams['rd_kw1'] = $rdKw;
+            $readParams['rd_kw2'] = $rdKw;
+            $readParams['rd_kw3'] = $rdKw;
         }
 
         if ($selectedTrangThai === 'bat_thuong') {
@@ -508,8 +511,13 @@ class UtilityController extends Controller
         }
 
         if (!empty($searchTerm)) {
-            $invWhere[] = "(hd.MaHoaDon LIKE :iv_kw OR p.MaPhong LIKE :iv_kw OR p.SoPhong LIKE :iv_kw OR sv.HoVaTen LIKE :iv_kw OR sv.MSSVTaiTruong LIKE :iv_kw)";
-            $invParams['iv_kw'] = "%{$searchTerm}%";
+            $invWhere[] = "(hd.MaHoaDon LIKE :iv_kw1 OR p.MaPhong LIKE :iv_kw2 OR p.SoPhong LIKE :iv_kw3 OR sv.HoVaTen LIKE :iv_kw4 OR sv.MSSVTaiTruong LIKE :iv_kw5)";
+            $ivKw = "%{$searchTerm}%";
+            $invParams['iv_kw1'] = $ivKw;
+            $invParams['iv_kw2'] = $ivKw;
+            $invParams['iv_kw3'] = $ivKw;
+            $invParams['iv_kw4'] = $ivKw;
+            $invParams['iv_kw5'] = $ivKw;
         }
 
         if ($selectedTrangThai === 'da_thanh_toan') {

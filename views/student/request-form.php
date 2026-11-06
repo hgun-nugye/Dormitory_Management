@@ -178,10 +178,19 @@ $extension = $serviceType === 'Hồ sơ miễn giảm lệ phí';
 
                 <!-- Lý do / Nội dung chi tiết -->
                 <div style="margin-bottom: 24px;">
-                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">
-                        Nội dung chi tiết / Lý do gửi yêu cầu <span style="color: #ef4444;">*</span>
-                    </label>
-                    <textarea class="form-control" name="LyDo" minlength="10" required rows="5" placeholder="Vui lòng mô tả chi tiết lý do, hoàn cảnh hoặc hiện tượng hư hỏng để cán bộ xử lý nhanh chóng (tối thiểu 10 ký tự)..."></textarea>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin: 0;">
+                            Nội dung chi tiết<span style="color: #ef4444;">*</span>
+                        </label>
+                        <span id="wordCounterBadge" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">
+                            Số từ: <span id="wordCountNum">0</span>/100 từ
+                        </span>
+                    </div>
+                    <textarea class="form-control" name="LyDo" id="requestLyDo" minlength="10" required rows="5" placeholder="Vui lòng mô tả chi tiết lý do, hoàn cảnh hoặc hiện tượng hư hỏng để cán bộ xử lý nhanh chóng (tối thiểu 10 ký tự, dưới 100 từ)..."></textarea>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 0.75rem; color: var(--text-muted);">
+                        <span><i class="fa-solid fa-circle-info"></i> Yêu cầu: tối thiểu 10 ký tự và từ dưới 100 từ.</span>
+                        <span id="wordCounterStatus" style="font-size: 0.75rem; font-weight: 600;"></span>
+                    </div>
                 </div>
 
                 <!-- Nút thao tác -->
@@ -197,6 +206,60 @@ $extension = $serviceType === 'Hồ sơ miễn giảm lệ phí';
         <?php endif; ?>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const textarea = document.getElementById('requestLyDo');
+        const countNum = document.getElementById('wordCountNum');
+        const badge = document.getElementById('wordCounterBadge');
+        const statusText = document.getElementById('wordCounterStatus');
+        const form = textarea ? textarea.closest('form') : null;
+
+        if (!textarea) return;
+
+        function getWordCount(text) {
+            const trimmed = text.trim();
+            if (!trimmed) return 0;
+            return trimmed.split(/\s+/).filter(Boolean).length;
+        }
+
+        function updateCounter() {
+            const words = getWordCount(textarea.value);
+            if (countNum) countNum.textContent = words;
+
+            if (words > 100) {
+                badge.style.color = '#ef4444';
+                statusText.style.color = '#ef4444';
+                statusText.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Đã vượt quá giới hạn (phải từ dưới 100 từ)!';
+                textarea.style.borderColor = '#ef4444';
+            } else if (words >= 80) {
+                badge.style.color = '#d97706';
+                statusText.style.color = '#d97706';
+                statusText.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Sắp đạt giới hạn 100 từ';
+                textarea.style.borderColor = '#d97706';
+            } else {
+                badge.style.color = 'var(--text-muted)';
+                statusText.textContent = '';
+                textarea.style.borderColor = '';
+            }
+        }
+
+        textarea.addEventListener('input', updateCounter);
+        updateCounter();
+
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const words = getWordCount(textarea.value);
+                if (words >= 100) {
+                    e.preventDefault();
+                    alert('Lý do gửi yêu cầu phải từ dưới 100 từ (hiện tại bạn đã nhập ' + words + ' từ). Vui lòng rút ngắn nội dung.');
+                    textarea.focus();
+                    return false;
+                }
+            });
+        }
+    });
+</script>
 
 <?php
 $content = ob_get_clean();
