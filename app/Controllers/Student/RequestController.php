@@ -9,6 +9,66 @@ use App\Core\Request;
 use App\Core\Session;
 
 class RequestController extends Controller {
+    public function attachment(): void {
+        $request = new Request();
+        $kind = (string) $request->input('kind', '');
+        $id = trim((string) $request->input('id', ''));
+        $mssv = $this->studentId();
+        $isStudent = Auth::isSinhVien();
+        $isStaff = Auth::isNhanVien() || Auth::isQuanLy() || Auth::isQuanTriVien();
+
+        if ($id === '' || (!$isStudent && !$isStaff)) {
+            http_response_code(403);
+            exit('Không tìm thấy tệp.');
+        }
+
+        if ($kind === 'proof') {
+            $proof = $isStudent
+                ? Database::fetch('SELECT TepMinhChung AS FilePath FROM DonTuMotCua WHERE MaDon = :id AND MaSinhVien = :student LIMIT 1', ['id' => $id, 'student' => $mssv])
+                : Database::fetch('SELECT TepMinhChung AS FilePath FROM DonTuMotCua WHERE MaDon = :id LIMIT 1', ['id' => $id]);
+            $storedPath = $proof['FilePath'] ?? null;
+            $directory = 'student-requests';
+            $allowedMimes = ['image/jpeg', 'image/png', 'application/pdf'];
+        } elseif ($kind === 'repair') {
+            $repair = $isStudent
+                ? Database::fetch('SELECT HinhAnh AS FilePath FROM PhieuBaoHong WHERE MaPhieu = :id AND MaSinhVienBao = :student LIMIT 1', ['id' => $id, 'student' => $mssv])
+                : Database::fetch('SELECT HinhAnh AS FilePath FROM PhieuBaoHong WHERE MaPhieu = :id LIMIT 1', ['id' => $id]);
+            $storedPath = $repair['FilePath'] ?? null;
+            $directory = 'repairs';
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+        } else {
+            http_response_code(404);
+            exit('Không tìm thấy tệp.');
+        }
+
+        $expectedPrefix = 'storage/uploads/' . $directory . '/';
+        if (!is_string($storedPath) || !str_starts_with(str_replace('\\', '/', $storedPath), $expectedPrefix)) {
+            http_response_code(404);
+            exit('Không tìm thấy tệp.');
+        }
+
+        $root = dirname(__DIR__, 3);
+        $uploadRoot = realpath($root . '/storage/uploads/' . $directory);
+        $filePath = $uploadRoot ? realpath($uploadRoot . DIRECTORY_SEPARATOR . basename($storedPath)) : false;
+        if (!$uploadRoot || !$filePath || !is_file($filePath) || !str_starts_with($filePath, $uploadRoot . DIRECTORY_SEPARATOR)) {
+            http_response_code(404);
+            exit('Không tìm thấy tệp.');
+        }
+
+        $mime = mime_content_type($filePath) ?: 'application/octet-stream';
+        if (!in_array($mime, $allowedMimes, true)) {
+            http_response_code(415);
+            exit('Định dạng tệp không được hỗ trợ.');
+        }
+
+        header('Content-Type: ' . $mime);
+        header('Content-Length: ' . filesize($filePath));
+        header('Content-Disposition: inline; filename="' . rawurlencode(basename($filePath)) . '"');
+        header('X-Content-Type-Options: nosniff');
+        readfile($filePath);
+        exit;
+    }
+
     public function index(): void {
         $mssv = $this->studentId();
         $requests = $mssv ? Database::fetchAll(
@@ -220,17 +280,31 @@ class RequestController extends Controller {
                 if (!$equipment) {
                     throw new \RuntimeException('equipment_missing');
                 }
+                $imagePath = null;
+                if (isset($_FILES['HinhAnh']) && ($_FILES['HinhAnh']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+                    $image = $_FILES['HinhAnh'];
+                    if (($image['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK || ($image['size'] ?? 0) > 5 * 1024 * 1024) throw new \RuntimeException('Ảnh không hợp lệ hoặc vượt quá 5 MB.');
+                    $mime = mime_content_type($image['tmp_name']);
+                    $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+                    if (!isset($extensions[$mime])) throw new \RuntimeException('Chỉ nhận ảnh JPG, PNG hoặc WEBP.');
+                    $uploadDir = dirname(__DIR__, 3) . '/storage/uploads/repairs';
+                    if (!is_dir($uploadDir)) mkdir($uploadDir, 0775, true);
+                    $filename = 'repair_' . bin2hex(random_bytes(8)) . '.' . $extensions[$mime];
+                    if (!move_uploaded_file($image['tmp_name'], $uploadDir . '/' . $filename)) throw new \RuntimeException('Không thể lưu ảnh minh họa.');
+                    $imagePath = 'storage/uploads/repairs/' . $filename;
+                }
                 Database::execute(
                     "INSERT INTO PhieuBaoHong
-                     (MaPhieu,MaPhong,MaToaNha,MaThietBi,MaSinhVienBao,LoaiSuCo,MoTaHuHong,TrangThaiSua,NgayBao)
-                     VALUES (:id,:room,:building,:equipment,:mssv,'PHONG',:reason,'Chờ xử lý',NOW())",
+                     (MaPhieu,MaPhong,MaToaNha,MaThietBi,MaSinhVienBao,LoaiSuCo,MoTaHuHong,HinhAnh,TrangThaiSua,NgayBao)
+                     VALUES (:id,:room,:building,:equipment,:mssv,'PHONG',:reason,:image,'Chờ xử lý',NOW())",
                     [
                         'id' => $this->newRequestId('BH'),
                         'room' => $room['MaPhong'],
                         'building' => $room['MaToaNha'],
                         'equipment' => $equipmentId,
                         'mssv' => $mssv,
-                        'reason' => $reason
+                        'reason' => $reason,
+                        'image' => $imagePath
                     ]
                 );
             } else {

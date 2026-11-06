@@ -417,7 +417,7 @@ function renderRequestReason(?string $rawReason): void
                                                 <?php renderRequestReason($req['LyDo'] ?? ''); ?>
                                                 <?php if (!empty($req['TepMinhChung'])): ?>
                                                     <div style="margin-top: 4px;">
-                                                        <a href="<?= url('uploads/' . htmlspecialchars($req['TepMinhChung'])) ?>" target="_blank" style="font-size: 0.75rem; color: #2563eb; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                                        <a href="<?= url('student/requests/attachment') ?>?kind=proof&amp;id=<?= rawurlencode($req['MaDon']) ?>" target="_blank" rel="noopener" style="font-size: 0.75rem; color: #2563eb; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
                                                             <i class="fa-solid fa-paperclip"></i> Xem tệp đính kèm
                                                         </a>
                                                     </div>

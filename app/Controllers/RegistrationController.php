@@ -34,9 +34,16 @@ class RegistrationController extends Controller
         AutoReleaseService::scanAndReleaseExpiredBeds();
 
         $user = Auth::user();
+        $studentPrefill = null;
         if ($user) {
             $mssv = $user['profile']['MaSinhVien'] ?? $user['TenDangNhap'] ?? '';
             if ($mssv !== '') {
+                $studentPrefill = Database::fetch(
+                    "SELECT sv.*, tk.TenDangNhap FROM SinhVien sv
+                     LEFT JOIN TaiKhoan tk ON tk.MaTaiKhoan = sv.MaTaiKhoan
+                     WHERE sv.MaSinhVien = :mssv LIMIT 1",
+                    ['mssv' => $mssv]
+                );
                 $existingApplication = Database::fetch(
                     "SELECT MaHoSo FROM HoSoDangKy
                      WHERE MaSinhVien = :mssv
@@ -97,9 +104,105 @@ class RegistrationController extends Controller
             'universities' => $universities,
             'areas' => $areas,
             'roomTypes' => $roomTypes,
+            'studentPrefill' => $studentPrefill,
             'success' => Session::flash('success'),
             'error' => Session::flash('error'),
         ]);
+    }
+
+    public function sendEmailOtp(): void
+    {
+        $request = new Request();
+        if (!$this->validCsrf($request)) {
+            $this->json(['success' => false, 'message' => 'Phiên biểu mẫu đã hết hạn. Vui lòng tải lại trang.'], 419);
+            return;
+        }
+
+        $email = strtolower(trim((string) $request->input('email', '')));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 100) {
+            $this->json(['success' => false, 'message' => 'Vui lòng nhập địa chỉ email hợp lệ.'], 422);
+            return;
+        }
+
+        try {
+            $user = Auth::user();
+            $currentStudentId = $user['profile']['MaSinhVien'] ?? ($user['TenDangNhap'] ?? '');
+            $existingStudent = Database::fetch(
+                'SELECT MaSinhVien FROM SinhVien WHERE Email = :email AND MaSinhVien <> :self LIMIT 1',
+                ['email' => $email, 'self' => $currentStudentId]
+            );
+            $existingStaff = Database::fetch(
+                'SELECT MaNhanVien FROM NhanVien WHERE Email = :email LIMIT 1',
+                ['email' => $email]
+            );
+            if ($existingStudent || $existingStaff) {
+                $this->json(['success' => false, 'message' => 'Email này đã được sử dụng cho một tài khoản khác.'], 409);
+                return;
+            }
+        } catch (\Throwable $e) {
+            $this->json(['success' => false, 'message' => 'Không thể kiểm tra email lúc này. Vui lòng thử lại.'], 500);
+            return;
+        }
+
+        $lastSentAt = (int) Session::get('registration_email_otp_last_sent', 0);
+        $waitSeconds = 60 - (time() - $lastSentAt);
+        if ($lastSentAt > 0 && $waitSeconds > 0) {
+            $this->json(['success' => false, 'message' => "Vui lòng chờ {$waitSeconds} giây trước khi gửi mã khác."], 429);
+            return;
+        }
+
+        Session::set('registration_email_otp_last_sent', time());
+        Session::remove('registration_email_otp');
+        $code = (string) random_int(100000, 999999);
+        $subject = '[KTX ĐHQG-HCM] Mã xác thực email đăng ký';
+        $html = '<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:28px;border:1px solid #dbe5ee;border-radius:12px;color:#18344c">'
+            . '<h2 style="margin:0 0 12px;color:#15577f">Xác thực email đăng ký</h2>'
+            . '<p>Nhập mã xác thực sau vào biểu mẫu đăng ký KTX:</p>'
+            . '<p style="margin:22px 0;padding:16px;text-align:center;background:#eff7fc;border-radius:10px;font-size:30px;font-weight:800;letter-spacing:8px;color:#145b91">' . $code . '</p>'
+            . '<p>Mã có hiệu lực trong 10 phút. Nếu bạn không yêu cầu mã này, hãy bỏ qua email.</p></div>';
+        $plain = "Mã xác thực email đăng ký KTX của bạn là: {$code}\nMã có hiệu lực trong 10 phút. Nếu bạn không yêu cầu mã này, hãy bỏ qua email.";
+        $result = MailService::send($email, 'Sinh viên', $subject, $html, $plain, false);
+
+        if (($result['mode'] ?? '') !== 'smtp') {
+            $this->json([
+                'success' => false,
+                'message' => 'Máy chủ chưa gửi được email xác thực. Vui lòng kiểm tra cấu hình SMTP rồi thử lại sau.',
+            ], 502);
+            return;
+        }
+
+        Session::set('registration_email_otp', [
+            'email' => $email,
+            'hash' => password_hash($code, PASSWORD_DEFAULT),
+            'expires_at' => time() + 600,
+            'attempts' => 0,
+        ]);
+        $this->json(['success' => true, 'message' => 'Mã xác thực đã được gửi. Vui lòng kiểm tra hộp thư đến và thư rác.']);
+    }
+
+    private function emailOtpError(string $email, string $code): ?string
+    {
+        $otp = Session::get('registration_email_otp');
+        if (!is_array($otp) || empty($otp['hash'])) {
+            return 'Vui lòng gửi mã xác thực về email trước.';
+        }
+        if (!hash_equals((string) ($otp['email'] ?? ''), strtolower(trim($email)))) {
+            return 'Email đã thay đổi. Vui lòng gửi mã xác thực mới đến email hiện tại.';
+        }
+        if ((int) ($otp['expires_at'] ?? 0) < time()) {
+            Session::remove('registration_email_otp');
+            return 'Mã xác thực đã hết hạn. Vui lòng gửi mã mới.';
+        }
+        if ((int) ($otp['attempts'] ?? 0) >= 5) {
+            Session::remove('registration_email_otp');
+            return 'Bạn đã nhập sai mã quá số lần cho phép. Vui lòng gửi mã mới.';
+        }
+        if ($code === '' || !password_verify($code, (string) $otp['hash'])) {
+            $otp['attempts'] = (int) ($otp['attempts'] ?? 0) + 1;
+            Session::set('registration_email_otp', $otp);
+            return 'Mã xác thực không chính xác.';
+        }
+        return null;
     }
 
     public function options(): void
@@ -244,8 +347,10 @@ class RegistrationController extends Controller
             return;
         }
 
+        $username = trim((string) $request->input('username', ''));
+        $password = (string) $request->input('password', '');
+        $confirmPassword = (string) $request->input('confirm_password', '');
         $email = trim((string) $request->input('email', ''));
-
         $hoTen = trim((string) $request->input('hoTen', ''));
         $mssv = trim((string) $request->input('mssv', ''));
         $cccd = trim((string) $request->input('cccd', ''));
@@ -256,24 +361,85 @@ class RegistrationController extends Controller
         $bhyt = trim((string) $request->input('bhyt', ''));
         $bedId = trim((string) $request->input('bed', ''));
         $registrationType = trim((string) $request->input('registrationType', 'Đăng ký thường'));
-        if ($hoTen === '' || $mssv === '' || $cccd === '' || $email === '' || $university === '' || $bedId === '') {
-            Session::flash('error', 'Vui lòng điền họ tên, MSSV, CCCD, email và chọn trường cùng vị trí giường.');
+        $user = Auth::user();
+        $studentId = (string) ($user['profile']['MaSinhVien'] ?? ($user['TenDangNhap'] ?? ''));
+        $existingProfile = $studentId !== '' ? Database::fetch(
+            'SELECT * FROM SinhVien WHERE MaSinhVien = :id LIMIT 1', ['id' => $studentId]
+        ) : null;
+        $isExistingStudent = $existingProfile !== null;
+        if ($isExistingStudent) {
+            $mssv = $studentId;
+            $hoTen = (string) $existingProfile['HoVaTen'];
+            $cccd = (string) ($existingProfile['SoCCCD'] ?? '');
+            $phone = (string) ($existingProfile['SoDienThoai'] ?? '');
+            $birthday = (string) ($existingProfile['NgaySinh'] ?? '');
+            $gender = (string) ($existingProfile['GioiTinh'] ?? '');
+            $university = (string) ($existingProfile['MaTruong'] ?? '');
+            $bhyt = (string) ($existingProfile['MaSoBHYT'] ?? '');
+            $email = (string) ($existingProfile['Email'] ?? $email);
+            $username = (string) ($user['TenDangNhap'] ?? $studentId);
+            $password = $confirmPassword = 'existing-account';
+        }
+        if ((!$isExistingStudent && ($username === '' || $password === '' || $confirmPassword === '')) || $hoTen === '' || $mssv === '' || $cccd === '' || (!$isExistingStudent && $phone === '') || $email === '' || $university === '' || $bedId === '') {
+            Session::flash('error', 'Vui lòng điền đầy đủ thông tin tài khoản, hồ sơ và vị trí giường.');
             $this->redirect('register');
             return;
         }
 
+        if (mb_strlen($username) > 50 || preg_match('/[\x00-\x1F\x7F]/', $username)) {
+            Session::flash('error', 'Tên đăng nhập không được dài quá 50 ký tự hoặc chứa ký tự điều khiển.');
+            $this->redirect('register');
+            return;
+        }
+        if (!preg_match('/^[A-Za-z0-9]+$/', $mssv)) {
+            Session::flash('error', 'MSSV chỉ được chứa chữ cái không dấu và chữ số.');
+            $this->redirect('register');
+            return;
+        }
+        if (!preg_match('/^[0-9]{12}$/', $cccd)) {
+            Session::flash('error', 'Số CCCD phải gồm đúng 12 chữ số.');
+            $this->redirect('register');
+            return;
+        }
+        if ($phone !== '' && !preg_match('/^[0-9]{9,11}$/', $phone)) {
+            Session::flash('error', 'Số điện thoại phải gồm từ 9 đến 11 chữ số.');
+            $this->redirect('register');
+            return;
+        }
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             Session::flash('error', 'Email cá nhân không hợp lệ.');
+            $this->redirect('register');
+            return;
+        }
+        if (mb_strlen($email) > 100) {
+            Session::flash('error', 'Email không được dài quá 100 ký tự.');
+            $this->redirect('register');
+            return;
+        }
+        if (!$isExistingStudent && mb_strlen($password) < 6) {
+            Session::flash('error', 'Mật khẩu phải có ít nhất 6 ký tự.');
+            $this->redirect('register');
+            return;
+        }
+        if (!$isExistingStudent && $password !== $confirmPassword) {
+            Session::flash('error', 'Mật khẩu nhập lại chưa khớp.');
+            $this->redirect('register');
+            return;
+        }
+        $otpError = $this->emailOtpError($email, (string) $request->input('email_otp', ''));
+        if ($otpError !== null) {
+            Session::flash('error', $otpError);
             $this->redirect('register');
             return;
         }
 
         try {
             $existingStudent = Database::fetch(
-                "SELECT MaSinhVien FROM SinhVien WHERE MaSinhVien = :mssv1 OR MSSVTaiTruong = :mssv2 LIMIT 1",
-                ['mssv1' => $mssv, 'mssv2' => $mssv]
+                "SELECT MaSinhVien FROM SinhVien
+                 WHERE MaSinhVien = :maSinhVien OR MSSVTaiTruong = :mssvTaiTruong LIMIT 1",
+                ['maSinhVien' => $mssv, 'mssvTaiTruong' => $mssv]
             );
-            if ($existingStudent) {
+            if ($existingStudent && (!$isExistingStudent || $existingStudent['MaSinhVien'] !== $studentId)) {
                 $existingApplication = Database::fetch(
                     "SELECT MaHoSo FROM HoSoDangKy
                      WHERE MaSinhVien = :mssv
@@ -291,26 +457,74 @@ class RegistrationController extends Controller
                 return;
             }
 
-            $existingAccount = Database::fetch(
-                "SELECT MaTaiKhoan FROM TaiKhoan WHERE TenDangNhap = :u LIMIT 1",
-                ['u' => $mssv]
+            $existingAccount = $isExistingStudent ? null : Database::fetch(
+                "SELECT MaTaiKhoan FROM TaiKhoan
+                 WHERE TenDangNhap = :username OR TenDangNhap = :mssv LIMIT 1",
+                ['username' => $username, 'mssv' => $mssv]
             );
             if ($existingAccount) {
-                Session::flash('error', 'Tài khoản với MSSV này đã tồn tại trong hệ thống. Vui lòng đăng nhập.');
-                $this->redirect('login');
+                Session::flash('error', 'Tên đăng nhập này đã được sử dụng. Vui lòng chọn tên khác.');
+                $this->redirect('register');
                 return;
             }
+
+            $usernameStudent = $isExistingStudent ? null : Database::fetch(
+                "SELECT MaSinhVien FROM SinhVien
+                 WHERE MaSinhVien = :usernameMaSinhVien OR MSSVTaiTruong = :usernameMssv LIMIT 1",
+                ['usernameMaSinhVien' => $username, 'usernameMssv' => $username]
+            );
+            if ($usernameStudent) {
+                Session::flash('error', 'Tên đăng nhập này đã được sử dụng làm mã sinh viên. Vui lòng chọn tên khác.');
+                $this->redirect('register');
+                return;
+            }
+
+            $existingCccd = $isExistingStudent ? null : Database::fetch(
+                "SELECT MaSinhVien FROM SinhVien WHERE SoCCCD = :cccd LIMIT 1",
+                ['cccd' => $cccd]
+            );
+            if ($existingCccd) {
+                Session::flash('error', 'Số CCCD này đã được đăng ký trong hệ thống.');
+                $this->redirect('register');
+                return;
+            }
+
+            $existingEmailStudent = Database::fetch(
+                "SELECT MaSinhVien FROM SinhVien WHERE Email = :email LIMIT 1",
+                ['email' => $email]
+            );
+            $existingEmailStaff = Database::fetch(
+                "SELECT MaNhanVien FROM NhanVien WHERE Email = :email LIMIT 1",
+                ['email' => $email]
+            );
+            if (($existingEmailStudent && (!$isExistingStudent || $existingEmailStudent['MaSinhVien'] !== $studentId)) || $existingEmailStaff) {
+                Session::flash('error', 'Email này đã được sử dụng cho một tài khoản khác.');
+                $this->redirect('register');
+                return;
+            }
+
+            if ($phone !== '' && !$isExistingStudent) {
+                $existingPhoneStudent = Database::fetch(
+                    "SELECT MaSinhVien FROM SinhVien WHERE SoDienThoai = :phone LIMIT 1",
+                    ['phone' => $phone]
+                );
+                $existingPhoneStaff = Database::fetch(
+                    "SELECT MaNhanVien FROM NhanVien WHERE SoDienThoai = :phone LIMIT 1",
+                    ['phone' => $phone]
+                );
+                if ($existingPhoneStudent || $existingPhoneStaff) {
+                    Session::flash('error', 'Số điện thoại này đã được sử dụng cho một tài khoản khác.');
+                    $this->redirect('register');
+                    return;
+                }
+            }
         } catch (\Throwable $e) {
-            error_log("Lỗi kiểm tra MSSV khi đăng ký: " . $e->getMessage());
-            Session::flash('error', 'Không thể kiểm tra MSSV. Vui lòng thử lại.');
+            Session::flash('error', 'Không thể kiểm tra thông tin đăng ký. Vui lòng thử lại.');
             $this->redirect('register');
             return;
         }
 
-        $studentId = $mssv;
-        $username = $studentId;
-        // Mật khẩu sinh ngẫu nhiên đúng 8 ký tự an toàn
-        $password = MailService::generatePassword(8);
+        $studentId = $isExistingStudent ? $studentId : $mssv;
 
         $uploads = [
             'cccdFront' => 'cccd_front',
@@ -384,6 +598,7 @@ class RegistrationController extends Controller
                 throw new \RuntimeException('Cổng đăng ký nội trú đã kết thúc thời hạn tiếp nhận hồ sơ trong quá trình xử lý.');
             }
 
+            if (!$isExistingStudent) {
             Database::execute(
                 "INSERT INTO TaiKhoan (TenDangNhap, MatKhauMaHoa, MaVaiTro, DangHoatDong)
                  VALUES (:username, :password, 'SINH_VIEN', 1)",
@@ -415,6 +630,7 @@ class RegistrationController extends Controller
                     'admission' => $uploadedPaths['admissionLetter'] ?? null,
                 ]
             );
+            }
 
             $applicationId = 'HS' . date('Y') . bin2hex(random_bytes(4));
             Database::execute(
@@ -442,20 +658,21 @@ class RegistrationController extends Controller
             );
 
             Database::commit();
+            Session::remove('registration_email_otp');
             $loginUrl = function_exists('url') ? url('login') : '';
-            $subject = '[KTX ĐHQG-HCM] Tài khoản đăng ký nội trú mới - Yêu cầu đổi mật khẩu';
-
+            $subject = '[KTX ĐHQG-HCM] Hồ sơ đăng ký nội trú đã được tiếp nhận';
+            $safeUsername = htmlspecialchars($username, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $safeName = htmlspecialchars($hoTen, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            
             $plain = "Xin chào {$hoTen},\n\n"
                 . "Hồ sơ đăng ký nội trú của bạn đã được tiếp nhận thành công vào hệ thống!\n"
                 . "--------------------------------------------------------\n"
                 . "THÔNG TIN TÀI KHOẢN VÀ HỒ SƠ:\n"
-                . "- Tên đăng nhập (MSSV): {$username}\n"
-                . "- Mật khẩu tạm thời (8 ký tự): {$password}\n"
+                . "- Tên đăng nhập: {$username}\n"
                 . "- Mã hồ sơ đăng ký: {$applicationId}\n"
                 . "- Cổng đăng nhập KTX: {$loginUrl}\n"
                 . "--------------------------------------------------------\n"
-                . "YÊU CẦU BẮT BUỘC:\n"
-                . "Mật khẩu trên được sinh ngẫu nhiên gồm 8 ký tự. Vì lý do an toàn bảo mật thông tin cá nhân, bạn vui lòng đăng nhập vào hệ thống tại link trên và đổi mật khẩu mới ngay trong lần đầu đăng nhập.\n\n"
+                . "Mật khẩu do bạn tự tạo khi đăng ký; email này không chứa mật khẩu.\n\n"
                 . "Trân trọng,\nBan Quản lý Ký túc xá ĐHQG-HCM";
 
             $html = <<<HTML
@@ -465,18 +682,14 @@ class RegistrationController extends Controller
         <p style="margin: 6px 0 0; font-size: 13px; opacity: 0.92;">Cổng thông tin Đăng ký & Quản lý Cư trú Nội trú</p>
     </div>
     <div style="padding: 24px;">
-        <p style="font-size: 15px; margin-top: 0;">Xin chào <strong>{$hoTen}</strong>,</p>
-        <p style="font-size: 14px; color: #475569;">Hồ sơ đăng ký chỗ ở nội trú của bạn đã được tiếp nhận thành công vào hệ thống. Dưới đây là thông tin tài khoản được cấp tự động:</p>
+        <p style="font-size: 15px; margin-top: 0;">Xin chào <strong>{$safeName}</strong>,</p>
+        <p style="font-size: 14px; color: #475569;">Hồ sơ đăng ký chỗ ở nội trú của bạn đã được tiếp nhận thành công vào hệ thống. Đây là thông tin tra cứu hồ sơ:</p>
         
         <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 20px 0;">
             <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
                 <tr>
-                    <td style="padding: 7px 0; color: #64748b; width: 45%;">Tên đăng nhập (MSSV):</td>
-                    <td style="padding: 7px 0; font-weight: 700; color: #1e40af; font-size: 15px;">{$username}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 7px 0; color: #64748b;">Mật khẩu tạm thời (8 ký tự):</td>
-                    <td style="padding: 7px 0;"><code style="background: #fee2e2; border: 1px solid #fca5a5; padding: 4px 10px; border-radius: 4px; font-size: 16px; font-weight: 700; color: #b91c1c; letter-spacing: 1.5px;">{$password}</code></td>
+                    <td style="padding: 7px 0; color: #64748b; width: 45%;">Tên đăng nhập:</td>
+                    <td style="padding: 7px 0; font-weight: 700; color: #1e40af; font-size: 15px;">{$safeUsername}</td>
                 </tr>
                 <tr>
                     <td style="padding: 7px 0; color: #64748b;">Mã hồ sơ đăng ký:</td>
@@ -485,13 +698,13 @@ class RegistrationController extends Controller
             </table>
         </div>
 
-        <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 14px; border-radius: 4px; margin-bottom: 22px;">
-            <p style="margin: 0; font-size: 13px; color: #b45309; font-weight: 700;">⚠️ YÊU CẦU ĐỔI MẬT KHẨU:</p>
-            <p style="margin: 6px 0 0; font-size: 13px; color: #92400e;">Mật khẩu trên là mật khẩu tạm thời 8 ký tự được tạo tự động cho hồ sơ của bạn. Vì lý do an toàn bảo mật thông tin cá nhân, bạn <strong>bắt buộc phải đổi mật khẩu mới</strong> ngay sau khi đăng nhập thành công vào hệ thống KTX.</p>
+        <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px; border-radius: 4px; margin-bottom: 22px;">
+            <p style="margin: 0; font-size: 13px; color: #1e40af; font-weight: 700;">Thông tin bảo mật</p>
+            <p style="margin: 6px 0 0; font-size: 13px; color: #334155;">Mật khẩu do bạn tự tạo khi đăng ký và không được gửi qua email. Hãy giữ kín mật khẩu của mình.</p>
         </div>
 
         <div style="text-align: center; margin: 26px 0;">
-            <a href="{$loginUrl}" style="background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 28px; font-size: 14px; font-weight: 700; border-radius: 6px; display: inline-block;">Đăng nhập hệ thống & Đổi mật khẩu</a>
+            <a href="{$loginUrl}" style="background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 28px; font-size: 14px; font-weight: 700; border-radius: 6px; display: inline-block;">Đăng nhập hệ thống</a>
         </div>
 
         <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
@@ -504,18 +717,21 @@ HTML;
 
             Session::flash(
                 'success',
-                "Đăng ký nội trú thành công! Mã hồ sơ: <b>" . htmlspecialchars($applicationId, ENT_QUOTES, 'UTF-8') . "</b>.<br>"
-                    . "Hệ thống đã tự động tạo tài khoản với Tên đăng nhập (MSSV): <b>" . htmlspecialchars($username, ENT_QUOTES, 'UTF-8') . "</b> và Mật khẩu tạm thời gồm 8 ký tự.<br>"
-                    . ($emailDelivered
-                        ? "Thông tin đăng nhập cùng <b>yêu cầu đổi mật khẩu</b> đã được gửi đến email <b>" . htmlspecialchars($email, ENT_QUOTES, 'UTF-8') . "</b>. Vui lòng kiểm tra hộp thư để đăng nhập và đổi mật khẩu."
-                        : "Tài khoản của bạn đã được tạo thành công. Bạn có thể sử dụng mật khẩu ngẫu nhiên 8 ký tự: <code>" . htmlspecialchars($password, ENT_QUOTES, 'UTF-8') . "</code> để đăng nhập và tiến hành đổi mật khẩu mới.")
+                "Đăng ký nội trú thành công! Mã hồ sơ: <b>{$applicationId}</b>.<br>"
+                . "Tài khoản <b>{$username}</b> đã được tạo bằng mật khẩu bạn chọn.<br>"
+                . ($emailDelivered
+                    ? "Thông báo hồ sơ đã được gửi đến email <b>{$email}</b>."
+                    : "Bạn có thể đăng nhập bằng tên đăng nhập và mật khẩu đã chọn.")
             );
             $this->redirect('login');
         } catch (\Throwable $e) {
             if (Database::getConnection()->inTransaction()) {
                 Database::rollBack();
             }
-            Session::flash('error', $e->getMessage() ?: 'Không thể tạo hồ sơ. Vui lòng thử lại.');
+            $errorMessage = $e instanceof PDOException && $e->getCode() === '23000'
+                ? 'Một hoặc nhiều thông tin (tên đăng nhập, MSSV, CCCD, email hoặc số điện thoại) vừa được tài khoản khác đăng ký. Vui lòng kiểm tra lại.'
+                : ($e->getMessage() ?: 'Không thể tạo hồ sơ. Vui lòng thử lại.');
+            Session::flash('error', $errorMessage);
             $this->redirect('register');
         }
     }
