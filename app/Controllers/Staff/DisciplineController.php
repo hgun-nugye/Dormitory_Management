@@ -778,9 +778,7 @@ class DisciplineController extends Controller
             if (!empty($toaParam) && $toaParam !== 'all') $filterToa = $toaParam;
         }
 
-        // =====================================================================
-        // TRƯỜNG HỢP 1: TAB CẢNH BÁO VẮNG MẶT > 30 NGÀY
-        // =====================================================================
+        // Trường hợp 1: Tab Cảnh báo vắng mặt > 30 ngày
         if ($tab === 'canh-bao') {
             $absenceData = AttendanceDisciplineService::detectLongTermAbsence(30, $filterCum, $filterToa, $filterKhu);
             $warnings = $absenceData['warnings'] ?? [];
@@ -817,9 +815,7 @@ class DisciplineController extends Controller
             exit;
         }
 
-        // =====================================================================
-        // TRƯỜNG HỢP 2: TAB NHẬT KÝ QUÉT THẺ BARRIER
-        // =====================================================================
+        // Trường hợp 2: Tab Nhật ký quét thẻ Barrier
         if ($tab === 'barrier') {
             $search = trim($_GET['search'] ?? '');
             $huongDi = trim($_GET['huongDi'] ?? '');
@@ -863,9 +859,7 @@ class DisciplineController extends Controller
             exit;
         }
 
-        // =====================================================================
-        // TRƯỜNG HỢP 3: TAB ĐIỂM RÈN LUYỆN NỘI TRÚ (MẶC ĐỊNH)
-        // =====================================================================
+        // Trường hợp 3: Tab Điểm rèn luyện nội trú (Mặc định)
         $data = AttendanceDisciplineService::exportTrainingPointsByUniversity($hocKy, $namHoc, !empty($maTruong) ? $maTruong : null);
 
         $fileName = "BaoCao_DiemRenLuyen_HK{$hocKy}_{$namHoc}_" . date('Ymd_His') . ".csv";

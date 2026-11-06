@@ -202,9 +202,7 @@ Router::post('/admin/universities/save', 'Admin\\UniversityController@saveUniver
 Router::post('/admin/universities/toggle-status', 'Admin\\UniversityController@toggleUniversityStatus');
 Router::post('/admin/universities/delete', 'Admin\\UniversityController@deleteUniversity');
 
-// ==========================================
 // RESTful API Routes (app/Controllers/Api)
-// ==========================================
 
 // 1. Phân hệ Đăng ký nội trú (Registration APIs)
 Router::post('/api/registration/send-otp', 'Api\\RegistrationApiController@sendOtp');

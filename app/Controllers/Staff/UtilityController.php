@@ -79,7 +79,7 @@ class UtilityController extends Controller
             ];
         }
 
-        // --- NẾU LÀ CÁN BỘ KỸ THUẬT ĐIỆN NƯỚC ---
+        // Cán bộ kỹ thuật điện nước
         if ($isTechnician) {
             $maKhu = null;
             if (str_contains($username, 'KTA') || str_contains($chucVu, 'khu a')) {
@@ -137,7 +137,7 @@ class UtilityController extends Controller
             ];
         }
 
-        // --- NẾU LÀ CHUYÊN VIÊN KẾ TOÁN ---
+        // Chuyên viên kế toán
         if ($isAccountant) {
             $khus = Database::fetchAll("SELECT MaKhu, TenKhu FROM KhuKTX ORDER BY MaKhu ASC");
             $cums = Database::fetchAll("SELECT MaCum, TenCum, MaKhu FROM CumNha ORDER BY MaKhu ASC, MaCum ASC");
@@ -171,7 +171,7 @@ class UtilityController extends Controller
             ];
         }
 
-        // --- CẤP 4: QUẢN LÝ TOÀN KTX (ADMIN / GIÁM ĐỐC) ---
+        // Cấp 4: Quản lý toàn KTX (Admin / Giám đốc)
         if ($role === 'ADMIN' || $role === 'QuanTriVien' || $role === 'NV_QUAN_LY_KTX') {
             $khus = Database::fetchAll("SELECT MaKhu, TenKhu FROM KhuKTX ORDER BY MaKhu ASC");
             $cums = Database::fetchAll("SELECT MaCum, TenCum, MaKhu FROM CumNha ORDER BY MaKhu ASC, MaCum ASC");
@@ -205,7 +205,7 @@ class UtilityController extends Controller
             ];
         }
 
-        // --- CẤP 3: TRƯỞNG KHU (TK001 -> Khu A, TK002 -> Khu B) ---
+        // Cấp 3: Trưởng Khu
         if ($role === 'TRUONG_KHU' || $cumQuanLy === 'A' || $cumQuanLy === 'B') {
             $maKhu = in_array($cumQuanLy, ['A', 'B']) ? $cumQuanLy : 'A';
             $khus = Database::fetchAll("SELECT MaKhu, TenKhu FROM KhuKTX WHERE MaKhu = :k", ['k' => $maKhu]);
@@ -241,7 +241,7 @@ class UtilityController extends Controller
             ];
         }
 
-        // --- CẤP 2: TRƯỞNG CỤM (CUMAG -> AG...) ---
+        // Cấp 2: Trưởng Cụm
         if ($role === 'TRUONG_CUM') {
             $maCum = !empty($cumQuanLy) ? $cumQuanLy : 'AG';
             $cumRow = Database::fetch("
@@ -289,7 +289,7 @@ class UtilityController extends Controller
             ];
         }
 
-        // --- CẤP 1: TRƯỞNG TÒA (TT001 -> A01...) ---
+        // Cấp 1: Trưởng Tòa
         $maToa = !empty($cumQuanLy) ? $cumQuanLy : 'A01';
         $toaRow = Database::fetch("
             SELECT t.MaToaNha, t.TenToaNha, t.TongSoTang, t.GioiTinhQuyDinh, t.TrangThaiToaNha, c.MaCum, c.TenCum, c.MaKhu, k.TenKhu

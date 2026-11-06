@@ -170,9 +170,7 @@ class DashboardController extends Controller
         $this->redirect('staff/dashboard');
     }
 
-    // =========================================================================
-    // CÁC HÀM TIỆN ÍCH CHUYỂN TIẾP TƯƠNG THÍCH NGƯỢC (FORWARDING METHODS)
-    // =========================================================================
+    // Forwarding methods cho tương thích ngược
 
     // Module Hạ tầng KTX (ZoneController)
     public function zones(): void { (new ZoneController())->zones(); }

@@ -6,7 +6,6 @@ $activeTab = $activeTab ?? 'canh-bao';
 $namHoc = $namHoc ?? '2026-2027';
 $hocKy = $hocKy ?? 1;
 
-// Helper làm sạch tên tòa nhà (loại bỏ lặp "Tòa Tòa")
 $formatTenToa = function (?string $tenToa, ?string $maToa): string {
     $toa = $tenToa ?: $maToa ?: '';
     $clean = preg_replace('/^(Tòa\s*nhà\s*|Tòa\s*)+/ui', '', trim($toa));
@@ -16,9 +15,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
 
 <div class="container">
 
-    <!-- ========================================================================= -->
-    <!-- BREADCRUMB & HEADER (ĐỒNG BỘ CHUẨN ĐIỆN NƯỚC & ZONES - CÁC NÚT PHÂN BỐ TỪ PHẢI) -->
-    <!-- ========================================================================= -->
     <div style="margin-bottom: 20px;">
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('staff/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">BQL KTX</a>
@@ -40,7 +36,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                 </p>
             </div>
 
-            <!-- CÁC NÚT THAO TÁC HEADER (ĐỒNG BỘ CHUẨN STAFF/MAINTENANCE - ĐẶT PHÍA BÊN PHẢI) -->
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; margin-left: auto;">
                 <?php if (!empty($isAllowed)): ?>
                     <?php if (!empty($scope['canRecordEvent'])): ?>
@@ -79,7 +74,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
         </div>
     </div>
 
-    <!-- THÔNG BÁO FLASH MESSAGES -->
     <?php if (!empty($flashSuccess)): ?>
         <div class="alert alert-success" style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
             <i class="fa-solid fa-circle-check" style="margin-right: 6px; color: #16a34a;"></i> <b>Thành công:</b> <?= htmlspecialchars($flashSuccess) ?>
@@ -98,9 +92,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
         </div>
     <?php endif; ?>
 
-    <!-- ========================================================================= -->
-    <!-- TRƯỜNG HỢP 1: TỪ CHỐI TRUY CẬP (RED WARNING CARD CHUẨN ĐỒNG BỘ 100%)       -->
-    <!-- ========================================================================= -->
     <?php if (empty($isAllowed)): ?>
         <div class="card" style="border: 2px solid #f87171; background: #fef2f2; border-radius: 12px; padding: 40px 24px; text-align: center; margin-top: 10px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.08);">
             <div style="font-size: 3.5rem; color: #dc2626; margin-bottom: 12px;">
@@ -136,13 +127,7 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
 
     <?php else: ?>
 
-        <!-- ========================================================================= -->
-        <!-- TRƯỜNG HỢP 2: CÁN BỘ & ĐỘI AN NINH ĐƯỢC PHÉP TRUY CẬP                     -->
-        <!-- ========================================================================= -->
-
-        <!-- 4 THẺ KPI THỐNG KÊ NHANH (QUICK STATS CARDS CHUẨN TỶ LỆ ROOMS & UTILITIES - ẢNH 1) -->
         <div class="grid grid-cols-4" style="gap: 16px; margin-bottom: 24px;">
-            <!-- Thẻ 1: Cảnh báo Vắng mặt > 30 ngày -->
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Cảnh báo Vắng > 30 ngày</span>
@@ -153,7 +138,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                 <div style="font-size: 0.8rem; color: var(--text-muted);">Không có đơn xin tạm vắng</div>
             </div>
 
-            <!-- Thẻ 2: Lượt quét thẻ Barrier -->
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Lượt quét Barrier</span>
@@ -164,7 +148,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                 <div style="font-size: 0.8rem; color: #16a34a;">Dữ liệu cổng vào / ra KTX</div>
             </div>
 
-            <!-- Thẻ 3: Tổng sinh viên theo dõi -->
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Sinh viên theo dõi</span>
@@ -175,7 +158,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                 <div style="font-size: 0.8rem; color: var(--text-muted);">Hợp đồng nội trú còn hiệu lực</div>
             </div>
 
-            <!-- Thẻ 4: Tiến độ Chốt điểm & Gửi trường -->
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Tiến độ Gửi trường</span>
@@ -194,13 +176,11 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
             </div>
         </div>
 
-        <!-- KHỐI BỘ LỌC ĐA TẦNG CASCADING (ĐỒNG BỘ BACKGROUND #f8fafc & PADDING CHUẨN ROOMS/ADMIN) -->
         <div class="card" style="margin-bottom: 24px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); background: #f8fafc;">
             <form method="GET" action="<?= url('staff/discipline') ?>" id="filterFormDiscipline" style="margin: 0;">
                 <input type="hidden" name="tab" id="currentActiveTab" value="<?= htmlspecialchars($activeTab ?? 'canh-bao') ?>">
 
                 <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <!-- 1. Ô tìm kiếm tức thời -->
                     <div style="position: relative; flex: 1; min-width: 240px; max-width: 320px;">
                         <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem;"></i>
                         <input type="text" name="search" id="inputSearch" class="btn-outline"
@@ -209,20 +189,17 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                             style="width: 100%; padding: 8px 12px 8px 36px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;">
                     </div>
 
-                    <!-- 2. Dropdown Năm học -->
                     <select name="namHoc" class="btn-outline" style="min-width: 140px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormDiscipline').submit()">
                         <option value="2026-2027" <?= ($namHoc === '2026-2027') ? 'selected' : '' ?>>Năm 2026-2027</option>
                         <option value="2025-2026" <?= ($namHoc === '2025-2026') ? 'selected' : '' ?>>Năm 2025-2026</option>
                     </select>
 
-                    <!-- 3. Dropdown Học kỳ -->
                     <select name="hocKy" class="btn-outline" style="min-width: 120px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormDiscipline').submit()">
                         <option value="1" <?= ($hocKy === 1) ? 'selected' : '' ?>>Học kỳ 1</option>
                         <option value="2" <?= ($hocKy === 2) ? 'selected' : '' ?>>Học kỳ 2</option>
                         <option value="3" <?= ($hocKy === 3) ? 'selected' : '' ?>>Học kỳ hè</option>
                     </select>
 
-                    <!-- 4. Dropdown Khu (cho Admin / ALL) -->
                     <?php if ($scope['level'] === 'ALL'): ?>
                         <select name="khu" id="filterKhuSelect" class="btn-outline" style="min-width: 130px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="onKhuChange(this.value)">
                             <option value="">-- Tất cả Khu --</option>
@@ -234,7 +211,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                         </select>
                     <?php endif; ?>
 
-                    <!-- 5. Dropdown Cụm (Cascading) -->
                     <?php if (in_array($scope['level'], ['ALL', 'KHU', 'AN_NINH'])): ?>
                         <select name="cum" id="filterCumSelect" class="btn-outline" style="min-width: 140px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="onCumChange(this.value)">
                             <option value="">-- Tất cả Cụm --</option>
@@ -246,7 +222,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                         </select>
                     <?php endif; ?>
 
-                    <!-- 6. Dropdown Tòa nhà (Cascading, không lặp "Tòa Tòa") -->
                     <?php if (in_array($scope['level'], ['ALL', 'KHU', 'CUM', 'AN_NINH'])): ?>
                         <select name="toa" id="filterToaSelect" class="btn-outline" style="min-width: 145px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormDiscipline').submit()">
                             <option value="">-- Tất cả Tòa nhà --</option>
@@ -258,7 +233,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                         </select>
                     <?php endif; ?>
 
-                    <!-- 7. Dropdown Tầng -->
                     <select name="tang" class="btn-outline" style="min-width: 125px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormDiscipline').submit()">
                         <option value="">-- Tất cả tầng --</option>
                         <?php for ($fl = 1; $fl <= 12; $fl++): ?>
@@ -266,7 +240,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                         <?php endfor; ?>
                     </select>
 
-                    <!-- 8. Dropdown Xếp loại -->
                     <select name="rating" class="btn-outline" style="min-width: 140px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormDiscipline').submit()">
                         <option value="all" <?= ($selectedRating === 'all') ? 'selected' : '' ?>>-- Tất cả Xếp loại --</option>
                         <option value="Xuất sắc" <?= ($selectedRating === 'Xuất sắc') ? 'selected' : '' ?>>Xuất sắc (90-100đ)</option>
@@ -276,14 +249,12 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                         <option value="Yếu" <?= ($selectedRating === 'Yếu') ? 'selected' : '' ?>>Yếu (<50đ)< /option>
                     </select>
 
-                    <!-- 9. Dropdown Trạng thái gửi trường -->
                     <select name="lockStatus" class="btn-outline" style="min-width: 155px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormDiscipline').submit()">
                         <option value="all" <?= ($selectedLockStatus === 'all') ? 'selected' : '' ?>>-- Tình trạng gửi trường --</option>
                         <option value="da-gui" <?= ($selectedLockStatus === 'da-gui') ? 'selected' : '' ?>>Đã gửi trường (Đã khóa)</option>
                         <option value="chua-gui" <?= ($selectedLockStatus === 'chua-gui') ? 'selected' : '' ?>>Đang cập nhật (Chưa khóa)</option>
                     </select>
 
-                    <!-- Nút Lọc & Nút Xóa bộ lọc -->
                     <a href="<?= url('staff/discipline') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 8px 14px; color: #dc2626; border-color: #fecaca; background: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.8rem; font-weight: 600; text-decoration: none;">
                         <i class="fa-solid fa-filter-circle-xmark"></i> Xóa bộ lọc
                     </a>
@@ -291,7 +262,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
             </form>
         </div>
 
-        <!-- 3 SUB-TABS ĐIỀU HƯỚNG GẮN PILL BADGES (ĐỒNG BỘ CHUẨN APPLICATIONS & UTILITIES) -->
         <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; flex-wrap: wrap;">
             <button type="button" class="tab-btn <?= ($activeTab === 'canh-bao') ? 'active' : '' ?>" id="tabBtnCanhBao" onclick="switchDisciplineTab('canh-bao')"
                 style="background: <?= ($activeTab === 'canh-bao') ? '#fee2e2' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'canh-bao') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'canh-bao') ? '#dc2626' : 'var(--text-secondary)' ?>; display: inline-flex; align-items: center; gap: 8px;">
@@ -318,9 +288,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
             </button>
         </div>
 
-        <!-- ========================================================================= -->
-        <!-- TAB 1: CẢNH BÁO VẮNG MẶT > 30 NGÀY                                        -->
-        <!-- ========================================================================= -->
         <div id="tabContent_canh-bao" class="tab-content" style="display: <?= ($activeTab === 'canh-bao') ? 'block' : 'none' ?>;">
             <div class="card" style="margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
@@ -398,7 +365,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                                         <td>
                                             <span class="badge" style="background: #fee2e2; color: #991b1b; border: none; font-size: 0.75rem; font-weight: 600; padding: 4px 8px; border-radius: 6px; width: 100px;">Không có đơn</span>
                                         </td>
-                                        <!-- CỘT THAO TÁC CÂN ĐỐI 100% INLINE-FLEX KHÔNG RỚT DÒNG (ẢNH 2) -->
                                         <td style="text-align: right; white-space: nowrap; width: 195px; min-width: 195px;">
                                             <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; white-space: nowrap;">
                                                 <button type="button" class="btn btn-outline btn-sm" onclick="openAbsenceActionModal('<?= htmlspecialchars($w['maSinhVien']) ?>', '<?= htmlspecialchars(addslashes($w['hoVaTen'])) ?>', '<?= htmlspecialchars($w['sdtPhuHuynh'] ?? '') ?>', 'lien_he')" style="border-radius: 6px; font-weight: 600; padding: 5px 11px; font-size: 0.825rem; display: inline-flex; align-items: center; gap: 4px; height: 32px; white-space: nowrap; flex-shrink: 0;" title="Liên hệ sinh viên hoặc phụ huynh">
@@ -419,7 +385,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                     </table>
                 </div>
 
-                <!-- THANH PHÂN TRANG (PAGINATION CONTROLS CHUẨN STAFF/ZONES) -->
                 <div id="canhBaoPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px; padding: 12px 16px;">
                     <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
                         <span id="canhBaoPaginationInfo" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
@@ -438,15 +403,11 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                     </div>
 
                     <div id="canhBaoPaginationControls" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
-                        <!-- Sinh tự động bằng Javascript chuẩn staff/zones -->
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ========================================================================= -->
-        <!-- TAB 2: NHẬT KÝ QUÉT THẺ BARRIER CỔNG KTX                                  -->
-        <!-- ========================================================================= -->
         <div id="tabContent_barrier" class="tab-content" style="display: <?= ($activeTab === 'barrier') ? 'block' : 'none' ?>;">
             <div class="card" style="margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
@@ -455,7 +416,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                         <span class="badge badge-info"><?= count($barrierLogs) ?> lượt gần nhất</span>
                     </div>
 
-                    <!-- Lọc nhanh hướng đi -->
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted);">Hướng:</span>
                         <a href="<?= url('staff/discipline?tab=barrier&huongDi=&namHoc=' . urlencode($namHoc) . '&hocKy=' . $hocKy) ?>" class="badge" style="padding: 4px 8px; border-radius: 6px; text-decoration: none; font-size: 0.78rem; <?= empty($huongDi) ? 'background: #0f172a; color: #fff;' : 'background: #f1f5f9; color: #475569;' ?>">Tất cả</a>
@@ -526,7 +486,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                                         <td>
                                             <span style="color: #15803d; font-weight: 600; font-size: 0.78rem;">Hợp lệ</span>
                                         </td>
-                                        <!-- CỘT THAO TÁC CÂN ĐỐI 100% INLINE-FLEX (ẢNH 2) -->
                                         <td style="text-align: right; white-space: nowrap; width: 195px; min-width: 195px;">
                                             <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; white-space: nowrap;">
                                                 <button type="button" class="btn btn-outline btn-sm" onclick="viewStudentHistory('<?= htmlspecialchars($log['MaSinhVien']) ?>')" style="border-radius: 6px; font-weight: 600; padding: 5px 11px; font-size: 0.825rem; display: inline-flex; align-items: center; gap: 4px; height: 32px; white-space: nowrap; flex-shrink: 0;" title="Xem lịch sử rèn luyện của sinh viên">
@@ -547,7 +506,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                     </table>
                 </div>
 
-                <!-- THANH PHÂN TRANG (PAGINATION CONTROLS CHUẨN STAFF/ZONES) -->
                 <div id="barrierPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px; padding: 12px 16px;">
                     <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
                         <span id="barrierPaginationInfo" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
@@ -566,15 +524,11 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                     </div>
 
                     <div id="barrierPaginationControls" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
-                        <!-- Sinh tự động bằng Javascript chuẩn staff/zones -->
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ========================================================================= -->
-        <!-- TAB 3: ĐIỂM RÈN LUYỆN & KỶ LUẬT HỌC KỲ                                    -->
-        <!-- ========================================================================= -->
         <div id="tabContent_ren-luyen" class="tab-content" style="display: <?= ($activeTab === 'ren-luyen') ? 'block' : 'none' ?>;">
             <div class="card" style="margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
@@ -686,7 +640,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                                                 </span>
                                             <?php endif; ?>
                                         </td>
-                                        <!-- CỘT THAO TÁC CÂN ĐỐI 100% INLINE-FLEX (ẢNH 2) -->
                                         <td style="text-align: right; white-space: nowrap; width: 195px; min-width: 195px;">
                                             <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; white-space: nowrap;">
                                                 <button type="button" class="btn btn-outline btn-sm" onclick="viewStudentHistory('<?= htmlspecialchars($row['MaSinhVien']) ?>')" style="border-radius: 6px; font-weight: 600; padding: 5px 11px; font-size: 0.825rem; display: inline-flex; align-items: center; gap: 4px; height: 32px; white-space: nowrap; flex-shrink: 0;" title="Xem lịch sử rèn luyện chi tiết">
@@ -711,7 +664,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                     </table>
                 </div>
 
-                <!-- THANH PHÂN TRANG (PAGINATION CONTROLS CHUẨN STAFF/ZONES) -->
                 <div id="renLuyenPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px; padding: 12px 16px;">
                     <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
                         <span id="renLuyenPaginationInfo" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
@@ -730,7 +682,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                     </div>
 
                     <div id="renLuyenPaginationControls" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
-                        <!-- Sinh tự động bằng Javascript chuẩn staff/zones -->
                     </div>
                 </div>
             </div>
@@ -740,9 +691,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
 
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL 1: GHI NHẬN SỰ KIỆN RÈN LUYỆN / VI PHẠM / KHEN THƯỞNG               -->
-<!-- ========================================================================= -->
 <div id="recordModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 520px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -800,9 +748,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL 2: XỬ LÝ CẢNH BÁO VẮNG MẶT KÉO DÀI                                  -->
-<!-- ========================================================================= -->
 <div id="absenceActionModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 520px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -849,9 +794,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL 3: XEM LỊCH SỬ ĐIỂM RÈN LUYỆN CHI TIẾT (AJAX)                       -->
-<!-- ========================================================================= -->
 <div id="historyModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 640px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 85vh; display: flex; flex-direction: column;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-shrink: 0;">
@@ -862,11 +804,9 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
         </div>
 
         <div id="historyStudentInfo" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.85rem; flex-shrink: 0;">
-            <!-- Render động bằng JavaScript -->
         </div>
 
         <div id="historyTimelineContainer" style="overflow-y: auto; flex: 1; padding-right: 4px;">
-            <!-- Danh sách sự kiện render bằng AJAX -->
         </div>
 
         <div style="display: flex; justify-content: flex-end; margin-top: 16px; flex-shrink: 0;">
@@ -875,9 +815,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL 4: CHỐT ĐIỂM & GỬI BÁO CÁO VỀ TRƯỜNG ĐH                              -->
-<!-- ========================================================================= -->
 <div id="lockSubmitModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 520px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -915,9 +852,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL 5: GIẢ LẬP QUÉT THẺ BARRIER (DEMO / KIỂM SOÁT)                      -->
-<!-- ========================================================================= -->
 <div id="simulateScanModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 500px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -969,9 +903,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL 6: NHẬP FILE ĐIỂM RÈN LUYỆN TỪ CSV                                -->
-<!-- ========================================================================= -->
 <div id="importDisciplineModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 540px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -1018,11 +949,7 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- JAVASCRIPT: PHÂN TRANG CHUẨN STAFF/ZONES, TABS & MODALS                  -->
-<!-- ========================================================================= -->
 <script>
-    // 1. Chuyển đổi Sub-tabs & cập nhật số lượng nút Xuất Excel
     function switchDisciplineTab(tabKey) {
         document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -1054,7 +981,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
         const inputTab = document.getElementById('currentActiveTab');
         if (inputTab) inputTab.value = tabKey;
 
-        // Cập nhật text nút Xuất Excel theo tab
         const btnExportText = document.getElementById('btnExportText');
         if (btnExportText) {
             let count = 0;
@@ -1068,7 +994,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
             btnExportText.innerText = `Xuất Excel (${count})`;
         }
 
-        // Render lại phân trang cho tab vừa mở
         const mapKey = {
             'canh-bao': 'canhBao',
             'barrier': 'barrier',
@@ -1083,7 +1008,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
         window.history.replaceState({}, '', url);
     }
 
-    // 2. Xuất Excel dữ liệu của tab hiện tại
     function exportDisciplineCurrentTab() {
         const inputTab = document.getElementById('currentActiveTab');
         const tab = inputTab ? inputTab.value : 'canh-bao';
@@ -1097,7 +1021,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
         window.location.href = url;
     }
 
-    // 3. Cascading dropdowns: Khu -> Cụm -> Tòa
     function onKhuChange(khu) {
         const cumSelect = document.getElementById('filterCumSelect');
         const toaSelect = document.getElementById('filterToaSelect');
@@ -1130,7 +1053,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
         document.getElementById('filterFormDiscipline').submit();
     }
 
-    // 4. PHÂN TRANG CHUẨN STAFF/ZONES (PAGINATION CONTROLS ĐỒNG BỘ 100%)
     const disciplinePagination = {
         canhBao: {
             currentPage: 1,
@@ -1179,7 +1101,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
             row.style.display = (idx >= startIdx && idx < endIdx) ? '' : 'none';
         });
 
-        // Cập nhật thông tin phân trang góc trái
         const infoEl = document.getElementById(config.infoId);
         if (infoEl) {
             if (total === 0) {
@@ -1191,14 +1112,12 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
             }
         }
 
-        // Tạo các nút phân trang góc phải (chuẩn staff/zones)
         const controlsEl = document.getElementById(config.controlsId);
         if (!controlsEl) return;
         controlsEl.innerHTML = '';
 
         if (totalPages <= 1) return;
 
-        // Nút Đầu (First Page)
         const btnFirst = document.createElement('button');
         btnFirst.type = 'button';
         btnFirst.className = 'btn btn-outline btn-sm';
@@ -1209,7 +1128,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
         btnFirst.title = 'Trang đầu tiên';
         controlsEl.appendChild(btnFirst);
 
-        // Nút Trước (Prev Page)
         const btnPrev = document.createElement('button');
         btnPrev.type = 'button';
         btnPrev.className = 'btn btn-outline btn-sm';
@@ -1220,7 +1138,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
         btnPrev.title = 'Trang trước';
         controlsEl.appendChild(btnPrev);
 
-        // Các nút số trang có dấu ...
         let startPage = Math.max(1, config.currentPage - 2);
         let endPage = Math.min(totalPages, config.currentPage + 2);
 
@@ -1248,7 +1165,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
             controlsEl.appendChild(dot);
         }
 
-        // Nút Tiếp (Next Page)
         const btnNext = document.createElement('button');
         btnNext.type = 'button';
         btnNext.className = 'btn btn-outline btn-sm';
@@ -1259,7 +1175,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
         btnNext.title = 'Trang kế tiếp';
         controlsEl.appendChild(btnNext);
 
-        // Nút Cuối (Last Page)
         const btnLast = document.createElement('button');
         btnLast.type = 'button';
         btnLast.className = 'btn btn-outline btn-sm';
@@ -1286,14 +1201,12 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
         }
     }
 
-    // Khởi chạy phân trang khi tải trang xong
     document.addEventListener('DOMContentLoaded', function() {
         renderDisciplinePagination('canhBao');
         renderDisciplinePagination('barrier');
         renderDisciplinePagination('renLuyen');
     });
 
-    // 5. Các hàm đóng mở Modal
     function openRecordModal() {
         document.getElementById('recordSelectSinhVien').value = '';
         document.getElementById('selectLoaiGhiNhan').value = 'Khen thưởng';
@@ -1361,7 +1274,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
         document.getElementById('importDisciplineModal').style.display = 'none';
     }
 
-    // 6. AJAX Xem chi tiết lịch sử rèn luyện
     function viewStudentHistory(maSv) {
         const infoBox = document.getElementById('historyStudentInfo');
         const container = document.getElementById('historyTimelineContainer');
@@ -1449,7 +1361,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
         document.getElementById('historyModal').style.display = 'none';
     }
 
-    // ESC & Backdrop close cho tất cả modals
     window.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeImportModal();

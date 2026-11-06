@@ -16,7 +16,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
 ?>
 
 <div class="container">
-    <!-- Breadcrumb & Header -->
     <div style="margin-bottom: 20px;">
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('staff/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">BQL KTX</a>
@@ -35,7 +34,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                 </p>
             </div>
 
-            <!-- CÁC NÚT THAO TÁC HEADER (ĐỒNG BỘ STYLE TOÀN HỆ THỐNG) -->
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                 <?php if (!empty($isAllowed)): ?>
                     <?php if (!empty($scope['level']) && $scope['level'] === 'ALL'): ?>
@@ -65,7 +63,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
         </div>
     </div>
 
-    <!-- FLASH MESSAGES -->
     <?php if (!empty($autoReleasedMessage)): ?>
         <div class="alert alert-warning" style="background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
             <i class="fa-solid fa-clock-rotate-left" style="margin-right: 6px; color: #d97706;"></i> <b>Tự động xử lý:</b> <?= htmlspecialchars($autoReleasedMessage) ?>
@@ -91,9 +88,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
     <?php endif; ?>
 
     <?php if (empty($isAllowed)): ?>
-        <!-- ================================================================= -->
-        <!-- MÀN HÌNH CHẶN 100% TRUY CẬP (DÀNH CHO NHÂN VIÊN KHÔNG PHẢI QUẢN LÝ) -->
-        <!-- ================================================================= -->
         <div class="card" style="border: 2px solid #ef4444; background: #fef2f2; border-radius: 12px; padding: 40px 30px; text-align: center; margin-top: 24px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.12);">
             <div style="width: 76px; height: 76px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; color: #dc2626; font-size: 2.2rem; border: 2px solid #fca5a5;">
                 <i class="fa-solid fa-triangle-exclamation"></i>
@@ -127,11 +121,7 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
         </div>
 
     <?php else: ?>
-        <!-- ================================================================= -->
-        <!-- GIAO DIỆN CHÍNH THỨC DÀNH CHO CÁN BỘ QUẢN LÝ HỢP LỆ -->
-        <!-- ================================================================= -->
 
-        <!-- THẺ THỐNG KÊ KPI NHANH (QUICK STATS CARDS) -->
         <div class="grid grid-cols-4" style="gap: 16px; margin-bottom: 24px;">
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -170,19 +160,16 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
             </div>
         </div>
 
-        <!-- BỘ LỌC ĐA TẦNG CASCADING FILTERS VÀ TÌM KIẾM TỨC THỜI -->
         <div class="card" style="margin-bottom: 24px; padding: 18px 20px; border-radius: 10px; border: 1px solid var(--border);">
             <form id="filterFormApplications" method="GET" action="<?= url('staff/applications') ?>">
                 <input type="hidden" name="tab" id="currentActiveTab" value="<?= htmlspecialchars($activeTab) ?>">
 
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                    <!-- 1. Ô tìm kiếm thông minh -->
                     <div style="position: relative; flex: 1; min-width: 260px;">
                         <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
                         <input type="text" name="search" value="<?= htmlspecialchars($searchKeyword) ?>" class="form-control" placeholder="Tìm theo mã hồ sơ, MSSV, họ tên, SĐT, số phòng..." style="padding-left: 38px; border-radius: 8px; height: 38px;">
                     </div>
 
-                    <!-- 2. Bộ lọc Khu KTX (Dành cho cấp Admin/Giám đốc) -->
                     <?php if ($scope['level'] === 'ALL'): ?>
                         <div style="min-width: 150px;">
                             <select name="khu" id="filterKhuSelect" class="form-control" style="border-radius: 8px; height: 38px;" onchange="onKhuChange(this.value)">
@@ -196,7 +183,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                         </div>
                     <?php endif; ?>
 
-                    <!-- 3. Bộ lọc Cụm nhà (Dành cho cấp Trưởng Khu trở lên) -->
                     <?php if (in_array($scope['level'], ['ALL', 'KHU'], true)): ?>
                         <div style="min-width: 170px;">
                             <select name="cum" id="filterCumSelect" class="form-control" style="border-radius: 8px; height: 38px;" onchange="onCumChange(this.value)">
@@ -210,7 +196,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                         </div>
                     <?php endif; ?>
 
-                    <!-- 4. Bộ lọc Tòa nhà (Dành cho cấp Trưởng Cụm trở lên) -->
                     <?php if (in_array($scope['level'], ['ALL', 'KHU', 'CUM'], true)): ?>
                         <div style="min-width: 180px;">
                             <select name="toa" id="filterToaSelect" class="form-control" style="border-radius: 8px; height: 38px;" onchange="document.getElementById('filterFormApplications').submit()">
@@ -224,7 +209,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                         </div>
                     <?php endif; ?>
 
-                    <!-- 5. Nút xóa bộ lọc -->
                     <?php if (!empty($searchKeyword) || !empty($filterKhu) || !empty($filterCum) || !empty($filterToa) || !empty($filterStatus)): ?>
                         <a href="<?= url('staff/applications?tab=' . urlencode($activeTab)) ?>" class="btn btn-outline" style="border-radius: 8px; height: 38px; display: inline-flex; align-items: center; color: #dc2626; border-color: #fca5a5; background: #fff5f5;" title="Xóa toàn bộ bộ lọc và trở về mặc định">
                             <i class="fa-solid fa-filter-circle-xmark" style="margin-right: 6px;"></i> Xóa bộ lọc
@@ -234,7 +218,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
             </form>
         </div>
 
-        <!-- TABS ĐIỀU HƯỚNG SUB-TABS XÉT DUYỆT -->
         <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; flex-wrap: wrap;">
             <button type="button" class="tab-btn <?= ($activeTab === 'cho_duyet') ? 'active' : '' ?>" id="tabBtnPending" onclick="switchAppTab('cho_duyet')" style="background:none; border:none; padding: 10px 18px; font-size: 0.95rem; font-weight: 700; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'cho_duyet') ? 'var(--primary)' : 'var(--text-secondary)' ?>; background: <?= ($activeTab === 'cho_duyet') ? '#eff6ff' : 'transparent' ?>;">
                 Chờ xét duyệt (24h)
@@ -264,9 +247,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
             <?php endif; ?>
         </div>
 
-        <!-- ===================================================================== -->
-        <!-- TAB 1: DANH SÁCH HỒ SƠ ĐĂNG KÝ MỚI CHỜ DUYỆT (24H) -->
-        <!-- ===================================================================== -->
         <div id="tabContentPending" style="display: <?= ($activeTab === 'cho_duyet') ? 'block' : 'none' ?>;">
             <div class="card" style="margin-bottom: 24px; border-radius: 10px; border: 1px solid var(--border);">
                 <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 16px;">
@@ -361,7 +341,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                     </table>
                 </div>
 
-                <!-- THANH PHÂN TRANG TAB CHỜ DUYỆT -->
                 <?php if (!empty($pendingApplications)): ?>
                     <div id="pendingPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
                         <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
@@ -385,9 +364,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
             </div>
         </div>
 
-        <!-- ===================================================================== -->
-        <!-- TAB 2: THEO DÕI HỒ SƠ ĐANG TRONG HẠN GIỮ CHỖ 72H (CHỜ THANH TOÁN) -->
-        <!-- ===================================================================== -->
         <div id="tabContentActive72h" style="display: <?= ($activeTab === 'dang_giu_cho') ? 'block' : 'none' ?>;">
             <div class="card" style="margin-bottom: 24px; border-radius: 10px; border: 1px solid var(--border);">
                 <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 16px;">
@@ -426,7 +402,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                                     $phutConLai = (int)($act['SoPhutConLai'] ?? 0);
                                     $gio = floor($phutConLai / 60);
                                     $phut = $phutConLai % 60;
-                                    // Tổng 72h = 4320 phút
                                     $percentElapsed = max(0, min(100, round((4320 - max(0, $phutConLai)) / 4320 * 100)));
                                     ?>
                                     <tr class="active72h-row" id="row-active-<?= htmlspecialchars($act['MaHoSo']) ?>" data-mahoso="<?= htmlspecialchars($act['MaHoSo']) ?>" data-hanchot="<?= htmlspecialchars($act['HanChotThanhToan'] ?? '') ?>">
@@ -482,7 +457,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                                                 </span>
                                             <?php endif; ?>
 
-                                            <!-- Thanh tiến trình 72h trực quan -->
                                             <div style="width: 100%; height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: 6px;" title="Đã trôi qua <?= $percentElapsed ?>% thời hạn 72h">
                                                 <div class="countdown-progress-bar" style="height: 100%; width: <?= $percentElapsed ?>%; background: <?= ($percentElapsed > 75) ? '#ef4444' : (($percentElapsed > 50) ? '#f59e0b' : '#3b82f6') ?>; border-radius: 3px;"></div>
                                             </div>
@@ -507,7 +481,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                     </table>
                 </div>
 
-                <!-- THANH PHÂN TRANG TAB ĐANG GIỮ CHỖ 72H -->
                 <?php if (!empty($active72hApplications)): ?>
                     <div id="active72hPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
                         <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
@@ -531,9 +504,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
             </div>
         </div>
 
-        <!-- ===================================================================== -->
-        <!-- TAB 3: LỊCH SỬ XỬ LÝ & THU HỒI 72H -->
-        <!-- ===================================================================== -->
         <div id="tabContentHistory" style="display: <?= ($activeTab === 'lich_su') ? 'block' : 'none' ?>;">
             <div class="card" style="margin-bottom: 24px; border-radius: 10px; border: 1px solid var(--border);">
                 <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 16px;">
@@ -615,7 +585,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                     </table>
                 </div>
 
-                <!-- THANH PHÂN TRANG TAB LỊCH SỬ -->
                 <?php if (!empty($historyApplications)): ?>
                     <div id="historyPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
                         <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
@@ -639,9 +608,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
             </div>
         </div>
 
-        <!-- ===================================================================== -->
-        <!-- TAB 4: THẨM ĐỊNH & XÉT DUYỆT HỒ SƠ MIỄN GIẢM NỘI TRÚ -->
-        <!-- ===================================================================== -->
         <div id="tabContentMienGiam" style="display: <?= ($activeTab === 'mien_giam') ? 'block' : 'none' ?>;">
             <div class="card" style="margin-bottom: 24px; border-radius: 10px; border: 1px solid var(--border);">
                 <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 16px;">
@@ -755,7 +721,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                     </table>
                 </div>
 
-                <!-- THANH PHÂN TRANG TAB MIỄN GIẢM -->
                 <?php if (!empty($mienGiamList)): ?>
                     <div id="mienGiamPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
                         <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
@@ -780,9 +745,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
         </div>
 
         <?php if (!empty($scope['level']) && $scope['level'] === 'ALL'): ?>
-            <!-- ===================================================================== -->
-            <!-- TAB 5: QUẢN LÝ ĐỢT ĐĂNG KÝ NỘI TRÚ (DÀNH RIÊNG QUẢN LÝ KTX / ADMIN)   -->
-            <!-- ===================================================================== -->
             <div id="tabContentDotDangKy" style="display: <?= ($activeTab === 'dot_dang_ky') ? 'block' : 'none' ?>;">
                 <div class="card" style="margin-bottom: 24px; border-radius: 10px; border: 1px solid var(--border);">
                     <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
@@ -913,9 +875,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
     <?php endif; ?>
 </div>
 
-<!-- ===================================================================== -->
-<!-- MODAL: TỪ CHỐI HỒ SƠ ĐĂNG KÝ (CÓ NHẬP LÝ DO CHUẨN) -->
-<!-- ===================================================================== -->
 <div id="modalRejectApplication" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
     <div style="background: #ffffff; border-radius: 12px; max-width: 500px; width: 92%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); overflow: hidden; border: 1px solid #e2e8f0;">
         <div style="padding: 18px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #fef2f2;">
@@ -953,9 +912,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
     </div>
 </div>
 
-<!-- ===================================================================== -->
-<!-- MODAL: HỦY GIỮ CHỖ 72H (CHO HỒ SƠ ĐANG CHỜ THANH TOÁN) -->
-<!-- ===================================================================== -->
 <div id="modalCancelActive" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
     <div style="background: #ffffff; border-radius: 12px; max-width: 500px; width: 92%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); overflow: hidden; border: 1px solid #e2e8f0;">
         <div style="padding: 18px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #fffbeb;">
@@ -986,9 +942,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL IMPORT KẾT QUẢ XÉT DUYỆT TỪ FILE CSV -->
-<!-- ========================================================================= -->
 <div id="modalImportApplications" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 20px 16px; box-sizing: border-box; overflow-y: auto;">
     <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 620px; max-height: calc(100vh - 40px); display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
         <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; flex-shrink: 0;">
@@ -1042,9 +995,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL: TẠO ĐỢT ĐĂNG KÝ NỘI TRÚ MỚI (DÀNH CHO QUẢN LÝ KTX)                -->
-<!-- ========================================================================= -->
 <div id="modalCreatePeriod" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); z-index: 999999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
     <div style="background: #ffffff; border-radius: 12px; max-width: 620px; width: 92%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); overflow: hidden; border: 1px solid #e2e8f0;">
         <div style="padding: 18px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #eff6ff;">
@@ -1110,9 +1060,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL: GIA HẠN THỜI GIAN ĐÓNG CỔNG ĐỢT ĐĂNG KÝ                          -->
-<!-- ========================================================================= -->
 <div id="modalExtendPeriod" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); z-index: 999999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
     <div style="background: #ffffff; border-radius: 12px; max-width: 480px; width: 92%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); overflow: hidden; border: 1px solid #e2e8f0;">
         <div style="padding: 18px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #eff6ff;">
@@ -1143,9 +1090,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
 </div>
 
 <script>
-    // =========================================================================
-    // QUẢN LÝ PHÂN TRANG CLIENT-SIDE CHO CÁC BẢNG (ĐỒNG BỘ UX NHƯ STAFF/ROOMS)
-    // =========================================================================
     const appPaginationState = {
         pending: {
             page: 1,
@@ -1461,7 +1405,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
         window.location.href = '<?= url('staff/applications/export') ?>?' + urlParams.toString();
     }
 
-    // Khởi chạy phân trang và phím bấm
     document.addEventListener('DOMContentLoaded', function() {
         renderAppPagination('pending');
         renderAppPagination('active72h');
@@ -1472,14 +1415,10 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
         const initialTab = input ? input.value : 'cho_duyet';
         updateExportButtonCount(initialTab);
 
-        // Khởi động tiến trình giám sát và tự động hủy giữ chỗ 72h thời gian thực
         update72hCountdowns();
         setInterval(update72hCountdowns, 10000);
     });
 
-    // =========================================================================
-    // TIẾN TRÌNH TỰ ĐỘNG HỦY GIỮ CHỖ KHI QUÁ HẠN 72H (REALTIME AUTO-RELEASE)
-    // =========================================================================
     let isAutoReleasing = false;
 
     function update72hCountdowns() {
@@ -1493,7 +1432,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
             const hanChotStr = row.dataset.hanchot;
             if (!hanChotStr) return;
 
-            // Chuyển định dạng 'YYYY-MM-DD HH:mm:ss' sang Date hợp lệ
             const targetTime = new Date(hanChotStr.replace(' ', 'T')).getTime();
             const diffMs = targetTime - now;
 
@@ -1561,7 +1499,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
             .then(function(data) {
                 isAutoReleasing = false;
                 if (data.success && data.total_released > 0) {
-                    // Tạo thông báo hiển thị cho cán bộ
                     const notiContainer = document.querySelector('.page-header') || document.querySelector('.content') || document.body;
                     const notiEl = document.createElement('div');
                     notiEl.className = 'alert alert-warning';
@@ -1571,7 +1508,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
                         notiContainer.parentNode.insertBefore(notiEl, notiContainer.nextSibling);
                     }
 
-                    // Xóa các dòng đã hết hạn khỏi DOM với hiệu ứng mượt
                     if (data.released_records && data.released_records.length > 0) {
                         data.released_records.forEach(function(rec) {
                             const row = document.getElementById('row-active-' + rec.MaHoSo);
@@ -1626,7 +1562,6 @@ $activeTab = $filters['tab'] ?? 'cho_duyet';
         }
     }
 
-    // Đóng modal khi bấm Escape hoặc click ra backdrop
     window.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeImportModal();

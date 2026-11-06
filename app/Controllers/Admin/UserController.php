@@ -192,7 +192,7 @@ class UserController extends Controller
 
         try {
             if ($maTaiKhoan > 0) {
-                // ==================== CẬP NHẬT (UPDATE) ====================
+                // Cập nhật (Update)
                 $existing = Database::fetch("SELECT * FROM TaiKhoan WHERE MaTaiKhoan = :id", ['id' => $maTaiKhoan]);
                 if (!$existing) {
                     Session::flash('error', 'Không tìm thấy tài khoản cán bộ để cập nhật!');
@@ -262,7 +262,7 @@ class UserController extends Controller
                     Session::flash('success', "Đã cập nhật thành công thông tin & quyền hạn cho cán bộ: {$hoVaTen} ({$tenDangNhap})!");
                 }
             } else {
-                // ==================== THÊM MỚI (CREATE) ====================
+                // Thêm mới (Create)
                 if (empty($matKhau)) {
                     Session::flash('error', 'Vui lòng nhập mật khẩu khởi tạo cho tài khoản cán bộ mới!');
                     $this->redirect('admin/users');

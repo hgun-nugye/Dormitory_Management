@@ -49,9 +49,7 @@ class DashboardService
             $userRoleName = 'Quản trị viên / Ban Giám đốc';
         }
 
-        // =========================================================================
-        // 1. CHẶN TUYỆT ĐỐI SINH VIÊN VÀ CÁC ĐỐI TƯỢNG KHÔNG THUỘC BQL KTX
-        // =========================================================================
+        // 1. Chặn sinh viên và các đối tượng không thuộc BQL KTX
         if ($role === 'SINH_VIEN' || $role === 'TRUONG_PHONG' || empty($role)) {
             return [
                 'isAllowed' => false,
@@ -68,9 +66,7 @@ class DashboardService
             ];
         }
 
-        // =========================================================================
-        // 2. NHÓM CHUYÊN TRÁCH: KẾ TOÁN & TÀI CHÍNH
-        // =========================================================================
+        // 2. Nhóm chuyên trách: Kế toán & Tài chính
         if ($role === 'KE_TOAN' || str_starts_with($username, 'KT') || str_contains($chucVu, 'kế toán')) {
             return [
                 'isAllowed' => true,
@@ -90,9 +86,7 @@ class DashboardService
             ];
         }
 
-        // =========================================================================
-        // 3. NHÓM CHUYÊN TRÁCH: KỸ THUẬT VIÊN & THỢ SỬA CHỮA
-        // =========================================================================
+        // 3. Nhóm chuyên trách: Kỹ thuật viên & Thợ sửa chữa
         if (str_starts_with($username, 'NV_KT') || str_contains($chucVu, 'kỹ thuật') || str_contains($chucVu, 'điện nước') || str_contains($chucVu, 'sửa chữa')) {
             return [
                 'isAllowed' => true,
@@ -113,9 +107,7 @@ class DashboardService
             ];
         }
 
-        // =========================================================================
-        // 4. NHÓM CHUYÊN TRÁCH: AN NINH & BẢO VỆ
-        // =========================================================================
+        // 4. Nhóm chuyên trách: An ninh & Bảo vệ
         if ($role === 'AN_NINH' || $role === 'BAO_VE' || str_contains($chucVu, 'an ninh') || str_contains($chucVu, 'bảo vệ')) {
             return [
                 'isAllowed' => true,
@@ -135,9 +127,7 @@ class DashboardService
             ];
         }
 
-        // =========================================================================
-        // 5. NHÓM CÁN BỘ QUẢN LÝ (MANAGER TIER: CẤP 1 ĐẾN CẤP 4)
-        // =========================================================================
+        // 5. Nhóm cán bộ quản lý (Manager Tier: Cấp 1 đến Cấp 4)
 
         // Danh sách tra cứu cơ sở hạ tầng
         $khus = Database::fetchAll("SELECT MaKhu, TenKhu FROM KhuKTX ORDER BY MaKhu ASC");

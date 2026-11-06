@@ -3,7 +3,6 @@ ob_start();
 ?>
 
 <div class="container">
-    <!-- Hero Section -->
     <div class="hero-section-custom">
         <div class="brand-badge">
             Đại học Quốc gia TP. Hồ Chí Minh
@@ -40,7 +39,6 @@ ob_start();
         </div>
     </div>
 
-    <!-- Stats Section -->
     <?php
     $statsDefaults = [
         'total_students' => 0,
@@ -77,7 +75,6 @@ ob_start();
         </div>
     </div>
 
-    <!-- 8 Business features showcase -->
     <div id="features" style="margin-top: 48px;">
         <div class="section-heading" style="text-align: center; margin-bottom: 40px;">
             <div style="color: #2563eb; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Tiêu chuẩn vận hành</div>

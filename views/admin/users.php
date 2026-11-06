@@ -3,7 +3,6 @@ ob_start();
 ?>
 
 <div class="container">
-    <!-- Breadcrumb & Header -->
     <div style="margin-bottom: 20px;">
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('admin/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">Quản trị hệ thống</a>
@@ -32,7 +31,6 @@ ob_start();
         </div>
     </div>
 
-    <!-- THÔNG BÁO FLASH MESSAGE -->
     <?php if (!empty($flashSuccess)): ?>
         <div class="alert alert-success" style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
             <i class="fa-solid fa-circle-check" style="margin-right: 6px;"></i> <b>Thành công:</b> <?= $flashSuccess ?>
@@ -51,7 +49,6 @@ ob_start();
         </div>
     <?php endif; ?>
 
-    <!-- BIỂU MẪU CRUD: THÊM / CẬP NHẬT TÀI KHOẢN CÁN BỘ (ẨN MẶC ĐỊNH, CHỈ HIỆN KHI CLICK BUTTON HOẶC SỬA) -->
     <div class="card" id="userFormCard" style="<?= !empty($flashError) ? 'display: block;' : 'display: none;' ?> margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
         <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
             <h3 id="formTitle" style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
@@ -67,7 +64,6 @@ ob_start();
             <?= csrf_field() ?>
             <input type="hidden" id="editMaTaiKhoan" name="maTaiKhoan" value="">
 
-            <!-- Datalist gợi ý họ và tên cán bộ khi nhập tay -->
             <datalist id="staffSuggestions">
                 <?php foreach ($allStaff as $st): ?>
                     <option value="<?= htmlspecialchars($st['HoVaTen']) ?>">
@@ -102,7 +98,6 @@ ob_start();
                     <input type="text" id="tenDangNhap" name="tenDangNhap" class="btn-outline" style="width: 100%; padding: 10px; border-radius: 6px; font-size: 0.9rem;" placeholder="Ví dụ: NV003, TK002, admin..." required>
                 </div>
                 <div>
-                    <!-- CHẾ ĐỘ THÊM MỚI: NHẬP MẬT KHẨU KHỞI TẠO -->
                     <div id="createPasswordBox">
                         <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">
                             Mật khẩu khởi tạo <span style="color:#dc2626;">*</span>
@@ -113,7 +108,6 @@ ob_start();
                         </div>
                     </div>
 
-                    <!-- CHẾ ĐỘ SỬA: KHÔNG CHO XEM MẬT KHẨU, CHỈ CHO RESET VỀ Demo@123 -->
                     <div id="editPasswordBox" style="display: none;">
                         <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">
                             Mật khẩu tài khoản
@@ -172,7 +166,6 @@ ob_start();
                     </div>
                 </div>
             </div>
-            <!-- CÁC NÚT CHỨC NĂNG FORM -->
             <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 8px; flex-wrap: wrap; gap: 10px;">
                 <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                     <button type="submit" id="btnSubmitForm" class="btn btn-primary"
@@ -198,7 +191,6 @@ ob_start();
         </form>
     </div>
 
-    <!-- BẢNG DANH SÁCH TÀI KHOẢN CÁN BỘ & PHÂN TRANG (CRUD TABLE) -->
     <div class="card">
         <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -207,7 +199,6 @@ ob_start();
             </div>
         </div>
 
-        <!-- THANH TÌM KIẾM VÀ LỌC ĐA TIÊU CHÍ -->
         <div style="display: flex; align-items: center; gap: 12px; margin: 0 0 20px; flex-wrap: wrap; background: #f8fafc; padding: 14px 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
             <div style="position: relative; flex: 1; min-width: 240px; max-width: 420px;">
                 <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
@@ -332,7 +323,6 @@ ob_start();
                                     <?= !empty($u['NgayTao']) ? date('d/m/Y', strtotime($u['NgayTao'])) : '—' ?>
                                 </td>
                                 <td style="text-align: right; white-space: nowrap;">
-                                    <!-- NÚT SỬA (UPDATE) -->
                                     <button type="button" class="btn btn-outline btn-sm"
                                         style="border-radius: 6px; margin-right: 4px;"
                                         onclick='editUser(<?= json_encode($u, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)'
@@ -340,7 +330,6 @@ ob_start();
                                         <i class="fa-solid fa-pen-to-square" style="margin-right: 6px;"></i> Sửa
                                     </button>
 
-                                    <!-- NÚT KHÓA / MỞ KHÓA -->
                                     <button type="button" class="btn btn-outline btn-sm btn-toggle-user"
                                         style="border-radius: 6px; margin-right: 4px; <?= $isLocked ? 'color: #15803d; border-color: #86efac;' : 'color: #b45309; border-color: #fde68a;' ?>"
                                         data-id="<?= (int)$u['MaTaiKhoan'] ?>"
@@ -352,7 +341,6 @@ ob_start();
                                             style="margin-right: 6px;"></i> <?= $isLocked ? 'Mở khóa' : 'Khóa' ?>
                                     </button>
 
-                                    <!-- NÚT XÓA -->
                                     <button type="button" class="btn btn-outline btn-sm btn-delete-user"
                                         style="border-radius: 6px; color: #dc2626; border-color: #fecaca; background: #fff;"
                                         data-id="<?= (int)$u['MaTaiKhoan'] ?>"
@@ -369,7 +357,6 @@ ob_start();
                 </table>
             </div>
 
-            <!-- THANH PHÂN TRANG (PAGINATION CONTROLS) -->
             <div id="userPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
                 <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
                     <span id="userPaginationInfo" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
@@ -388,7 +375,6 @@ ob_start();
                 </div>
 
                 <div id="userPaginationControls" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
-                    <!-- Sẽ được sinh động bằng Javascript -->
                 </div>
             </div>
         <?php else: ?>
@@ -397,12 +383,8 @@ ob_start();
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL IMPORT DANH SÁCH CÁN BỘ TỪ FILE CSV -->
-<!-- ========================================================================= -->
 <div id="importUserModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;">
     <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 580px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
-        <!-- Modal Header -->
         <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc;">
             <div style="font-size: 1.05rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
                 <i class="fa-solid fa-file-import" style="color: #2563eb; margin-right: 6px;"></i>
@@ -413,11 +395,9 @@ ob_start();
             </button>
         </div>
 
-        <!-- Modal Body & Form -->
         <form action="<?= url('admin/users/import') ?>" method="POST" enctype="multipart/form-data" style="margin: 0;">
             <?= csrf_field() ?>
             <div style="padding: 20px;">
-                <!-- Hướng dẫn & Tải file mẫu -->
                 <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 14px 16px; margin-bottom: 18px; font-size: 0.85rem; color: #1e40af;">
                     <div style="font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
                         <i class="fa-solid fa-circle-info"></i> Quy định định dạng file nhập dữ liệu:
@@ -435,7 +415,6 @@ ob_start();
                     </div>
                 </div>
 
-                <!-- Chọn file -->
                 <div style="margin-bottom: 16px;">
                     <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #1e293b; margin-bottom: 6px;">
                         Chọn tệp CSV danh sách cán bộ <span style="color: #dc2626;">*</span>
@@ -444,7 +423,6 @@ ob_start();
                     <small style="color: var(--text-muted); display: block; margin-top: 4px;">Tệp tối đa 10MB, hỗ trợ font tiếng Việt UTF-8.</small>
                 </div>
 
-                <!-- Tùy chọn ghi đè -->
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
                     <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 0.85rem; color: #334155; cursor: pointer; user-select: none;">
                         <input type="checkbox" name="overwriteExisting" value="1" checked style="margin-top: 2px;">
@@ -455,7 +433,6 @@ ob_start();
                 </div>
             </div>
 
-            <!-- Modal Footer -->
             <div style="padding: 14px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: flex-end; gap: 10px;">
                 <button type="button" class="btn btn-outline" onclick="closeImportUserModal()" style="border-radius: 6px; padding: 8px 18px;">
                     Hủy bỏ
@@ -468,17 +445,12 @@ ob_start();
     </div>
 </div>
 
-<!-- JAVASCRIPT XỬ LÝ PHÂN TRANG, BỘ LỌC, MODAL VÀ FORM CRUD -->
 <script>
-    // Dữ liệu cán bộ và hạ tầng phân cấp có sẵn để tra cứu & gán phạm vi phụ trách
     const staffPool = <?= json_encode($allStaff ?? [], JSON_UNESCAPED_UNICODE) ?>;
     const khuPool = <?= json_encode($khuList ?? [], JSON_UNESCAPED_UNICODE) ?>;
     const cumPool = <?= json_encode($cumNhaList ?? [], JSON_UNESCAPED_UNICODE) ?>;
     const toaPool = <?= json_encode($toaNhaList ?? [], JSON_UNESCAPED_UNICODE) ?>;
 
-    // =========================================================================
-    // 1. PHÂN TRANG VÀ LỌC TÌM KIẾM CÁN BỘ (REAL-TIME PAGINATION & FILTER)
-    // =========================================================================
     let userCurrentPage = 1;
     let userPageSize = 10;
     let userMatchedRows = [];
@@ -514,7 +486,6 @@ ob_start();
             }
         });
 
-        // Xử lý dòng thông báo khi không có kết quả
         let noResultRow = document.getElementById('noUserSearchResult');
         if (userMatchedRows.length === 0 && allRows.length > 0) {
             if (!noResultRow) {
@@ -550,7 +521,6 @@ ob_start();
             }
         });
 
-        // Cập nhật dòng thông tin phân trang
         const infoEl = document.getElementById('userPaginationInfo');
         if (infoEl) {
             if (total === 0) {
@@ -567,7 +537,6 @@ ob_start();
             totalBadge.innerText = total + ' tài khoản';
         }
 
-        // Cập nhật số lượng trên nút Xuất Excel
         const exportBtnText = document.getElementById('btnExportText');
         if (exportBtnText) {
             const allStaffRows = document.querySelectorAll('#userTableBody tr.user-row');
@@ -578,7 +547,6 @@ ob_start();
             }
         }
 
-        // Cập nhật các nút phân trang
         const controlsEl = document.getElementById('userPaginationControls');
         if (!controlsEl) return;
 
@@ -589,15 +557,12 @@ ob_start();
 
         let html = '';
 
-        // Nút Đầu (<<)
         const disabledFirst = userCurrentPage === 1 ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : 'style="padding: 5px 9px; border-radius: 6px;"';
         html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToUserPage(1)" ${disabledFirst} title="Trang đầu"><i class="fa-solid fa-angles-left"></i></button>`;
 
-        // Nút Trước (<)
         const disabledPrev = userCurrentPage === 1 ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : 'style="padding: 5px 9px; border-radius: 6px;"';
         html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToUserPage(${userCurrentPage - 1})" ${disabledPrev} title="Trang trước"><i class="fa-solid fa-angle-left"></i></button>`;
 
-        // Các nút số trang
         let startPage = Math.max(1, userCurrentPage - 2);
         let endPage = Math.min(totalPages, userCurrentPage + 2);
 
@@ -623,11 +588,9 @@ ob_start();
             html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToUserPage(${totalPages})" style="padding: 5px 10px; border-radius: 6px;">${totalPages}</button>`;
         }
 
-        // Nút Sau (>)
         const disabledNext = userCurrentPage === totalPages ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : 'style="padding: 5px 9px; border-radius: 6px;"';
         html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToUserPage(${userCurrentPage + 1})" ${disabledNext} title="Trang sau"><i class="fa-solid fa-angle-right"></i></button>`;
 
-        // Nút Cuối (>>)
         const disabledLast = userCurrentPage === totalPages ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : 'style="padding: 5px 9px; border-radius: 6px;"';
         html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToUserPage(${totalPages})" ${disabledLast} title="Trang cuối"><i class="fa-solid fa-angles-right"></i></button>`;
 
@@ -660,7 +623,6 @@ ob_start();
         filterUsers();
     }
 
-    // Xuất file CSV danh sách cán bộ theo đúng kết quả đang hiển thị theo bộ lọc
     function exportFilteredUsers() {
         if (!userMatchedRows || userMatchedRows.length === 0) {
             alert('Không có cán bộ nào phù hợp với bộ lọc hiện tại để xuất file!');
@@ -678,7 +640,6 @@ ob_start();
             return;
         }
 
-        // Tạo form ẩn gửi danh sách ID cán bộ đã lọc sang backend để xuất CSV chuẩn UTF-8
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '<?= url("admin/users/export") ?>';
@@ -701,9 +662,6 @@ ob_start();
         document.body.removeChild(form);
     }
 
-    // =========================================================================
-    // 2. MODAL IMPORT DANH SÁCH CÁN BỘ
-    // =========================================================================
     function openImportUserModal() {
         const modal = document.getElementById('importUserModal');
         if (modal) {
@@ -720,7 +678,6 @@ ob_start();
         }
     }
 
-    // Đóng modal khi click ra ngoài vùng dialog
     window.addEventListener('click', function(e) {
         const importModal = document.getElementById('importUserModal');
         if (e.target === importModal) {
@@ -728,9 +685,6 @@ ob_start();
         }
     });
 
-    // =========================================================================
-    // 3. XỬ LÝ GỢI Ý HỌ TÊN CÁN BỘ TỪ DATALIST & PHẠM VI THEO VAI TRÒ
-    // =========================================================================
     const hoVaTenInput = document.getElementById('hoVaTen');
     const soDienThoaiInput = document.getElementById('soDienThoai');
     const tenDangNhapInput = document.getElementById('tenDangNhap');
@@ -758,7 +712,6 @@ ob_start();
         if (scopeStar) scopeStar.style.display = 'none';
 
         if (role === 'TRUONG_KHU') {
-            // 1. Trưởng khu KTX: Chỉ định Khu KTX (Khu A / Khu B)
             if (scopeLabel) scopeLabel.innerText = 'Phạm vi phụ trách (Chỉ định Khu KTX)';
             if (scopeStar) scopeStar.style.display = 'inline';
             if (scopeHelp) scopeHelp.innerHTML = '<i class="fa-solid fa-circle-info" style="margin-right: 4px;"></i> Trưởng khu có toàn quyền quản lý trên toàn bộ các Cụm và Tòa nhà thuộc Khu KTX được phân công.';
@@ -777,7 +730,6 @@ ob_start();
 
             scopeSelect.setAttribute('required', 'required');
         } else if (role === 'TRUONG_CUM') {
-            // 2. Trưởng cụm nhà: Chỉ định Cụm nhà (AG, AH, BA, BB, BC...)
             if (scopeLabel) scopeLabel.innerText = 'Phạm vi phụ trách (Chỉ định Cụm nhà)';
             if (scopeStar) scopeStar.style.display = 'inline';
             if (scopeHelp) scopeHelp.innerHTML = '<i class="fa-solid fa-circle-info" style="margin-right: 4px;"></i> Trưởng cụm phụ trách quản lý cơ sở vật chất, nhân sự và xét duyệt hồ sơ tại Cụm nhà được gán.';
@@ -787,7 +739,6 @@ ob_start();
             optDefault.innerText = '-- Chọn Cụm nhà phụ trách --';
             scopeSelect.appendChild(optDefault);
 
-            // Gom nhóm theo Khu A và Khu B
             const khuGroups = {};
             cumPool.forEach(c => {
                 const kCode = c.MaKhu || 'Khác';
@@ -809,7 +760,6 @@ ob_start();
 
             scopeSelect.setAttribute('required', 'required');
         } else if (role === 'TRUONG_TOA') {
-            // 3. Trưởng tòa nhà: Chỉ định Tòa nhà (A01, H01, BA1, B02, C06...)
             if (scopeLabel) scopeLabel.innerText = 'Phạm vi phụ trách (Chỉ định Tòa nhà)';
             if (scopeStar) scopeStar.style.display = 'inline';
             if (scopeHelp) scopeHelp.innerHTML = '<i class="fa-solid fa-circle-info" style="margin-right: 4px;"></i> Trưởng tòa phụ trách trực tiếp sinh viên, cơ sở vật chất và nề nếp tại Tòa nhà được gán.';
@@ -819,7 +769,6 @@ ob_start();
             optDefault.innerText = '-- Chọn Tòa nhà phụ trách --';
             scopeSelect.appendChild(optDefault);
 
-            // Gom nhóm theo Cụm
             const cumGroups = {};
             toaPool.forEach(t => {
                 const cCode = t.MaCum || 'Khác';
@@ -842,7 +791,6 @@ ob_start();
 
             scopeSelect.setAttribute('required', 'required');
         } else if (role === 'ADMIN' || role === 'NV_QUAN_LY_KTX') {
-            // 4. Admin hoặc Quản lý chung KTX: Toàn quyền toàn hệ thống
             if (scopeLabel) scopeLabel.innerText = 'Phạm vi quản trị (Toàn hệ thống KTX)';
             if (scopeHelp) scopeHelp.innerHTML = '<i class="fa-solid fa-circle-check" style="color:#15803d; margin-right: 4px;"></i> Vai trò này có toàn quyền quản trị và giám sát trên toàn bộ hệ thống KTX ĐHQG-HCM (không giới hạn khu/cụm/tòa).';
 
@@ -851,7 +799,6 @@ ob_start();
             opt.innerText = 'Toàn hệ thống KTX (Không giới hạn phạm vi)';
             scopeSelect.appendChild(opt);
         } else if (role === 'NV_THUONG') {
-            // 5. Nhân viên thường / Kỹ thuật / Hành chính: Cho phép chọn theo Cụm, Tòa hoặc Toàn hệ thống
             if (scopeLabel) scopeLabel.innerText = 'Phạm vi phân công kỹ thuật / công việc';
             if (scopeHelp) scopeHelp.innerHTML = '<i class="fa-solid fa-circle-info" style="margin-right: 4px;"></i> Nhân viên có thể được phân công làm việc theo một Cụm, một Tòa hoặc làm việc trên Toàn hệ thống.';
 
@@ -884,7 +831,6 @@ ob_start();
                 scopeSelect.appendChild(groupToa);
             }
         } else {
-            // Chưa chọn vai trò
             if (scopeLabel) scopeLabel.innerText = 'Phạm vi phụ trách (Chỉ định Khu / Cụm / Tòa)';
             if (scopeHelp) scopeHelp.innerHTML = '<i class="fa-solid fa-arrow-up" style="margin-right: 4px;"></i> Vui lòng chọn Vai trò hệ thống ở trên để hiển thị phạm vi phân quyền phù hợp.';
 
@@ -894,7 +840,6 @@ ob_start();
             scopeSelect.appendChild(opt);
         }
 
-        // Khôi phục giá trị đã chọn nếu có
         if (selectedValue !== undefined && selectedValue !== null && selectedValue !== '') {
             scopeSelect.value = selectedValue;
             if (!scopeSelect.value && selectedValue.startsWith('KHU_')) {
@@ -939,9 +884,6 @@ ob_start();
         });
     }
 
-    // =========================================================================
-    // 4. ĐIỀU KHIỂN FORM THÊM / SỬA (CRUD)
-    // =========================================================================
     function showCreateUserForm() {
         resetUserForm();
         const card = document.getElementById('userFormCard');
@@ -991,7 +933,6 @@ ob_start();
         document.getElementById('formTitle').innerHTML = '<span>Chỉnh sửa thông tin cán bộ: ' + (user.HoVaTen || user.TenDangNhap) + '</span>';
         document.getElementById('editMaTaiKhoan').value = user.MaTaiKhoan;
 
-        // Cố định tên đăng nhập khi sửa
         const tenDangNhapInput = document.getElementById('tenDangNhap');
         tenDangNhapInput.value = user.TenDangNhap;
         tenDangNhapInput.readOnly = true;
@@ -1009,7 +950,6 @@ ob_start();
         }
         renderScopeByRole(user.MaVaiTro || '', user.MaCumQuanLy || '');
 
-        // Chuyển vùng mật khẩu
         const createBox = document.getElementById('createPasswordBox');
         const editBox = document.getElementById('editPasswordBox');
         if (createBox) createBox.style.display = 'none';
@@ -1173,7 +1113,6 @@ ob_start();
         f.submit();
     }
 
-    // Khởi tạo bộ lọc, phân trang và phạm vi theo vai trò ngay khi trang tải xong
     document.addEventListener('DOMContentLoaded', function() {
         filterUsers();
         if (maVaiTroSelect) {
