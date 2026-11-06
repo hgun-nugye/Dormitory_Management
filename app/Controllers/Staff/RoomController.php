@@ -72,7 +72,7 @@ class RoomController extends Controller
             ];
         }
 
-        // 2. CẤP 4: Quản lý toàn KTX (Giám đốc / Admin)
+        // 2. CẤP 4: Ban quản lý KTX
         if ($role === 'ADMIN' || $role === 'QuanTriVien' || $role === 'NV_QUAN_LY_KTX') {
             $khus = Database::fetchAll("SELECT MaKhu, TenKhu FROM KhuKTX ORDER BY MaKhu ASC");
             $cums = Database::fetchAll("SELECT MaCum, TenCum, MaKhu FROM CumNha ORDER BY MaKhu ASC, MaCum ASC");
@@ -89,7 +89,7 @@ class RoomController extends Controller
                 'level' => 'ALL',
                 'levelNumber' => 4,
                 'role' => $role,
-                'title' => 'Quản lý toàn KTX (Giám đốc / Admin)',
+                'title' => 'Ban quản lý KTX',
                 'badgeClass' => 'badge-primary',
                 'maKhu' => null,
                 'maCum' => null,

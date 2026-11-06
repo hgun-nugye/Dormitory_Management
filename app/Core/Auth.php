@@ -4,10 +4,63 @@ namespace App\Core;
 
 class Auth
 {
-    // Kiểm tra người dùng đã đăng nhập chưa
+    // Kiểm tra người dùng đã đăng nhập chưa và phiên có hợp lệ không
     public static function check(): bool
     {
-        return Session::has('user');
+        if (!Session::has('user')) {
+            return false;
+        }
+
+        if (!Session::validateSecurity(3600)) {
+            Session::flash('error', 'Phiên làm việc của bạn đã hết hạn do không hoạt động. Vui lòng đăng nhập lại.');
+            return false;
+        }
+
+        return true;
+    }
+
+    // Kiểm tra tính kích hoạt thực tế của tài khoản trong CSDL
+    public static function isUserActive(): bool
+    {
+        $userId = self::id();
+        if (!$userId) {
+            return false;
+        }
+
+        // Kiểm tra CSDL định kỳ mỗi 60s để giảm tải
+        $lastCheck = (int)Session::get('last_db_check', 0);
+        if (time() - $lastCheck < 60) {
+            return true;
+        }
+
+        try {
+            $row = Database::fetch(
+                "SELECT DangHoatDong, MaVaiTro FROM TaiKhoan WHERE MaTaiKhoan = :id LIMIT 1",
+                ['id' => $userId]
+            );
+
+            if (!$row || (int)($row['DangHoatDong'] ?? 0) !== 1) {
+                self::logout();
+                Session::flash('error', 'Tài khoản của bạn đã bị khóa hoặc ngừng hoạt động.');
+                return false;
+            }
+
+            // Đồng bộ lại vai trò nếu bị quản trị viên thay đổi giữa phiên
+            $currentUser = Session::get('user');
+            if ($currentUser && ($currentUser['MaVaiTro'] ?? '') !== $row['MaVaiTro']) {
+                $currentUser['MaVaiTro'] = $row['MaVaiTro'];
+                $vt = Database::fetch("SELECT TenVaiTro FROM VaiTro WHERE MaVaiTro = :vt LIMIT 1", ['vt' => $row['MaVaiTro']]);
+                if ($vt) {
+                    $currentUser['VaiTro'] = $vt['TenVaiTro'];
+                }
+                Session::set('user', $currentUser);
+            }
+
+            Session::set('last_db_check', time());
+            return true;
+        } catch (\Throwable $e) {
+            return true;
+        }
     }
 
     // Lấy thông tin người dùng đang đăng nhập
@@ -46,11 +99,15 @@ class Auth
             || str_contains(mb_strtolower($ten), 'trưởng phòng');
     }
 
-    // Kiểm tra có phải nhân viên không (Bao gồm Cán bộ quản lý, Kế toán và Kỹ thuật)
+    // Kiểm tra có phải nhân viên không (Bao gồm Cán bộ quản lý KTX, Kế toán và Kỹ thuật, không bao gồm Admin)
     public static function isNhanVien(): bool
     {
         $user = self::user();
         if (!$user) {
+            return false;
+        }
+        // Quản trị viên hệ thống (Admin) tách biệt hoàn toàn với Cán bộ KTX
+        if (self::isQuanTriVien()) {
             return false;
         }
         $ma = $user['MaVaiTro'] ?? '';
@@ -63,11 +120,11 @@ class Auth
             || str_contains(mb_strtolower($ten), 'kế toán');
     }
 
-    // Kiểm tra có phải cán bộ quản lý KTX không (Admin, Quản lý KTX, Trưởng Khu, Trưởng Cụm, Trưởng Tòa)
+    // Kiểm tra có phải cán bộ quản lý KTX không (Quản lý KTX, Trưởng Khu, Trưởng Cụm, Trưởng Tòa)
     public static function isQuanLy(): bool
     {
         $user = self::user();
-        if (!$user) {
+        if (!$user || self::isQuanTriVien()) {
             return false;
         }
         $ma = $user['MaVaiTro'] ?? '';
@@ -86,8 +143,7 @@ class Auth
             return false;
         }
 
-        return in_array($ma, ['ADMIN', 'QuanTriVien', 'NV_QUAN_LY_KTX', 'TRUONG_KHU', 'TRUONG_CUM', 'TRUONG_TOA'], true)
-            || str_contains($ten, 'quản trị')
+        return in_array($ma, ['NV_QUAN_LY_KTX', 'TRUONG_KHU', 'TRUONG_CUM', 'TRUONG_TOA'], true)
             || str_contains($ten, 'quản lý')
             || str_contains($ten, 'trưởng khu')
             || str_contains($ten, 'trưởng cụm')
@@ -281,8 +337,13 @@ HTML;
             $user['HoVaTen'] = 'Quản trị viên Hệ thống';
         }
 
-        // 4. Lưu thông tin đăng nhập
+        // 4. Chống Session Fixation: Tái tạo session ID mới trước khi cấp quyền
+        Session::regenerate(true);
+
+        // Lưu thông tin đăng nhập và khởi tạo chữ ký bảo mật
         Session::set('user', $user);
+        Session::initSecurityFingerprint();
+        Session::set('last_db_check', time());
 
         return true;
     }
@@ -292,5 +353,6 @@ HTML;
     {
         Session::remove('user');
         Session::destroy();
+        Session::regenerate(true);
     }
 }

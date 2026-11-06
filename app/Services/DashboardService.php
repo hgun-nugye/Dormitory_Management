@@ -45,12 +45,14 @@ class DashboardService
             $userRoleName = 'Trưởng BQL Cụm';
         } elseif ($role === 'TRUONG_KHU') {
             $userRoleName = 'Trưởng BQL Khu';
-        } elseif ($role === 'ADMIN' || $role === 'QuanTriVien' || $role === 'NV_QUAN_LY_KTX') {
-            $userRoleName = 'Quản trị viên / Ban Giám đốc';
+        } elseif ($role === 'ADMIN' || $role === 'QuanTriVien') {
+            $userRoleName = 'Quản trị viên Hệ thống';
+        } elseif ($role === 'NV_QUAN_LY_KTX') {
+            $userRoleName = 'Ban Giám đốc KTX';
         }
 
-        // 1. Chặn sinh viên và các đối tượng không thuộc BQL KTX
-        if ($role === 'SINH_VIEN' || $role === 'TRUONG_PHONG' || empty($role)) {
+        // 1. Chặn Quản trị viên hệ thống (Admin), Sinh viên và các đối tượng không thuộc BQL KTX
+        if ($role === 'ADMIN' || $role === 'QuanTriVien' || $role === 'SINH_VIEN' || $role === 'TRUONG_PHONG' || empty($role)) {
             return [
                 'isAllowed' => false,
                 'level' => 'DENIED',
@@ -139,15 +141,15 @@ class DashboardService
             ORDER BY c.MaKhu ASC, c.MaCum ASC, t.MaToaNha ASC
         ");
 
-        // CẤP 4: Quản lý toàn KTX (ADMIN / Ban Giám đốc)
-        if ($role === 'ADMIN' || $role === 'QuanTriVien' || $role === 'NV_QUAN_LY_KTX') {
+        // CẤP 4: Ban quản lý KTX
+        if ($role === 'NV_QUAN_LY_KTX') {
             return [
                 'isAllowed' => true,
                 'level' => 'ALL',
                 'levelNumber' => 4,
                 'role' => $role,
                 'userRoleName' => $userRoleName,
-                'title' => 'Quản lý toàn KTX (Giám đốc / Admin)',
+                'title' => 'Ban quản lý KTX',
                 'badgeClass' => 'badge-info',
                 'isKeToan' => false,
                 'isKyThuat' => false,
@@ -706,7 +708,8 @@ class DashboardService
                     'url' => url('staff/discipline?tab=barrier' . ($searchMssv !== '' ? '&search=' . urlencode($searchMssv) : ''))
                 ];
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         // 2. Phiếu bảo trì báo hỏng mới nhất
         try {
@@ -734,7 +737,8 @@ class DashboardService
                     'url' => url('staff/maintenance?tab=' . $statusTab . '&search=' . urlencode($m['MaPhieu']))
                 ];
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         // 3. Đơn từ dịch vụ Một cửa mới nhất
         try {
@@ -767,7 +771,8 @@ class DashboardService
                     'url' => url('staff/requests?tab=' . $tab . '&search=' . urlencode($r['MaDon']))
                 ];
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         // 4. Hồ sơ đăng ký nội trú mới nhất
         try {
@@ -797,7 +802,8 @@ class DashboardService
                     'url' => url('staff/applications?tab=' . $appTab . '&search=' . urlencode($a['MaHoSo']))
                 ];
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         // 5. Giao dịch thanh toán mới nhất
         try {
@@ -823,7 +829,8 @@ class DashboardService
                     'url' => url('staff/utilities?search=' . urlencode($p['MaPhong'] ?? ''))
                 ];
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         // Sắp xếp theo thời gian mới nhất
         usort($activities, fn($a, $b) => strcmp($b['time'], $a['time']));

@@ -41,6 +41,26 @@ class AuthController extends Controller {
         }
 
         if (Auth::login($username, $password)) {
+            $intended = Session::get('intended_url');
+            Session::remove('intended_url');
+
+            // Nếu có URL mong muốn trước đó và hợp lệ theo vai trò thì chuyển hướng đến đó
+            if ($intended && is_string($intended)) {
+                $trimmed = '/' . ltrim($intended, '/');
+                if (Auth::isSinhVien() && str_starts_with($trimmed, '/student')) {
+                    $this->redirect(ltrim($trimmed, '/'));
+                    return;
+                }
+                if (Auth::isNhanVien() && str_starts_with($trimmed, '/staff')) {
+                    $this->redirect(ltrim($trimmed, '/'));
+                    return;
+                }
+                if (Auth::isQuanTriVien() && str_starts_with($trimmed, '/admin')) {
+                    $this->redirect(ltrim($trimmed, '/'));
+                    return;
+                }
+            }
+
             $this->redirectBasedOnRole();
         } else {
             Session::flash('error', 'Tên đăng nhập hoặc mật khẩu không chính xác.');

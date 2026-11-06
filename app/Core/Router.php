@@ -34,8 +34,30 @@ class Router {
             if ($route['method'] === $method && self::matchUri($route['uri'], $uri, $params)) {
                 // Execute Middlewares
                 foreach ($route['middlewares'] as $middleware) {
-                    $middlewareInstance = new $middleware();
-                    $middlewareInstance->handle($request);
+                    $args = [];
+                    $middlewareClass = $middleware;
+
+                    if (is_string($middleware) && str_contains($middleware, ':')) {
+                        [$middlewareClass, $paramStr] = explode(':', $middleware, 2);
+                        $args = array_map('trim', explode(',', $paramStr));
+                    }
+
+                    // Tự động phân giải namespace nếu truyền tên ngắn
+                    if (is_string($middlewareClass) && !class_exists($middlewareClass)) {
+                        $namespacedClass = "App\\Middlewares\\{$middlewareClass}";
+                        if (class_exists($namespacedClass)) {
+                            $middlewareClass = $namespacedClass;
+                        }
+                    }
+
+                    if (is_string($middlewareClass) && class_exists($middlewareClass)) {
+                        $middlewareInstance = !empty($args) ? new $middlewareClass($args) : new $middlewareClass();
+                        if (method_exists($middlewareInstance, 'handle')) {
+                            $middlewareInstance->handle($request, ...$args);
+                        }
+                    } elseif (is_callable($middleware)) {
+                        call_user_func($middleware, $request);
+                    }
                 }
 
                 $action = $route['action'];

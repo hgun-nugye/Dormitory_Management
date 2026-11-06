@@ -32,6 +32,30 @@ if (!empty($hopDong['NgayKetThuc'])) {
         <span style="color: var(--text-primary); font-weight: 600;">Cổng thông tin sinh viên</span>
     </div>
 
+    <?php
+    $flashError = $flashError ?? \App\Core\Session::flash('error');
+    $flashSuccess = $flashSuccess ?? \App\Core\Session::flash('success');
+    $flashWarning = $flashWarning ?? \App\Core\Session::flash('warning');
+    ?>
+    <?php if (!empty($flashError)): ?>
+        <div class="alert alert-danger" style="margin-bottom: 20px; padding: 14px 18px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; border-radius: 8px; font-size: 14px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size: 18px; flex-shrink: 0;"></i>
+            <span><?= htmlspecialchars($flashError) ?></span>
+        </div>
+    <?php endif; ?>
+    <?php if (!empty($flashSuccess)): ?>
+        <div class="alert alert-success" style="margin-bottom: 20px; padding: 14px 18px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; border-radius: 8px; font-size: 14px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <i class="fa-solid fa-circle-check" style="font-size: 18px; flex-shrink: 0;"></i>
+            <span><?= htmlspecialchars($flashSuccess) ?></span>
+        </div>
+    <?php endif; ?>
+    <?php if (!empty($flashWarning)): ?>
+        <div class="alert alert-warning" style="margin-bottom: 20px; padding: 14px 18px; background: #fffbeb; border: 1px solid #fde68a; color: #b45309; border-radius: 8px; font-size: 14px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <i class="fa-solid fa-circle-info" style="font-size: 18px; flex-shrink: 0;"></i>
+            <span><?= htmlspecialchars($flashWarning) ?></span>
+        </div>
+    <?php endif; ?>
+
     <div class="card student-welcome" style="margin-bottom: 24px; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);  box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
             <div style="display: flex; align-items: center; gap: 18px;">
