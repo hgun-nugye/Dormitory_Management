@@ -699,16 +699,21 @@ class DashboardService
 
         // 1. Quẹt thẻ barrier gần nhất
         try {
-            $barrierLogs = AttendanceDisciplineService::getBarrierLogs($cum, $toa, $khu, '', '', 5, 0);
+            $barrierLogs = AttendanceDisciplineService::getBarrierLogs($cum, $toa, $khu, '', '', 6, 0);
             foreach ($barrierLogs['logs'] ?? [] as $log) {
-                $phongInfo = !empty($log['MaPhong']) ? " - Phòng {$log['MaPhong']} (" . ($log['MaToaNha'] ?? '') . ")" : '';
+                $phongInfo = !empty($log['MaPhong']) ? " - P.{$log['MaPhong']} (" . ($log['MaToaNha'] ?? '') . ")" : '';
+                $searchMssv = $log['MaSinhVien'] ?? '';
                 $activities[] = [
                     'time' => $log['ThoiGianQuet'] ?? '',
+                    'time_formatted' => !empty($log['ThoiGianQuet']) ? date('H:i d/m', strtotime($log['ThoiGianQuet'])) : '',
                     'icon' => ($log['HuongDi'] === 'Vào') ? 'fa-arrow-right-to-bracket' : 'fa-arrow-right-from-bracket',
                     'color' => ($log['HuongDi'] === 'Vào') ? '#16a34a' : '#2563eb',
+                    'bg' => ($log['HuongDi'] === 'Vào') ? '#f0fdf4' : '#eff6ff',
                     'title' => "Sinh viên " . ($log['HoVaTen'] ?? '') . " (" . ($log['MaSinhVien'] ?? '') . ")",
                     'desc' => "Quét thẻ " . ($log['HuongDi'] ?? '') . " tại " . ($log['CongKiemSoat'] ?? '') . $phongInfo,
-                    'type' => 'barrier'
+                    'type' => 'barrier',
+                    'category' => 'An ninh',
+                    'url' => url('staff/discipline?tab=barrier' . ($searchMssv !== '' ? '&search=' . urlencode($searchMssv) : ''))
                 ];
             }
         } catch (\Throwable $e) {}
@@ -721,24 +726,118 @@ class DashboardService
                 LEFT JOIN Phong p ON pb.MaPhong = p.MaPhong
                 LEFT JOIN ToaNha tn ON COALESCE(pb.MaToaNha, p.MaToaNha) = tn.MaToaNha
                 LEFT JOIN SinhVien sv ON pb.MaSinhVienBao = sv.MaSinhVien
-                ORDER BY pb.NgayBao DESC LIMIT 5
+                ORDER BY pb.NgayBao DESC LIMIT 6
             ";
             $maintLogs = Database::fetchAll($sqlMaint);
             foreach ($maintLogs as $m) {
+                $statusTab = ($m['TrangThaiSua'] === 'Chờ xử lý') ? 'pending' : (($m['TrangThaiSua'] === 'Đang sửa chữa') ? 'fixing' : 'completed');
                 $activities[] = [
                     'time' => $m['NgayBao'] ?? '',
+                    'time_formatted' => !empty($m['NgayBao']) ? date('H:i d/m', strtotime($m['NgayBao'])) : '',
                     'icon' => 'fa-wrench',
                     'color' => '#d97706',
-                    'title' => "Báo hỏng: {$m['MaPhieu']} (Phòng {$m['MaPhong']} - {$m['TenToaNha']})",
-                    'desc' => "{$m['HoVaTen']}: " . mb_substr($m['MoTaHuHong'], 0, 60) . '...',
-                    'type' => 'maintenance'
+                    'bg' => '#fffbeb',
+                    'title' => "Báo hỏng: {$m['MaPhieu']} (P.{$m['MaPhong']} - {$m['TenToaNha']})",
+                    'desc' => ($m['HoVaTen'] ? "{$m['HoVaTen']}: " : '') . mb_substr($m['MoTaHuHong'] ?? '', 0, 60) . '...',
+                    'type' => 'maintenance',
+                    'category' => 'Bảo trì',
+                    'url' => url('staff/maintenance?tab=' . $statusTab . '&search=' . urlencode($m['MaPhieu']))
+                ];
+            }
+        } catch (\Throwable $e) {}
+
+        // 3. Đơn từ dịch vụ Một cửa mới nhất
+        try {
+            $sqlRequests = "
+                SELECT dt.MaDon, dt.LoaiDon, dt.TuNgay, dt.TrangThaiDuyet, sv.HoVaTen, sv.MaSinhVien
+                FROM DonTuMotCua dt
+                LEFT JOIN SinhVien sv ON dt.MaSinhVien = sv.MaSinhVien
+                ORDER BY dt.MaDon DESC LIMIT 5
+            ";
+            $requestLogs = Database::fetchAll($sqlRequests);
+            foreach ($requestLogs as $r) {
+                $tab = ($r['TrangThaiDuyet'] === 'Chờ duyệt') ? 'pending' : 'resolved';
+                if (str_contains($r['LoaiDon'], 'chuyển') || str_contains($r['LoaiDon'], 'Chuyển')) $tab = 'transfer';
+                if (str_contains($r['LoaiDon'], 'trả') || str_contains($r['LoaiDon'], 'Trả')) $tab = 'checkout';
+
+                $isFuture = !empty($r['TuNgay']) && strtotime($r['TuNgay']) > time();
+                $timeVal = !empty($r['TuNgay']) ? ($isFuture ? date('Y-m-d H:i:s', time() - 3600) : $r['TuNgay'] . ' 08:00:00') : '';
+                $timeFmt = $isFuture ? ('Hiệu lực ' . date('d/m', strtotime($r['TuNgay']))) : (!empty($r['TuNgay']) ? date('d/m', strtotime($r['TuNgay'])) : 'Mới nộp');
+
+                $activities[] = [
+                    'time' => $timeVal,
+                    'time_formatted' => $timeFmt,
+                    'icon' => 'fa-file-signature',
+                    'color' => '#7c3aed',
+                    'bg' => '#f5f3ff',
+                    'title' => "Đơn 1 cửa: {$r['MaDon']} - {$r['LoaiDon']}",
+                    'desc' => "Sinh viên {$r['HoVaTen']} ({$r['MaSinhVien']}) - Trạng thái: {$r['TrangThaiDuyet']}",
+                    'type' => 'request',
+                    'category' => 'Đơn từ',
+                    'url' => url('staff/requests?tab=' . $tab . '&search=' . urlencode($r['MaDon']))
+                ];
+            }
+        } catch (\Throwable $e) {}
+
+        // 4. Hồ sơ đăng ký nội trú mới nhất
+        try {
+            $sqlApps = "
+                SELECT hs.MaHoSo, hs.ThoiGianNop, hs.TrangThaiHoSo, sv.HoVaTen, sv.MaSinhVien, tn.TenToaNha, p.SoPhong
+                FROM HoSoDangKy hs
+                LEFT JOIN SinhVien sv ON hs.MaSinhVien = sv.MaSinhVien
+                LEFT JOIN Giuong g ON hs.MaGiuong = g.MaGiuong
+                LEFT JOIN Phong p ON g.MaPhong = p.MaPhong
+                LEFT JOIN ToaNha tn ON p.MaToaNha = tn.MaToaNha
+                ORDER BY hs.ThoiGianNop DESC LIMIT 5
+            ";
+            $appLogs = Database::fetchAll($sqlApps);
+            foreach ($appLogs as $a) {
+                $appTab = ($a['TrangThaiHoSo'] === 'Chờ duyệt') ? 'cho_duyet' : (($a['TrangThaiHoSo'] === 'Chờ thanh toán') ? 'dang_giu_cho' : 'lich_su');
+                $roomDesc = !empty($a['SoPhong']) ? "P.{$a['SoPhong']} ({$a['TenToaNha']})" : 'chưa xếp phòng';
+                $activities[] = [
+                    'time' => $a['ThoiGianNop'] ?? '',
+                    'time_formatted' => !empty($a['ThoiGianNop']) ? date('H:i d/m', strtotime($a['ThoiGianNop'])) : '',
+                    'icon' => 'fa-id-card-clip',
+                    'color' => '#0284c7',
+                    'bg' => '#f0f9ff',
+                    'title' => "Hồ sơ đăng ký: {$a['MaHoSo']}",
+                    'desc' => "{$a['HoVaTen']} đăng ký {$roomDesc} - {$a['TrangThaiHoSo']}",
+                    'type' => 'application',
+                    'category' => 'Xét duyệt',
+                    'url' => url('staff/applications?tab=' . $appTab . '&search=' . urlencode($a['MaHoSo']))
+                ];
+            }
+        } catch (\Throwable $e) {}
+
+        // 5. Giao dịch thanh toán mới nhất
+        try {
+            $sqlPayments = "
+                SELECT gd.MaGiaoDich, gd.SoTien, gd.ThoiGianGiaoDich, gd.PhuongThucThanhToan, hd.LoaiHoaDon, hd.MaPhong, sv.HoVaTen
+                FROM GiaoDichThanhToan gd
+                JOIN HoaDon hd ON gd.MaHoaDon = hd.MaHoaDon
+                LEFT JOIN SinhVien sv ON hd.MaSinhVien = sv.MaSinhVien
+                ORDER BY gd.ThoiGianGiaoDich DESC LIMIT 5
+            ";
+            $paymentLogs = Database::fetchAll($sqlPayments);
+            foreach ($paymentLogs as $p) {
+                $activities[] = [
+                    'time' => $p['ThoiGianGiaoDich'] ?? '',
+                    'time_formatted' => !empty($p['ThoiGianGiaoDich']) ? date('H:i d/m', strtotime($p['ThoiGianGiaoDich'])) : '',
+                    'icon' => 'fa-receipt',
+                    'color' => '#059669',
+                    'bg' => '#ecfdf5',
+                    'title' => "Thanh toán: " . number_format($p['SoTien'] ?? 0, 0, ',', '.') . " đ",
+                    'desc' => "{$p['HoVaTen']} đóng {$p['LoaiHoaDon']} - P.{$p['MaPhong']} ({$p['PhuongThucThanhToan']})",
+                    'type' => 'payment',
+                    'category' => 'Thu phí',
+                    'url' => url('staff/utilities?search=' . urlencode($p['MaPhong'] ?? ''))
                 ];
             }
         } catch (\Throwable $e) {}
 
         // Sắp xếp theo thời gian mới nhất
         usort($activities, fn($a, $b) => strcmp($b['time'], $a['time']));
-        return array_slice($activities, 0, 8);
+        return array_slice($activities, 0, 10);
     }
 
     /**

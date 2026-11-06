@@ -350,10 +350,10 @@ function renderMaintenanceNote(?string $note): void
                         <table class="data-table" id="table_<?= $tabKey ?>">
                             <thead>
                                 <tr>
-                                    <th style="width: 120px;">Mã Phiếu & Loại</th>
-                                    <th>Vị Trí & Khu Vực</th>
-                                    <th>Hạng Mục / Thiết Bị</th>
-                                    <th>Nội Dung Sự Cố & Người Báo</th>
+                                    <th style="width: 120px;">Mã Phiếu</th>
+                                    <th>Vị Trí</th>
+                                    <th>Hạng Mục</th>
+                                    <th>Nội Dung Sự Cố</th>
                                     <th>Kỹ Thuật Phụ Trách</th>
                                     <th>Trạng Thái</th>
                                     <th style="text-align: right; width: 195px; min-width: 195px; white-space: nowrap;">Thao tác</th>
@@ -363,8 +363,7 @@ function renderMaintenanceNote(?string $note): void
                                 <?php if (empty($cfg['list'])): ?>
                                     <tr>
                                         <td colspan="7" style="text-align: center; padding: 40px 16px; color: var(--text-muted);">
-                                            <div style="font-size: 2.2rem; margin-bottom: 6px;">📂</div>
-                                            <div style="font-weight: 600; color: var(--text-secondary);">Không có phiếu sự cố bảo trì nào trong mục này.</div>
+                                            <div style="font-weight: 400; color: var(--text-secondary);">Không có phiếu sự cố bảo trì nào trong mục này.</div>
                                         </td>
                                     </tr>
                                 <?php else: ?>
@@ -390,11 +389,11 @@ function renderMaintenanceNote(?string $note): void
                                                 <div style="margin-top: 4px;">
                                                     <?php if ($isInfra): ?>
                                                         <span class="badge" style="background: #f3e8ff; color: #7e22ce; border: none; font-size: 0.72rem; font-weight: 700; padding: 2px 6px;">
-                                                            🏢 Hạ tầng chung
+                                                            Hạ tầng chung
                                                         </span>
                                                     <?php else: ?>
                                                         <span class="badge" style="background: #e0f2fe; color: #0369a1; border: none; font-size: 0.72rem; font-weight: 700; padding: 2px 6px;">
-                                                            🛏️ Phòng SV
+                                                            Phòng SV
                                                         </span>
                                                     <?php endif; ?>
                                                 </div>

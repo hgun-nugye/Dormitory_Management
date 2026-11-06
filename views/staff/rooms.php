@@ -292,7 +292,7 @@ $isAllToas = $isAllToas ?? empty($filterToa);
         <div class="card">
             <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span>Danh sách Phòng ở & Sơ đồ Giường (<?= !empty($isAllToas) ? 'Tất cả Tòa nhà' : htmlspecialchars($formatTenToa($toaInfo['TenToaNha'] ?? $maToa, $maToa)) ?>)</span>
+                    <span>Danh sách Phòng ở (<?= !empty($isAllToas) ? 'Tất cả Tòa nhà' : htmlspecialchars($formatTenToa($toaInfo['TenToaNha'] ?? $maToa, $maToa)) ?>)</span>
                     <span class="badge badge-info" id="roomTotalBadge"><?= count($phongList ?? []) ?> phòng</span>
                 </div>
             </div>

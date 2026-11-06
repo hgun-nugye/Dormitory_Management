@@ -62,9 +62,9 @@ ob_start();
             <?php if (!empty($scope['canCreatePhong']) && !empty($scope['canUpdatePhong'])): ?>
                 <span class="badge badge-success" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Toàn quyền</span>
             <?php elseif (!empty($scope['canCreatePhong']) || !empty($scope['canDeletePhong'])): ?>
-                <span class="badge badge-primary" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Thêm & Xóa (CD)</span>
+                <span class="badge badge-primary" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Thêm & Xóa </span>
             <?php elseif (!empty($scope['canUpdatePhong'])): ?>
-                <span class="badge badge-warning" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Cập nhật (RU)</span>
+                <span class="badge badge-warning" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Cập nhật</span>
             <?php else: ?>
                 <span class="badge" style="font-size:0.65rem; margin-left:6px; padding:2px 6px; background:#e2e8f0; color:#64748b;">Xem</span>
             <?php endif; ?>
@@ -75,9 +75,9 @@ ob_start();
             <?php if (!empty($scope['canCreateToa']) && !empty($scope['canUpdateToa'])): ?>
                 <span class="badge badge-success" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Toàn quyền</span>
             <?php elseif (!empty($scope['canCreateToa']) || !empty($scope['canDeleteToa'])): ?>
-                <span class="badge badge-primary" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Thêm & Xóa (CD)</span>
+                <span class="badge badge-primary" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Thêm & Xóa </span>
             <?php elseif (!empty($scope['canUpdateToa'])): ?>
-                <span class="badge badge-warning" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Cập nhật (RU)</span>
+                <span class="badge badge-warning" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Cập nhật</span>
             <?php else: ?>
                 <span class="badge" style="font-size:0.65rem; margin-left:6px; padding:2px 6px; background:#e2e8f0; color:#64748b;">Xem</span>
             <?php endif; ?>
@@ -88,9 +88,9 @@ ob_start();
             <?php if (!empty($scope['canCreateCum']) && !empty($scope['canUpdateCum'])): ?>
                 <span class="badge badge-success" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Toàn quyền</span>
             <?php elseif (!empty($scope['canCreateCum']) || !empty($scope['canDeleteCum'])): ?>
-                <span class="badge badge-primary" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Thêm & Xóa (CD)</span>
+                <span class="badge badge-primary" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Thêm & Xóa </span>
             <?php elseif (!empty($scope['canUpdateCum'])): ?>
-                <span class="badge badge-warning" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Cập nhật (RU)</span>
+                <span class="badge badge-warning" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Cập nhật</span>
             <?php else: ?>
                 <span class="badge" style="font-size:0.65rem; margin-left:6px; padding:2px 6px; background:#e2e8f0; color:#64748b;">Xem</span>
             <?php endif; ?>
@@ -101,9 +101,9 @@ ob_start();
             <?php if (!empty($scope['canCreateKhu']) && !empty($scope['canUpdateKhu'])): ?>
                 <span class="badge badge-success" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Toàn quyền</span>
             <?php elseif (!empty($scope['canCreateKhu']) || !empty($scope['canDeleteKhu'])): ?>
-                <span class="badge badge-primary" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Thêm & Xóa (CD)</span>
+                <span class="badge badge-primary" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Thêm & Xóa </span>
             <?php elseif (!empty($scope['canUpdateKhu'])): ?>
-                <span class="badge badge-warning" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Cập nhật (RU)</span>
+                <span class="badge badge-warning" style="font-size:0.65rem; margin-left:6px; padding:2px 6px;">Cập nhật</span>
             <?php else: ?>
                 <span class="badge" style="font-size:0.65rem; margin-left:6px; padding:2px 6px; background:#e2e8f0; color:#64748b;">Xem</span>
             <?php endif; ?>

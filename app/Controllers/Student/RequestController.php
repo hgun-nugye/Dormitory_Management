@@ -166,8 +166,21 @@ class RequestController extends Controller {
 
         $reason = trim((string) $request->input('LyDo', ''));
         $allowed = ['Xin chuyển phòng', 'Xin sửa chữa', 'Xin tạm vắng', 'Xin trả phòng', 'Xin gia hạn', 'Hồ sơ miễn giảm lệ phí'];
-        if (!in_array($type, $allowed, true) || mb_strlen($reason) < 10) {
-            Session::flash('error', 'Vui lòng chọn loại đơn và nhập lý do ít nhất 10 ký tự.');
+        if (!in_array($type, $allowed, true)) {
+            Session::flash('error', 'Vui lòng chọn loại đơn hợp lệ.');
+            $this->redirect($this->serviceRoute($type));
+            return;
+        }
+
+        if (mb_strlen($reason) < 10) {
+            Session::flash('error', 'Vui lòng nhập lý do ít nhất 10 ký tự.');
+            $this->redirect($this->serviceRoute($type));
+            return;
+        }
+
+        $wordCount = count(preg_split('/\s+/u', $reason, -1, PREG_SPLIT_NO_EMPTY));
+        if ($wordCount >= 100) {
+            Session::flash('error', 'Lý do gửi yêu cầu phải dưới 100 từ (hiện tại có ' . $wordCount . ' từ).');
             $this->redirect($this->serviceRoute($type));
             return;
         }

@@ -4,7 +4,228 @@ ob_start();
 $isAllowed = $isAllowed ?? $scope['isAllowed'] ?? false;
 $viewType = $viewType ?? 'manager';
 ?>
+<style>
+    /* Thẻ thống kê Kế toán và Kỹ thuật */
+    .grid.grid-cols-4 .stat-card {
+        padding: 12px !important;
+        border-radius: 9px;
+        min-width: 0;
+    }
 
+    .grid.grid-cols-4 .stat-label {
+        font-size: 0.72rem !important;
+        line-height: 1.4;
+    }
+
+    .grid.grid-cols-4 .stat-val {
+        font-size: 1.25rem !important;
+        margin: 5px 0 !important;
+        line-height: 1.4;
+    }
+
+    .grid.grid-cols-4 .stat-val span {
+        font-size: 0.75rem !important;
+    }
+
+    .grid.grid-cols-4 .stat-sub {
+        font-size: 0.72rem !important;
+        line-height: 1.4;
+    }
+
+    /* Thẻ tác vụ Dashboard quản lý */
+    .kpi-action-grid .stat-card {
+        padding: 12px !important;
+        border-radius: 9px;
+        min-width: 0;
+    }
+
+    .kpi-action-grid .stat-card>div:first-child {
+        gap: 6px;
+    }
+
+    .kpi-action-grid .stat-card>div:first-child .stat-label {
+        font-size: 0.72rem !important;
+        line-height: 1.4;
+    }
+
+    .kpi-action-grid .stat-card>div:first-child i {
+        font-size: 1rem !important;
+    }
+
+    .kpi-action-grid .stat-card>div:nth-child(2) {
+        font-size: 1.4rem !important;
+        margin: 5px 0 !important;
+        line-height: 1.4;
+    }
+
+    .kpi-action-grid .stat-card>div:nth-child(3) {
+        font-size: 0.72rem !important;
+        line-height: 1.4;
+        margin-bottom: 9px !important;
+    }
+
+    .kpi-action-grid .stat-card>a {
+        padding: 6px 8px;
+        font-size: 0.75rem;
+        min-height: 30px;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .grid.grid-cols-4 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .kpi-action-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+    }
+
+    @media (max-width: 576px) {
+
+        .grid.grid-cols-4,
+        .kpi-action-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
+
+    .kpi-action-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    .kpi-action-grid .stat-card {
+        min-width: 0;
+        height: 100%;
+        box-sizing: border-box;
+    }
+
+    @media (max-width: 992px) {
+        .kpi-action-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 576px) {
+        .kpi-action-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Hoạt động gần đây (Interactive Live Activity Feed) */
+    .recent-activity-link {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        font-size: 0.825rem;
+        text-decoration: none;
+        padding: 11px 12px;
+        border-radius: 8px;
+        border: 1px solid #f1f5f9;
+        background: #ffffff;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+        cursor: pointer;
+    }
+
+    .recent-activity-link:hover {
+        background: #f8fafc !important;
+        border-color: #cbd5e1 !important;
+        transform: translateX(4px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+    }
+
+    .activity-icon-wrap {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 0.825rem;
+        margin-top: 2px;
+        transition: transform 0.2s ease;
+    }
+
+    .recent-activity-link:hover .activity-icon-wrap {
+        transform: scale(1.12);
+    }
+
+    .activity-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .activity-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 3px;
+    }
+
+    .activity-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.85rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        transition: color 0.15s ease;
+    }
+
+    .recent-activity-link:hover .activity-title {
+        color: var(--primary) !important;
+    }
+
+    .activity-time {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .activity-desc {
+        color: var(--text-secondary);
+        font-size: 0.78rem;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .activity-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 6px;
+    }
+
+    .activity-cta {
+        color: var(--primary);
+        font-size: 0.72rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        opacity: 0.75;
+        transition: all 0.15s ease;
+    }
+
+    .recent-activity-link:hover .activity-cta {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    .recent-activity-link:hover .activity-cta i {
+        transform: translateX(3px);
+        transition: transform 0.15s ease;
+    }
+</style>
 <div class="container">
 
     <!-- ========================================================================= -->
@@ -264,9 +485,9 @@ $viewType = $viewType ?? 'manager';
                 </div>
             </div>
 
-        <!-- ========================================================================= -->
-        <!-- PHÂN NHÁNH 2: GIAO DIỆN KỸ THUẬT VIÊN SỬA CHỮA (TECHNICAL DASHBOARD)     -->
-        <!-- ========================================================================= -->
+            <!-- ========================================================================= -->
+            <!-- PHÂN NHÁNH 2: GIAO DIỆN KỸ THUẬT VIÊN SỬA CHỮA (TECHNICAL DASHBOARD)     -->
+            <!-- ========================================================================= -->
         <?php elseif ($viewType === 'technical'): ?>
             <?php
             $tStats = $technicalData['stats'] ?? [];
@@ -373,23 +594,19 @@ $viewType = $viewType ?? 'manager';
                 </div>
             </div>
 
-        <!-- ========================================================================= -->
-        <!-- PHÂN NHÁNH 3: GIAO DIỆN CÁN BỘ QUẢN LÝ (MANAGER TIERS 1-4)                -->
-        <!-- ========================================================================= -->
+            <!-- ========================================================================= -->
+            <!-- PHÂN NHÁNH 3: GIAO DIỆN CÁN BỘ QUẢN LÝ (MANAGER TIERS 1-4)                -->
+            <!-- ========================================================================= -->
         <?php else: ?>
 
             <!-- BỘ LỌC PHẠM VI PHÂN CẤP (CASCADING SCOPE FILTER BAR) -->
             <?php if (!empty($scope['canFilterKhu']) || !empty($scope['canFilterCum']) || !empty($scope['canFilterToa'])): ?>
                 <div class="card" style="padding: 14px 18px; margin-bottom: 20px; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0;">
                     <form method="GET" action="<?= url('staff/dashboard') ?>" style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
-                        <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary); display: inline-flex; align-items: center; gap: 6px;">
-                            <i class="fa-solid fa-filter" style="color: var(--primary);"></i> Lọc phạm vi dữ liệu:
-                        </span>
 
                         <!-- Chọn Khu (Dành cho Admin) -->
                         <?php if (!empty($scope['canFilterKhu'])): ?>
                             <div style="display: flex; align-items: center; gap: 6px;">
-                                <label style="font-size: 0.8rem; font-weight: 500; color: var(--text-muted);">Khu:</label>
                                 <select name="khu" id="filterKhu" class="form-control" style="padding: 4px 8px; font-size: 0.825rem; border-radius: 6px; height: 32px;" onchange="updateFilterOptions(); this.form.submit();">
                                     <option value="all">-- Toàn KTX (Khu A & B) --</option>
                                     <?php foreach ($scope['availableKhus'] ?? [] as $k): ?>
@@ -404,7 +621,6 @@ $viewType = $viewType ?? 'manager';
                         <!-- Chọn Cụm (Dành cho Admin & Trưởng Khu) -->
                         <?php if (!empty($scope['canFilterCum'])): ?>
                             <div style="display: flex; align-items: center; gap: 6px;">
-                                <label style="font-size: 0.8rem; font-weight: 500; color: var(--text-muted);">Cụm:</label>
                                 <select name="cum" id="filterCum" class="form-control" style="padding: 4px 8px; font-size: 0.825rem; border-radius: 6px; height: 32px;" onchange="this.form.submit();">
                                     <option value="all">-- Tất cả Cụm --</option>
                                     <?php foreach ($scope['availableCums'] ?? [] as $c): ?>
@@ -421,11 +637,10 @@ $viewType = $viewType ?? 'manager';
                         <!-- Chọn Tòa (Dành cho Admin, Trưởng Khu & Trưởng Cụm) -->
                         <?php if (!empty($scope['canFilterToa'])): ?>
                             <div style="display: flex; align-items: center; gap: 6px;">
-                                <label style="font-size: 0.8rem; font-weight: 500; color: var(--text-muted);">Tòa nhà:</label>
                                 <select name="toa" id="filterToa" class="form-control" style="padding: 4px 8px; font-size: 0.825rem; border-radius: 6px; height: 32px;" onchange="this.form.submit();">
                                     <option value="all">-- Tất cả Tòa --</option>
                                     <?php foreach ($scope['availableToas'] ?? [] as $t): ?>
-                                        <?php 
+                                        <?php
                                         $matchKhu = empty($activeKhu) || $activeKhu === 'all' || ($t['MaKhu'] ?? '') === $activeKhu;
                                         $matchCum = empty($activeCum) || $activeCum === 'all' || ($t['MaCum'] ?? '') === $activeCum;
                                         if ($matchKhu && $matchCum):
@@ -440,130 +655,122 @@ $viewType = $viewType ?? 'manager';
                         <?php endif; ?>
 
                         <?php if (!empty($activeKhu) || !empty($activeCum) || !empty($activeToa)): ?>
-                            <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 4px 10px; font-size: 0.8rem;">
-                                Xóa bộ lọc
+                            <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 8px 14px; color: #dc2626; border-color: #fecaca; background: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.8rem; font-weight: 600; text-decoration: none;">
+                                <i class="fa-solid fa-filter-circle-xmark"></i> Xóa bộ lọc
                             </a>
                         <?php endif; ?>
                     </form>
                 </div>
             <?php endif; ?>
 
-            <!-- HÀNG 6 KPI CARDS THỜI GIAN THỰC (REAL-TIME KPIS) -->
-            <div class="grid grid-cols-3" style="gap: 16px; margin-bottom: 24px;">
-                <!-- KPI 1: Hồ sơ chờ duyệt 72h -->
-                <div class="card stat-card" style="border-left: 4px solid #f59e0b; padding: 18px; border-radius: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div>
-                            <div class="stat-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">1. Hồ sơ giữ chỗ 72h</div>
-                            <div class="stat-val" style="color: #b45309; font-size: 1.7rem; font-weight: 700; margin: 4px 0;">
-                                <?= (int)($kpis['applications']['total'] ?? 0) ?>
-                            </div>
-                        </div>
-                        <span style="width: 36px; height: 36px; border-radius: 8px; background: #fef3c7; color: #b45309; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
-                            <i class="fa-solid fa-id-card-clip"></i>
-                        </span>
+
+            <!-- TRUNG TÂM ĐIỀU HÀNH - OPERATIONAL ACTION CARDS -->
+            <div class="kpi-action-grid" style="margin-bottom: 24px;">
+                <!-- 1. HỒ SƠ GIỮ CHỖ -->
+                <div class="card stat-card" style="border-left: 4px solid #f59e0b; padding: 16px; border-radius: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="stat-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Hồ sơ giữ chỗ</span>
+
                     </div>
-                    <div class="stat-sub" style="font-size: 0.825rem; display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-                        <span style="color: #dc2626; font-weight: 600;"><?= (int)($kpis['applications']['urgent'] ?? 0) ?> hồ sơ &gt; 48h</span>
-                        <a href="<?= url('staff/applications') ?>" style="color: var(--primary); font-weight: 600; text-decoration: none;">Xem &rarr;</a>
+                    <div style="font-size: 1.8rem; font-weight: 750; color: #b45309; margin: 8px 0;">
+                        <?= (int)($kpis['applications']['total'] ?? 0) ?>
                     </div>
+                    <div style="font-size: 0.8rem; color: #dc2626; margin-bottom: 12px;">
+                        <i class="fa-solid fa-clock"></i>
+                        <?= (int)($kpis['applications']['urgent'] ?? 0) ?> hồ sơ quá 48 giờ
+                    </div>
+                    <a href="<?= url('staff/applications') ?>" class="btn btn-outline btn-sm" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 6px; text-decoration: none;">
+                        Xử lý hồ sơ <i class="fa-solid fa-arrow-right"></i>
+                    </a>
                 </div>
 
-                <!-- KPI 2: Công suất phòng & Dồn phòng <= 50% -->
-                <div class="card stat-card" style="border-left: 4px solid #2563eb; padding: 18px; border-radius: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div>
-                            <div class="stat-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">2. Phòng cần dồn ghép (&le; 50%)</div>
-                            <div class="stat-val" style="color: #1e40af; font-size: 1.7rem; font-weight: 700; margin: 4px 0;">
-                                <?= (int)($kpis['rooms']['underOccupied'] ?? 0) ?>
-                            </div>
-                        </div>
-                        <span style="width: 36px; height: 36px; border-radius: 8px; background: #dbeafe; color: #1e40af; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
-                            <i class="fa-solid fa-bed"></i>
-                        </span>
+                <!-- 2. PHÒNG CẦN DỒN GHÉP -->
+                <div class="card stat-card" style="border-left: 4px solid #2563eb; padding: 16px; border-radius: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="stat-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Phòng cần dồn ghép</span>
                     </div>
-                    <div class="stat-sub" style="font-size: 0.825rem; display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-                        <span>Lấp đầy TB: <b><?= $kpis['rooms']['avgRate'] ?? 0 ?>%</b></span>
-                        <a href="<?= url('staff/rooms') ?>" style="color: var(--primary); font-weight: 600; text-decoration: none;">Sơ đồ &rarr;</a>
+                    <div style="font-size: 1.8rem; font-weight: 750; color: #1e40af; margin: 8px 0;">
+                        <?= (int)($kpis['rooms']['underOccupied'] ?? 0) ?>
                     </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        Lấp đầy trung bình: <b><?= $kpis['rooms']['avgRate'] ?? 0 ?>%</b>
+                    </div>
+                    <a href="<?= url('staff/rooms') ?>" class="btn btn-outline btn-sm" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 6px; text-decoration: none;">
+                        Điều phối phòng <i class="fa-solid fa-arrow-right"></i>
+                    </a>
                 </div>
 
-                <!-- KPI 3: Sự cố Bảo trì tồn đọng -->
-                <div class="card stat-card" style="border-left: 4px solid #dc2626; padding: 18px; border-radius: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div>
-                            <div class="stat-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">3. Sự cố bảo trì cần sửa</div>
-                            <div class="stat-val" style="color: #b91c1c; font-size: 1.7rem; font-weight: 700; margin: 4px 0;">
-                                <?= (int)($kpis['maintenance']['total'] ?? 0) ?>
-                            </div>
-                        </div>
-                        <span style="width: 36px; height: 36px; border-radius: 8px; background: #fee2e2; color: #b91c1c; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
-                            <i class="fa-solid fa-wrench"></i>
-                        </span>
+                <!-- 3. SỰ CỐ BẢO TRÌ -->
+                <div class="card stat-card" style="border-left: 4px solid #dc2626; padding: 16px; border-radius: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="stat-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Sự cố bảo trì</span>
                     </div>
-                    <div class="stat-sub" style="font-size: 0.825rem; display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-                        <span style="color: #dc2626; font-weight: 600;"><?= (int)($kpis['maintenance']['urgent'] ?? 0) ?> sự cố khẩn cấp</span>
-                        <a href="<?= url('staff/maintenance') ?>" style="color: var(--primary); font-weight: 600; text-decoration: none;">Điều phối &rarr;</a>
+                    <div style="font-size: 1.8rem; font-weight: 750; color: #b91c1c; margin: 8px 0;">
+                        <?= (int)($kpis['maintenance']['total'] ?? 0) ?>
                     </div>
+                    <div style="font-size: 0.8rem; color: #dc2626; margin-bottom: 12px;">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <?= (int)($kpis['maintenance']['urgent'] ?? 0) ?> sự cố khẩn cấp
+                    </div>
+                    <a href="<?= url('staff/maintenance') ?>" class="btn btn-outline btn-sm" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 6px; text-decoration: none;">
+                        Điều phối sửa chữa <i class="fa-solid fa-arrow-right"></i>
+                    </a>
                 </div>
 
-                <!-- KPI 4: Công nợ Điện Nước -->
-                <div class="card stat-card" style="border-left: 4px solid #10b981; padding: 18px; border-radius: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div>
-                            <div class="stat-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">4. Công nợ Điện Nước tháng</div>
-                            <div class="stat-val" style="color: #15803d; font-size: 1.7rem; font-weight: 700; margin: 4px 0;">
-                                <?= number_format($kpis['utilities']['totalDebt'] ?? 0, 0, ',', '.') ?> <span style="font-size: 0.85rem; font-weight: 500;">đ</span>
-                            </div>
-                        </div>
-                        <span style="width: 36px; height: 36px; border-radius: 8px; background: #d1fae5; color: #15803d; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
-                            <i class="fa-solid fa-bolt"></i>
-                        </span>
+                <!-- 4. CÔNG NỢ ĐIỆN NƯỚC -->
+                <div class="card stat-card" style="border-left: 4px solid #10b981; padding: 16px; border-radius: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="stat-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Công nợ điện nước</span>
                     </div>
-                    <div class="stat-sub" style="font-size: 0.825rem; display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-                        <span><?= (int)($kpis['utilities']['debtRooms'] ?? 0) ?> phòng chưa nộp tiền</span>
-                        <a href="<?= url('staff/utilities') ?>" style="color: var(--primary); font-weight: 600; text-decoration: none;">Đối soát &rarr;</a>
+                    <div style="font-size: 1.65rem; font-weight: 750; color: #15803d; margin: 8px 0;">
+                        <?= number_format($kpis['utilities']['totalDebt'] ?? 0, 0, ',', '.') ?> <span style="font-size: 0.85rem;">đ</span>
                     </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+                        <i class="fa-solid fa-house"></i>
+                        <?= (int)($kpis['utilities']['debtRooms'] ?? 0) ?> phòng chưa thanh toán
+                    </div>
+                    <a href="<?= url('staff/utilities') ?>" class="btn btn-outline btn-sm" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 6px; text-decoration: none;">
+                        Đối soát công nợ <i class="fa-solid fa-arrow-right"></i>
+                    </a>
                 </div>
 
-                <!-- KPI 5: Cảnh báo Vắng mặt > 30 ngày -->
-                <div class="card stat-card" style="border-left: 4px solid #8b5cf6; padding: 18px; border-radius: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div>
-                            <div class="stat-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">5. Cảnh báo vắng mặt &gt; 30 ngày</div>
-                            <div class="stat-val" style="color: #6d28d9; font-size: 1.7rem; font-weight: 700; margin: 4px 0;">
-                                <?= (int)($kpis['absence']['warnings'] ?? 0) ?>
-                            </div>
-                        </div>
-                        <span style="width: 36px; height: 36px; border-radius: 8px; background: #ede9fe; color: #6d28d9; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
-                            <i class="fa-solid fa-user-clock"></i>
-                        </span>
+                <!-- 5. CẢNH BÁO VẮNG MẶT -->
+                <div class="card stat-card" style="border-left: 4px solid #8b5cf6; padding: 16px; border-radius: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="stat-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Cảnh báo vắng mặt</span>
                     </div>
-                    <div class="stat-sub" style="font-size: 0.825rem; display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-                        <span>Không có đơn tạm vắng</span>
-                        <a href="<?= url('staff/discipline?tab=canh-bao') ?>" style="color: var(--primary); font-weight: 600; text-decoration: none;">An ninh &rarr;</a>
+                    <div style="font-size: 1.8rem; font-weight: 750; color: #6d28d9; margin: 8px 0;">
+                        <?= (int)($kpis['absence']['warnings'] ?? 0) ?>
                     </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+                        <i class="fa-solid fa-calendar-xmark"></i>
+                        Vắng trên 30 ngày, chưa có đơn
+                    </div>
+                    <a href="<?= url('staff/discipline?tab=canh-bao') ?>" class="btn btn-outline btn-sm" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 6px; text-decoration: none;">
+                        Kiểm tra an ninh <i class="fa-solid fa-arrow-right"></i>
+                    </a>
                 </div>
 
-                <!-- KPI 6: Đơn từ Một Cửa chờ duyệt -->
-                <div class="card stat-card" style="border-left: 4px solid #0d9488; padding: 18px; border-radius: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div>
-                            <div class="stat-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">6. Đơn dịch vụ Một Cửa</div>
-                            <div class="stat-val" style="color: #0f766e; font-size: 1.7rem; font-weight: 700; margin: 4px 0;">
-                                <?= (int)($kpis['requests']['total'] ?? 0) ?>
-                            </div>
-                        </div>
-                        <span style="width: 36px; height: 36px; border-radius: 8px; background: #ccfbf1; color: #0f766e; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
-                            <i class="fa-solid fa-envelope-open-text"></i>
-                        </span>
+                <!-- 6. YÊU CẦU MỘT CỬA -->
+                <div class="card stat-card" style="border-left: 4px solid #0d9488; padding: 16px; border-radius: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="stat-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Yêu cầu Một Cửa</span>
                     </div>
-                    <div class="stat-sub" style="font-size: 0.825rem; display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-                        <span>Chuyển phòng / Tạm vắng / Hoàn phí</span>
-                        <a href="<?= url('staff/requests') ?>" style="color: var(--primary); font-weight: 600; text-decoration: none;">Giải quyết &rarr;</a>
+                    <div style="font-size: 1.8rem; font-weight: 750; color: #0f766e; margin: 8px 0;">
+                        <?= (int)($kpis['requests']['total'] ?? 0) ?>
                     </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+                        <i class="fa-solid fa-list-check"></i>
+                        Chuyển phòng / Tạm vắng / Hoàn phí
+                    </div>
+                    <a href="<?= url('staff/requests') ?>" class="btn btn-outline btn-sm" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 6px; text-decoration: none;">
+                        Giải quyết yêu cầu <i class="fa-solid fa-arrow-right"></i>
+                    </a>
                 </div>
+
             </div>
+
 
             <!-- ===================================================================== -->
             <!-- TRUNG TÂM TÁC VỤ CẤP BÁCH CẦN XỬ LÝ NGAY (URGENT ACTION CENTER)        -->
@@ -571,16 +778,11 @@ $viewType = $viewType ?? 'manager';
             <div class="card" style="margin-bottom: 24px; border-radius: 12px; border: 1px solid #fed7aa; background: #fffaf0;">
                 <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #ffedd5;">
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="width: 28px; height: 28px; border-radius: 6px; background: #ffedd5; color: #c2410c; display: flex; align-items: center; justify-content: center;">
-                            <i class="fa-solid fa-triangle-exclamation"></i>
-                        </span>
+
                         <h3 style="font-size: 1.05rem; font-weight: 700; color: #9a3412; margin: 0;">
-                            Trung tâm Tác vụ Cấp bách (Cần xử lý ưu tiên)
+                            Tác vụ Cấp bách
                         </h3>
                     </div>
-                    <span style="font-size: 0.8rem; color: #c2410c; font-weight: 500;">
-                        Tự động tổng hợp các sự vụ cần cán bộ phản hồi ngay
-                    </span>
                 </div>
 
                 <!-- Sub-nav tabs tác vụ khẩn -->
@@ -799,7 +1001,7 @@ $viewType = $viewType ?? 'manager';
                 <div class="card" style="border-radius: 10px; padding: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
                         <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px;">
-                            <i class="fa-solid fa-chart-pie" style="color: #2563eb;"></i> Công suất lưu trú & Đề xuất dồn phòng (&le; 50%)
+                            Công suất lưu trú
                         </h3>
                         <a href="<?= url('staff/rooms') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-size: 0.78rem;">
                             Sơ đồ phòng &rarr;
@@ -809,7 +1011,7 @@ $viewType = $viewType ?? 'manager';
                     <!-- Danh sách phòng <= 50% -->
                     <div style="margin-top: 14px;">
                         <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">
-                            Phòng công suất thấp cần ghép (Top 5):
+                            Phòng công suất thấp cần ghép:
                         </div>
                         <?php if (!empty($underOccupiedRooms)): ?>
                             <div class="table-responsive">
@@ -857,7 +1059,7 @@ $viewType = $viewType ?? 'manager';
                         <?php if (!empty($occupancyStats)): ?>
                             <div style="display: flex; flex-direction: column; gap: 10px;">
                                 <?php foreach (array_slice($occupancyStats, 0, 6) as $occ): ?>
-                                    <?php 
+                                    <?php
                                     $rate = (float)($occ['TyLeLapDay'] ?? 0);
                                     $barColor = ($rate >= 80) ? '#16a34a' : (($rate >= 50) ? '#2563eb' : '#dc2626');
                                     ?>
@@ -882,59 +1084,52 @@ $viewType = $viewType ?? 'manager';
                     <div class="card" style="border-radius: 10px; padding: 18px; flex: 1;">
                         <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
                             <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px;">
-                                <i class="fa-solid fa-clock-rotate-left" style="color: #6366f1;"></i> Hoạt động gần đây
+                                <i class="fa-solid fa-clock-rotate-left" style="color: var(--primary); font-size: 1rem;"></i>
+                                Hoạt động gần đây
                             </h3>
-                            <span style="font-size: 0.75rem; color: #16a34a; font-weight: 600;">
-                                <i class="fa-solid fa-circle" style="font-size: 0.5rem;"></i> Trực tuyến
+                            <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 500;">
+                                Nhấp mục để xem chi tiết
                             </span>
                         </div>
 
-                        <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 12px;">
+                        <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 10px;">
                             <?php if (!empty($recentActivities)): ?>
                                 <?php foreach ($recentActivities as $act): ?>
-                                    <div style="display: flex; gap: 10px; align-items: flex-start; font-size: 0.825rem;">
-                                        <span style="width: 28px; height: 28px; border-radius: 50%; background: #f1f5f9; color: <?= $act['color'] ?>; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.75rem;">
+                                    <a href="<?= htmlspecialchars($act['url'] ?? '#') ?>"
+                                        class="recent-activity-link"
+                                        title="Nhấn để xem chi tiết trên phân hệ tương ứng">
+                                        <span class="activity-icon-wrap" style="background: <?= $act['bg'] ?? '#f1f5f9' ?>; color: <?= $act['color'] ?>;">
                                             <i class="fa-solid <?= $act['icon'] ?>"></i>
                                         </span>
-                                        <div style="flex: 1;">
-                                            <div style="font-weight: 600; color: var(--text-primary);"><?= htmlspecialchars($act['title']) ?></div>
-                                            <div style="color: var(--text-secondary); font-size: 0.78rem; line-height: 1.4;"><?= htmlspecialchars($act['desc']) ?></div>
-                                            <div style="color: var(--text-muted); font-size: 0.72rem; margin-top: 2px;"><?= $act['time'] ?></div>
+                                        <div class="activity-content">
+                                            <div class="activity-header">
+                                                <div class="activity-title">
+                                                    <?= htmlspecialchars($act['title']) ?>
+                                                </div>
+                                                <span class="activity-time">
+                                                    <?= htmlspecialchars($act['time_formatted'] ?? $act['time']) ?>
+                                                </span>
+                                            </div>
+                                            <div class="activity-desc">
+                                                <?= htmlspecialchars($act['desc']) ?>
+                                            </div>
+                                            <div class="activity-footer">
+                                                <span class="badge" style="background: <?= $act['bg'] ?? '#f1f5f9' ?>; color: <?= $act['color'] ?>; border: none; font-size: 0.68rem; padding: 2px 7px; border-radius: 4px; font-weight: 600;">
+                                                    <?= htmlspecialchars($act['category'] ?? 'Hoạt động') ?>
+                                                </span>
+                                                <span class="activity-cta">
+                                                    Xem chi tiết <i class="fa-solid fa-arrow-right"></i>
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
+                                    </a>
                                 <?php endforeach; ?>
                             <?php else: ?>
-                                <div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 20px;">
+                                <div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 24px;">
+                                    <i class="fa-regular fa-folder-open" style="font-size: 1.8rem; color: #cbd5e1; margin-bottom: 8px; display: block;"></i>
                                     Chưa có nhật ký hoạt động nào gần đây.
                                 </div>
                             <?php endif; ?>
-                        </div>
-                    </div>
-
-                    <!-- Lối tắt chuyển nhanh sang 6 phân hệ cốt lõi -->
-                    <div class="card" style="border-radius: 10px; padding: 18px;">
-                        <h4 style="font-size: 0.9rem; font-weight: 700; margin: 0 0 10px; color: var(--text-secondary); text-transform: uppercase;">
-                            Lối tắt nghiệp vụ cốt lõi
-                        </h4>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                            <a href="<?= url('staff/applications') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-size: 0.8rem; justify-content: flex-start;">
-                                <i class="fa-solid fa-user-check" style="color: #f59e0b; margin-right: 6px;"></i> Duyệt 72h
-                            </a>
-                            <a href="<?= url('staff/rooms') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-size: 0.8rem; justify-content: flex-start;">
-                                <i class="fa-solid fa-bed" style="color: #2563eb; margin-right: 6px;"></i> Sơ đồ phòng
-                            </a>
-                            <a href="<?= url('staff/maintenance') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-size: 0.8rem; justify-content: flex-start;">
-                                <i class="fa-solid fa-wrench" style="color: #dc2626; margin-right: 6px;"></i> Bảo trì
-                            </a>
-                            <a href="<?= url('staff/utilities') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-size: 0.8rem; justify-content: flex-start;">
-                                <i class="fa-solid fa-bolt" style="color: #10b981; margin-right: 6px;"></i> Điện nước
-                            </a>
-                            <a href="<?= url('staff/discipline') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-size: 0.8rem; justify-content: flex-start;">
-                                <i class="fa-solid fa-shield-halved" style="color: #8b5cf6; margin-right: 6px;"></i> An ninh
-                            </a>
-                            <a href="<?= url('staff/requests') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; font-size: 0.8rem; justify-content: flex-start;">
-                                <i class="fa-solid fa-envelope" style="color: #0d9488; margin-right: 6px;"></i> Một Cửa
-                            </a>
                         </div>
                     </div>
                 </div>
@@ -947,24 +1142,24 @@ $viewType = $viewType ?? 'manager';
 </div>
 
 <script>
-// Chuyển đổi tab Tác vụ cấp bách
-function switchUrgentTab(tabKey) {
-    document.querySelectorAll('.urgent-content').forEach(el => el.style.display = 'none');
-    document.querySelectorAll('.urgent-tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-        btn.style.background = 'transparent';
-        btn.style.color = '#9a3412';
-    });
+    // Chuyển đổi tab Tác vụ cấp bách
+    function switchUrgentTab(tabKey) {
+        document.querySelectorAll('.urgent-content').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.urgent-tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+            btn.style.background = 'transparent';
+            btn.style.color = '#9a3412';
+        });
 
-    const activeEl = document.getElementById('urgentContent' + tabKey.charAt(0).toUpperCase() + tabKey.slice(1));
-    const activeBtn = document.getElementById('urgentTab' + tabKey.charAt(0).toUpperCase() + tabKey.slice(1));
-    if (activeEl) activeEl.style.display = 'block';
-    if (activeBtn) {
-        activeBtn.classList.add('active');
-        activeBtn.style.background = '#ea580c';
-        activeBtn.style.color = '#ffffff';
+        const activeEl = document.getElementById('urgentContent' + tabKey.charAt(0).toUpperCase() + tabKey.slice(1));
+        const activeBtn = document.getElementById('urgentTab' + tabKey.charAt(0).toUpperCase() + tabKey.slice(1));
+        if (activeEl) activeEl.style.display = 'block';
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+            activeBtn.style.background = '#ea580c';
+            activeBtn.style.color = '#ffffff';
+        }
     }
-}
 </script>
 
 <?php

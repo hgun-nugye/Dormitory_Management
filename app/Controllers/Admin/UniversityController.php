@@ -256,8 +256,10 @@ class UniversityController extends Controller
                     $isFiltered = true;
                 }
                 if (!empty($keyword)) {
-                    $whereConditions[] = "(t.MaTruong LIKE :kw OR t.TenTruong LIKE :kw)";
-                    $params['kw'] = "%{$keyword}%";
+                    $whereConditions[] = "(t.MaTruong LIKE :kw1 OR t.TenTruong LIKE :kw2)";
+                    $kwVal = "%{$keyword}%";
+                    $params['kw1'] = $kwVal;
+                    $params['kw2'] = $kwVal;
                     $isFiltered = true;
                 }
             }

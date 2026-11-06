@@ -299,10 +299,10 @@ function renderRequestReason(?string $rawReason): void
         <?php
         // Danh sách render theo từng Tab
         $tabConfigs = [
-            'pending' => ['title' => 'Đơn Chờ xét duyệt (Ưu tiên giải quyết trong 24h)', 'list' => $pendingRequests ?? []],
-            'transfer' => ['title' => 'Danh sách Đơn Xin chuyển phòng & Bù trừ chi phí', 'list' => $transferRequests ?? []],
+            'pending' => ['title' => 'Đơn chờ xét duyệt', 'list' => $pendingRequests ?? []],
+            'transfer' => ['title' => 'Danh sách Đơn Xin chuyển phòng', 'list' => $transferRequests ?? []],
             'checkout' => ['title' => 'Danh sách Đơn Xin trả phòng sớm & Xin tạm vắng', 'list' => $checkoutRequests ?? []],
-            'history' => ['title' => 'Lịch sử giải quyết Đơn từ Một Cửa (Đã duyệt & Đã từ chối)', 'list' => $historyRequests ?? []]
+            'history' => ['title' => 'Lịch sử giải quyết Đơn từ Một Cửa', 'list' => $historyRequests ?? []]
         ];
         ?>
 
@@ -322,9 +322,9 @@ function renderRequestReason(?string $rawReason): void
                                 <tr>
                                     <th>Mã Đơn</th>
                                     <th>Sinh Viên</th>
-                                    <th>Loại Đơn & Vị Trí Hiện Tại</th>
-                                    <th>Đề Xuất / Chi Tiết</th>
-                                    <th>Lý Do / Minh Chứng</th>
+                                    <th>Loại Đơn</th>
+                                    <th>Chi Tiết</th>
+                                    <th>Lý Do</th>
                                     <th>Trạng Thái</th>
                                     <th style="text-align: right; width: 180px; min-width: 180px; white-space: nowrap;">Thao tác</th>
                                 </tr>
@@ -333,8 +333,7 @@ function renderRequestReason(?string $rawReason): void
                                 <?php if (empty($cfg['list'])): ?>
                                     <tr>
                                         <td colspan="7" style="text-align: center; padding: 40px 16px; color: var(--text-muted);">
-                                            <div style="font-size: 2.2rem; margin-bottom: 6px;">📂</div>
-                                            <div style="font-weight: 600; color: var(--text-secondary);">Không có hồ sơ đơn từ nào trong mục này.</div>
+                                            <div style="font-weight: 400; color: var(--text-secondary);">Không có hồ sơ đơn từ nào trong mục này.</div>
                                         </td>
                                     </tr>
                                 <?php else: ?>
