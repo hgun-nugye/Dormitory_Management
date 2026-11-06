@@ -104,6 +104,7 @@ $extension = $serviceType === 'Hồ sơ miễn giảm lệ phí';
                                     </option>
                                 <?php endforeach; ?>
                             </select>
+                            <div style="margin-top:14px"><label style="display:block;font-size:.85rem;font-weight:600;margin-bottom:6px">Ảnh hiện trường (không bắt buộc)</label><input class="form-control" type="file" name="HinhAnh" accept="image/jpeg,image/png,image/webp"><small class="text-muted">JPG, PNG hoặc WEBP, tối đa 5 MB.</small></div>
                             <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
                                 <i class="fa-solid fa-info-circle"></i> Nếu thiết bị chung phòng chưa có trong danh mục, hãy mô tả chi tiết ở phần nội dung bên dưới.
                             </div>

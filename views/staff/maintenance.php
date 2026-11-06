@@ -442,7 +442,7 @@ function renderMaintenanceNote(?string $note): void
                                                 </div>
                                                 <?php if (!empty($t['HinhAnh'])): ?>
                                                     <div style="margin-bottom: 4px;">
-                                                        <a href="<?= url(htmlspecialchars($t['HinhAnh'])) ?>" target="_blank" style="font-size: 0.75rem; color: #2563eb; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                                        <a href="<?= url('student/requests/attachment') ?>?kind=repair&amp;id=<?= rawurlencode($t['MaPhieu']) ?>" target="_blank" rel="noopener" style="font-size: 0.75rem; color: #2563eb; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
                                                             <i class="fa-solid fa-image"></i> Xem ảnh hiện trường
                                                         </a>
                                                     </div>
