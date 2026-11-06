@@ -126,7 +126,7 @@ class StudentController extends Controller
         Database::beginTransaction();
         try {
             if ($maTaiKhoan > 0) {
-                // ==================== CẬP NHẬT (UPDATE) ====================
+                // Cập nhật (Update)
                 $existingAcc = Database::fetch("SELECT * FROM TaiKhoan WHERE MaTaiKhoan = :id FOR UPDATE", ['id' => $maTaiKhoan]);
                 if (!$existingAcc) {
                     throw new \Exception('Không tìm thấy tài khoản sinh viên để cập nhật.');
@@ -165,7 +165,7 @@ class StudentController extends Controller
                 Database::commit();
                 Session::flash('success', "Đã cập nhật thành công thông tin sinh viên: <b>{$hoVaTen}</b> ({$maSinhVien})!");
             } else {
-                // ==================== THÊM MỚI (CREATE) ====================
+                // Thêm mới (Create)
                 // Kiểm tra trùng lặp MSSV hoặc Tên đăng nhập
                 $dup = Database::fetch("SELECT MaTaiKhoan FROM TaiKhoan WHERE TenDangNhap = :u", ['u' => $maSinhVien]);
                 if ($dup) {

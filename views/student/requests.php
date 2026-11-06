@@ -51,14 +51,12 @@ $services = [
 ?>
 
 <div class="container">
-    <!-- Breadcrumb -->
     <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
         <a href="<?= url('/') ?>" style="color: var(--text-muted); text-decoration: none;">Trang chủ</a>
         <span>/</span>
         <span style="color: var(--text-primary); font-weight: 600;">Dịch vụ một cửa</span>
     </div>
 
-    <!-- Alert Notifications -->
     <?php if (!empty($error)): ?>
         <div class="alert alert-danger" style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
             <span><?= htmlspecialchars($error) ?></span>
@@ -70,7 +68,6 @@ $services = [
         </div>
     <?php endif; ?>
 
-    <!-- Page Header -->
     <div class="page-header">
         <div>
             <h1 class="page-title">Cổng dịch vụ một cửa sinh viên</h1>
@@ -85,7 +82,6 @@ $services = [
         </div>
     </div>
 
-    <!-- Process Workflow Banner -->
     <div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); border: 1px solid var(--border);">
         <div style="display: flex; align-items: center; justify-content: space-around; flex-wrap: wrap; gap: 16px; text-align: center;">
             <div style="display: flex; align-items: center; gap: 12px;">
@@ -114,7 +110,6 @@ $services = [
         </div>
     </div>
 
-    <!-- 5 Service Selection Cards -->
     <div style="margin-bottom: 32px;">
         <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--text-primary); margin-bottom: 14px;">
             Tạo yêu cầu mới
@@ -146,9 +141,6 @@ $services = [
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- PHẦN: LỊCH SỬ GỬI ĐƠN & PHIẾU BÁO HỎNG -->
-    <!-- ========================================== -->
     <div id="history-section" style="scroll-margin-top: 80px; margin-bottom: 36px;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid var(--border);">
             <div>
@@ -159,7 +151,6 @@ $services = [
                     Theo dõi tiến độ, tình trạng xử lý và phản hồi từ Ban quản lý KTX đối với tất cả đơn của bạn
                 </p>
             </div>
-            <!-- Tabs Filter -->
             <div style="display: flex; gap: 8px;">
                 <button type="button" id="tab-all-btn" onclick="showTab('all')" class="btn btn-primary btn-sm" style="border-radius: 6px;">
                     Tất cả (<?= $totalCount ?>)
@@ -173,7 +164,6 @@ $services = [
             </div>
         </div>
 
-        <!-- 1. BẢNG ĐƠN MỘT CỬA HÀNH CHÍNH -->
         <div id="tab-requests-content" class="card" style="margin-bottom: 24px;">
             <div class="card-title">
                 <span>Danh sách Đơn Một cửa hành chính</span>
@@ -259,7 +249,6 @@ $services = [
                     </table>
                 </div>
 
-                <!-- Thanh phân trang Đơn hành chính (5 mục / trang) -->
                 <div id="requestPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
                     <span id="requestPaginationInfo" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;"></span>
                     <div id="requestPaginationControls" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;"></div>
@@ -267,7 +256,6 @@ $services = [
             <?php endif; ?>
         </div>
 
-        <!-- 2. BẢNG PHIẾU BÁO HỎNG KỸ THUẬT -->
         <div id="tab-repairs-content" class="card">
             <div class="card-title">
                 <span>Danh sách Phiếu Báo hỏng thiết bị</span>
@@ -338,7 +326,6 @@ $services = [
                     </table>
                 </div>
 
-                <!-- Thanh phân trang Báo hỏng kỹ thuật (5 mục / trang) -->
                 <div id="repairPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
                     <span id="repairPaginationInfo" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;"></span>
                     <div id="repairPaginationControls" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;"></div>
@@ -348,9 +335,6 @@ $services = [
     </div>
 </div>
 
-<!-- ========================================== -->
-<!-- MODAL XEM CHI TIẾT ĐƠN / PHIẾU BÁO HỎNG -->
-<!-- ========================================== -->
 <div id="detailModal" style="display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(2px); align-items: center; justify-content: center; padding: 20px;">
     <div style="background: #ffffff; border-radius: 12px; max-width: 600px; width: 100%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); overflow: hidden;">
         <div style="padding: 16px 20px; background: #f8fafc; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
@@ -363,7 +347,6 @@ $services = [
         </div>
 
         <div style="padding: 20px; max-height: 70vh; overflow-y: auto;" id="modalBody">
-            <!-- Nội dung chi tiết được inject qua JavaScript -->
         </div>
 
         <div style="padding: 14px 20px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
@@ -388,7 +371,6 @@ $services = [
         const controlsEl = document.getElementById('requestPaginationControls');
         const barEl = document.getElementById('requestPaginationBar');
 
-        // Nếu số lượng đơn từ <= 5, hiển thị trọn vẹn và ẩn thanh nút phân trang
         if (total <= REQUESTS_PER_PAGE) {
             rows.forEach(row => {
                 row.style.display = '';
@@ -451,7 +433,6 @@ $services = [
         const controlsEl = document.getElementById('repairPaginationControls');
         const barEl = document.getElementById('repairPaginationBar');
 
-        // Nếu số lượng phiếu sự cố <= 5, hiển thị trọn vẹn và ẩn thanh nút phân trang
         if (total <= REPAIRS_PER_PAGE) {
             rows.forEach(row => {
                 row.style.display = '';

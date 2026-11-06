@@ -11,7 +11,6 @@ $missingList = $missingRooms ?? [];
 $meta = $roomMetadata ?? [];
 $kpiData = $kpis ?? ['tongDien' => 0, 'tongNuoc' => 0, 'batThuong' => 0, 'chuaThu' => 0, 'daGhi' => 0, 'tongPhong' => 0];
 
-// Helper làm sạch tên tòa nhà: tránh lặp "Tòa Tòa A01"
 $formatTenToa = function (?string $rawName, ?string $code = ''): string {
     if (!$rawName) return $code ?: '---';
     $clean = preg_replace('/^(tòa\s*|toà\s*)+/ui', '', trim($rawName));
@@ -21,7 +20,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
 
 <div class="container">
 
-    <!-- BREADCRUMB & HEADER (ĐỒNG BỘ CHUẨN ZONES, ROOMS & APPLICATIONS) -->
     <div style="margin-bottom: 20px;">
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('staff/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">BQL KTX</a>
@@ -40,7 +38,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                 </p>
             </div>
 
-            <!-- CÁC NÚT THAO TÁC HEADER (ĐỒNG BỘ ADMIN, ROOMS & APPLICATIONS) -->
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                 <?php if (!empty($isAllowed)): ?>
                     <?php if (!empty($scope['canPublishCluster'])): ?>
@@ -71,7 +68,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
         </div>
     </div>
 
-    <!-- FLASH MESSAGES -->
     <?php if (!empty($success)): ?>
         <div class="alert alert-success" style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
             <i class="fa-solid fa-circle-check" style="margin-right: 6px;"></i> <b>Thành công:</b> <?= $success ?>
@@ -84,9 +80,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
         </div>
     <?php endif; ?>
 
-    <!-- ========================================================================= -->
-    <!-- TRƯỜNG HỢP 1: TỪ CHỐI TRUY CẬP (RED WARNING CARD) CHO NON-STAFF           -->
-    <!-- ========================================================================= -->
     <?php if (!$isAllowed): ?>
         <div class="card" style="border: 2px solid #ef4444; background: #fef2f2; border-radius: 12px; padding: 40px 30px; text-align: center; margin-top: 24px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.12);">
             <div style="width: 76px; height: 76px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; color: #dc2626; font-size: 2.2rem; border: 2px solid #fca5a5;">
@@ -122,13 +115,7 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
 
     <?php else: ?>
 
-        <!-- ========================================================================= -->
-        <!-- TRƯỜNG HỢP 2: CÁN BỘ ĐƯỢC PHÉP TRUY CẬP                                   -->
-        <!-- ========================================================================= -->
-
-        <!-- 4 THẺ KPI THỐNG KÊ NHANH (QUICK STATS CARDS CHUẨN TỶ LỆ ROOMS & APPS) -->
         <div class="grid grid-cols-4" style="gap: 16px; margin-bottom: 24px;">
-            <!-- Thẻ 1: Tiêu thụ Điện -->
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Tiêu thụ Điện (kWh)</span>
@@ -140,7 +127,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                 <div style="font-size: 0.8rem; color: var(--text-muted);">Biểu giá lũy tiến chuẩn EVN</div>
             </div>
 
-            <!-- Thẻ 2: Tiêu thụ Nước -->
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Tiêu thụ Nước (m³)</span>
@@ -152,7 +138,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                 <div style="font-size: 0.8rem; color: var(--text-muted);">Đơn giá nước sạch: 12.500 đ/m³</div>
             </div>
 
-            <!-- Thẻ 3: Cảnh báo Rò rỉ / Chập -->
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03); background: <?= ($kpiData['batThuong'] ?? 0) > 0 ? '#fffbeb' : '#ffffff' ?>;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: <?= ($kpiData['batThuong'] ?? 0) > 0 ? '#b45309' : 'var(--text-muted)' ?>; font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Cảnh báo Rò rỉ / Chập</span>
@@ -166,7 +151,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                 <div style="font-size: 0.8rem; color: <?= ($kpiData['batThuong'] ?? 0) > 0 ? '#b45309' : 'var(--text-muted)' ?>;">Tăng vọt gấp &gt;3 lần trung bình 3T</div>
             </div>
 
-            <!-- Thẻ 4: Tiến độ & Công nợ -->
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Tiến độ & Công nợ</span>
@@ -182,13 +166,11 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
             </div>
         </div>
 
-        <!-- KHỐI BỘ LỌC ĐA TẦNG CASCADING (ĐỒNG BỘ BACKGROUND #f8fafc & PADDING CHUẨN ROOMS/ADMIN) -->
         <div class="card" style="margin-bottom: 24px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); background: #f8fafc;">
             <form method="GET" action="<?= url('staff/utilities') ?>" id="filterFormUtilities" style="margin: 0;">
                 <input type="hidden" name="tab" id="currentActiveTab" value="<?= htmlspecialchars($activeTab ?? 'readings') ?>">
 
                 <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <!-- 1. Ô tìm kiếm tức thời -->
                     <div style="position: relative; flex: 1; min-width: 240px; max-width: 340px;">
                         <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem;"></i>
                         <input type="text" name="search" id="inputSearch" class="btn-outline"
@@ -197,7 +179,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                             style="width: 100%; padding: 8px 12px 8px 36px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;">
                     </div>
 
-                    <!-- 2. Chọn Kỳ: Tháng & Năm -->
                     <div style="display: flex; gap: 6px; align-items: center; background: #fff; border: 1px solid #cbd5e1; padding: 3px 8px; border-radius: 6px; height: 38px;">
                         <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);"><i class="fa-regular fa-calendar" style="margin-right: 4px;"></i>Kỳ:</span>
                         <select name="thang" class="btn-outline" style="padding: 2px 6px; font-size: 0.85rem; border: none; height: 30px; font-weight: 600; background: transparent;" onchange="document.getElementById('filterFormUtilities').submit()">
@@ -212,7 +193,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                         </select>
                     </div>
 
-                    <!-- 3. Dropdown Khu -->
                     <?php if ($scope['level'] === 'ALL' || ($scope['level'] === 'KY_THUAT' && empty($scope['maKhu']))): ?>
                         <select name="khu" id="filterKhuSelect" class="btn-outline" style="min-width: 130px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="onKhuChange(this.value)">
                             <option value="">-- Tất cả Khu --</option>
@@ -224,7 +204,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                         </select>
                     <?php endif; ?>
 
-                    <!-- 4. Dropdown Cụm -->
                     <?php if ($scope['level'] === 'ALL' || $scope['level'] === 'KHU' || $scope['level'] === 'KY_THUAT'): ?>
                         <select name="cum" id="filterCumSelect" class="btn-outline" style="min-width: 140px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="onCumChange(this.value)">
                             <option value="">-- Tất cả Cụm --</option>
@@ -238,7 +217,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                         </select>
                     <?php endif; ?>
 
-                    <!-- 5. Dropdown Tòa (Khử lặp nhãn "Tòa Tòa") -->
                     <?php if ($scope['level'] !== 'TOA'): ?>
                         <select name="toa" id="filterToaSelect" class="btn-outline" style="min-width: 160px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormUtilities').submit()">
                             <option value="">-- Tất cả Tòa nhà --</option>
@@ -256,7 +234,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                         </select>
                     <?php endif; ?>
 
-                    <!-- 6. Dropdown Tầng -->
                     <select name="tang" class="btn-outline" style="min-width: 125px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormUtilities').submit()">
                         <option value="">-- Tất cả tầng --</option>
                         <?php for ($t = 1; $t <= 12; $t++): ?>
@@ -264,7 +241,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                         <?php endfor; ?>
                     </select>
 
-                    <!-- 7. Dropdown Trạng thái -->
                     <select name="trangThai" class="btn-outline" style="min-width: 150px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormUtilities').submit()">
                         <option value="">-- Tất cả trạng thái --</option>
                         <option value="binh_thuong" <?= $selectedTrangThai === 'binh_thuong' ? 'selected' : '' ?>>Tiêu thụ bình thường</option>
@@ -273,7 +249,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                         <option value="da_thanh_toan" <?= $selectedTrangThai === 'da_thanh_toan' ? 'selected' : '' ?>>Đã thanh toán</option>
                     </select>
 
-                    <!-- Nút Lọc & Nút Xóa bộ lọc -->
                     <?php if (!empty($searchTerm) || !empty($selectedKhu) || !empty($selectedCum) || !empty($selectedToa) || !empty($selectedTang) || !empty($selectedTrangThai)): ?>
                         <a href="<?= url('staff/utilities') ?>?thang=<?= $currentMonth ?>&nam=<?= $currentYear ?>&tab=<?= htmlspecialchars($activeTab ?? 'readings') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; height: 38px; padding: 0 14px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; color: #dc2626; border-color: #fca5a5; background: #fff5f5; font-weight: 600;" title="Xóa toàn bộ bộ lọc và trở về mặc định">
                             <i class="fa-solid fa-filter-circle-xmark"></i> Xóa bộ lọc
@@ -283,7 +258,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
             </form>
         </div>
 
-        <!-- 3 SUB-TABS ĐIỀU HƯỚNG (ĐỒNG BỘ CHUẨN APPLICATIONS VỚI PILL BADGES) -->
         <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; flex-wrap: wrap;">
             <button type="button" class="tab-btn <?= ($activeTab === 'readings') ? 'active' : '' ?>" id="tabBtnReadings" onclick="switchUtilTab('readings')"
                 style="background: <?= ($activeTab === 'readings') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'readings') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'readings') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
@@ -304,12 +278,8 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
             </button>
         </div>
 
-        <!-- ========================================================================= -->
-        <!-- TAB 1: GHI NHẬN CHỈ SỐ & CẢNH BÁO BẤT THƯỜNG                              -->
-        <!-- ========================================================================= -->
         <div id="tabContentReadings" style="display: <?= ($activeTab === 'readings') ? 'block' : 'none' ?>;">
 
-            <!-- FORM GHI NHANH CHỈ SỐ (ĐỒNG BỘ CARD PADDING & KÍCH CỠ) -->
             <?php if (!empty($scope['canRecordReading'])): ?>
                 <div class="card" id="boxFormRecordReading" style="margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
                     <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
@@ -324,7 +294,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                         <input type="hidden" name="nam" value="<?= $currentYear ?>">
 
                         <div class="grid grid-cols-4" style="gap: 16px; margin-bottom: 16px;">
-                            <!-- 1. Chọn phòng -->
                             <div>
                                 <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Chọn phòng ghi số <span style="color: #dc2626;">*</span></label>
                                 <select name="maPhong" id="selectPhong" class="btn-outline" style="width: 100%; padding: 8px 10px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" required onchange="onRoomChanged(this.value)">
@@ -337,7 +306,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                                 </select>
                             </div>
 
-                            <!-- 2. Chỉ số Điện Cũ & Mới -->
                             <div>
                                 <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Điện Cũ &rarr; Mới (kWh) <span style="color: #dc2626;">*</span></label>
                                 <div style="display: flex; gap: 6px;">
@@ -347,7 +315,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                                 <div id="previewDien" style="font-size: 0.75rem; color: #0369a1; margin-top: 4px; min-height: 16px;"></div>
                             </div>
 
-                            <!-- 3. Chỉ số Nước Cũ & Mới -->
                             <div>
                                 <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Nước Cũ &rarr; Mới (m³) <span style="color: #dc2626;">*</span></label>
                                 <div style="display: flex; gap: 6px;">
@@ -357,7 +324,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                                 <div id="previewNuoc" style="font-size: 0.75rem; color: #0f766e; margin-top: 4px; min-height: 16px;"></div>
                             </div>
 
-                            <!-- 4. Sĩ số SV & Dự toán tổng tiền -->
                             <div>
                                 <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Sĩ số SV thực tế <span style="color: #dc2626;">*</span></label>
                                 <input type="number" name="soSV" id="inputSoSV" class="btn-outline" style="width: 100%; padding: 8px 10px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" value="1" min="1" required oninput="calculatePreview()">
@@ -374,7 +340,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                 </div>
             <?php endif; ?>
 
-            <!-- BẢNG THEO DÕI CHỈ SỐ & TIÊU THỤ (ĐỒNG BỘ CHUẨN CARD VÀ TABLE) -->
             <div class="card" style="margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
@@ -486,7 +451,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                     </table>
                 </div>
 
-                <!-- THANH PHÂN TRANG TAB 1 -->
                 <?php if (!empty($readingList)): ?>
                     <div id="readingsPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
                         <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
@@ -508,9 +472,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
             </div>
         </div>
 
-        <!-- ========================================================================= -->
-        <!-- TAB 2: QUẢN LÝ HÓA ĐƠN & GẠCH NỢ MÔ PHỎNG                                 -->
-        <!-- ========================================================================= -->
         <div id="tabContentInvoices" style="display: <?= ($activeTab === 'invoices') ? 'block' : 'none' ?>;">
             <div class="card" style="margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
@@ -609,7 +570,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                     </table>
                 </div>
 
-                <!-- THANH PHÂN TRANG TAB 2 -->
                 <?php if (!empty($invoiceList)): ?>
                     <div id="invoicesPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
                         <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
@@ -631,9 +591,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
             </div>
         </div>
 
-        <!-- ========================================================================= -->
-        <!-- TAB 3: DANH SÁCH PHÒNG CHƯA GHI CHỈ SỐ KỲ NÀY                             -->
-        <!-- ========================================================================= -->
         <div id="tabContentMissing" style="display: <?= ($activeTab === 'missing') ? 'block' : 'none' ?>;">
             <div class="card" style="margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
@@ -703,7 +660,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                     </table>
                 </div>
 
-                <!-- THANH PHÂN TRANG TAB 3 -->
                 <?php if (!empty($missingList)): ?>
                     <div id="missingPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
                         <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
@@ -728,9 +684,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
     <?php endif; ?>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL: NHẬP CHỈ SỐ ĐIỆN NƯỚC HÀNG LOẠT TỪ FILE CSV                        -->
-<!-- ========================================================================= -->
 <div id="modalImportUtilities" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 540px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -778,13 +731,9 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- JAVASCRIPT: AUTO-FILL, PREVIEW TÍNH TIỀN, TABS, PHÂN TRANG CLIENT-SIDE     -->
-<!-- ========================================================================= -->
 <script>
     const roomMeta = <?= json_encode($meta, JSON_UNESCAPED_UNICODE) ?>;
 
-    // 1. Phân trang Client-side cho cả 3 tabs
     const utilPaginationState = {
         readings: {
             page: 1,
@@ -839,10 +788,8 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
             }
 
             let html = '';
-            // Nút trang trước
             html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToUtilPage('${tabKey}', ${state.page - 1})" ${state.page === 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} style="padding: 4px 10px; border-radius: 6px;">&laquo; Trước</button>`;
 
-            // Các số trang
             for (let p = 1; p <= totalPages; p++) {
                 if (p === 1 || p === totalPages || (p >= state.page - 1 && p <= state.page + 1)) {
                     const isActive = (p === state.page);
@@ -855,7 +802,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
                 }
             }
 
-            // Nút trang sau
             html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToUtilPage('${tabKey}', ${state.page + 1})" ${state.page === totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} style="padding: 4px 10px; border-radius: 6px;">Sau &raquo;</button>`;
 
             navEl.innerHTML = html;
@@ -878,7 +824,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
         renderUtilPagination(tabKey);
     }
 
-    // 2. Tự động điền dữ liệu phòng khi chọn
     function onRoomChanged(maPhong) {
         if (!maPhong || !roomMeta[maPhong]) {
             document.getElementById('inputDienCu').value = '';
@@ -939,7 +884,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
         }
 
         if (kwh >= 0 && m3 >= 0 && (!isNaN(dienMoi) || !isNaN(nuocMoi))) {
-            // Ước tính sơ bộ: Nước 12.500 đ/m3 + Điện trung bình ~2.000 đ/kWh
             const estTienNuoc = m3 * 12500;
             let estTienDien = 0;
             let rem = kwh;
@@ -1006,7 +950,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
         return true;
     }
 
-    // 3. Chuyển đổi Sub-Tabs & Cập nhật số đếm nút Xuất Excel
     function updateExportButtonCount(tabKey) {
         const btnText = document.getElementById('btnExportText');
         if (!btnText) return;
@@ -1073,7 +1016,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
         updateExportButtonCount(tabKey);
     }
 
-    // 4. Quick Fill khi bấm "Ghi số ngay" từ Tab 3
     function quickFillRoom(maPhong) {
         switchUtilTab('readings');
         const select = document.getElementById('selectPhong');
@@ -1091,7 +1033,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
         if (inpDien) inpDien.focus();
     }
 
-    // 5. Cascading Dropdown Handlers
     function onKhuChange(khuVal) {
         const cumSelect = document.getElementById('filterCumSelect');
         const toaSelect = document.getElementById('filterToaSelect');
@@ -1106,7 +1047,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
         document.getElementById('filterFormUtilities').submit();
     }
 
-    // 6. Xuất Excel
     function exportUtilities() {
         const urlParams = new URLSearchParams(window.location.search);
         const input = document.getElementById('currentActiveTab');
@@ -1115,7 +1055,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
         window.location.href = '<?= url('staff/utilities/export') ?>?' + urlParams.toString();
     }
 
-    // 7. Modals
     function openImportModal() {
         const modal = document.getElementById('modalImportUtilities');
         if (modal) modal.style.display = 'flex';
@@ -1126,7 +1065,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
         if (modal) modal.style.display = 'none';
     }
 
-    // Khởi chạy khi DOM sẵn sàng
     document.addEventListener('DOMContentLoaded', function() {
         renderUtilPagination('readings');
         renderUtilPagination('invoices');
@@ -1137,7 +1075,6 @@ $formatTenToa = function (?string $rawName, ?string $code = ''): string {
         updateExportButtonCount(initialTab);
     });
 
-    // ESC & Backdrop close
     window.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeImportModal();

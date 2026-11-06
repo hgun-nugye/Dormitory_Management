@@ -14,7 +14,6 @@ $extension = $serviceType === 'Hồ sơ miễn giảm lệ phí';
 ?>
 
 <div class="container">
-    <!-- Breadcrumb -->
     <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
         <a href="<?= url('/') ?>" style="color: var(--text-muted); text-decoration: none;"><i class="fa-solid fa-house"></i> Trang chủ</a>
         <span>/</span>
@@ -25,7 +24,6 @@ $extension = $serviceType === 'Hồ sơ miễn giảm lệ phí';
         <span style="color: var(--text-primary); font-weight: 600;"><?= htmlspecialchars($serviceType) ?></span>
     </div>
 
-    <!-- Page Header -->
     <div class="page-header">
         <div>
             <h1 class="page-title">
@@ -40,7 +38,6 @@ $extension = $serviceType === 'Hồ sơ miễn giảm lệ phí';
         </div>
     </div>
 
-    <!-- Alert Notifications -->
     <?php if (!empty($error)): ?>
         <div class="alert alert-danger" style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
             <i class="fa-solid fa-circle-exclamation" style="font-size: 16px;"></i>
@@ -67,7 +64,6 @@ $extension = $serviceType === 'Hồ sơ miễn giảm lệ phí';
                 </a>
             </div>
         <?php else: ?>
-            <!-- Current Contract Callout -->
             <div style=" margin-bottom: 24px; padding: 14px 18px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <div style="width: 38px; height: 38px; border-radius: 50%; background: #ffffff; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 16px;">
@@ -84,13 +80,11 @@ $extension = $serviceType === 'Hồ sơ miễn giảm lệ phí';
                 <span class="badge badge-success"><i class="fa-solid fa-check"></i> Đang hiệu lực</span>
             </div>
 
-            <!-- Form -->
             <form method="post" action="<?= url('student/requests') ?>" enctype="multipart/form-data">
                 <?= csrf_field() ?>
                 <input type="hidden" name="LoaiDon" value="<?= htmlspecialchars($serviceType) ?>">
 
                 <div class="grid grid-cols-2" style="gap: 18px; margin-bottom: 20px;">
-                    <!-- Trường 1: Sửa chữa thiết bị -->
                     <?php if ($repair): ?>
                         <div style="grid-column: 1 / -1;">
                             <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">
@@ -111,7 +105,6 @@ $extension = $serviceType === 'Hồ sơ miễn giảm lệ phí';
                         </div>
                     <?php endif; ?>
 
-                    <!-- Trường 2: Chuyển phòng -->
                     <?php if ($transfer): ?>
                         <div style="grid-column: 1 / -1;">
                             <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">
@@ -133,7 +126,6 @@ $extension = $serviceType === 'Hồ sơ miễn giảm lệ phí';
                         </div>
                     <?php endif; ?>
 
-                    <!-- Trường 3: Tạm vắng -->
                     <?php if ($leave): ?>
                         <div>
                             <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">
@@ -149,7 +141,6 @@ $extension = $serviceType === 'Hồ sơ miễn giảm lệ phí';
                         </div>
                     <?php endif; ?>
 
-                    <!-- Trường 4: Trả phòng -->
                     <?php if ($returnRoom): ?>
                         <div style="grid-column: 1 / -1;">
                             <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">
@@ -162,7 +153,6 @@ $extension = $serviceType === 'Hồ sơ miễn giảm lệ phí';
                         </div>
                     <?php endif; ?>
 
-                    <!-- Trường 5: Hồ sơ miễn giảm -->
                     <?php if ($extension): ?>
                         <div style="grid-column: 1 / -1;">
                             <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">
@@ -176,7 +166,6 @@ $extension = $serviceType === 'Hồ sơ miễn giảm lệ phí';
                     <?php endif; ?>
                 </div>
 
-                <!-- Lý do / Nội dung chi tiết -->
                 <div style="margin-bottom: 24px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin: 0;">
@@ -193,7 +182,6 @@ $extension = $serviceType === 'Hồ sơ miễn giảm lệ phí';
                     </div>
                 </div>
 
-                <!-- Nút thao tác -->
                 <div style="display: flex; gap: 12px; align-items: center; border-top: 1px solid var(--border); padding-top: 18px;">
                     <button class="btn btn-primary" type="submit" style="border-radius: 8px; padding: 10px 22px;">
                         <i class="fa-solid fa-paper-plane" style="margin-right: 6px;"></i> Gửi yêu cầu ngay

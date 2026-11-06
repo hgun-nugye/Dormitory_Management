@@ -202,24 +202,35 @@ Router::post('/admin/universities/save', 'Admin\\UniversityController@saveUniver
 Router::post('/admin/universities/toggle-status', 'Admin\\UniversityController@toggleUniversityStatus');
 Router::post('/admin/universities/delete', 'Admin\\UniversityController@deleteUniversity');
 
-// Cron Trigger Routes
-Router::get('/cron/trigger_release', function () {
-    $res = \App\Services\AutoReleaseService::scanAndReleaseExpiredBeds();
-    json_response([
-        'status' => 'success',
-        'action' => 'Cron Job 72h Auto Release Beds',
-        'result' => $res
-    ]);
-});
+// RESTful API Routes (app/Controllers/Api)
 
-Router::get('/cron/trigger_absence', function () {
-    $res = \App\Services\AttendanceDisciplineService::detectLongTermAbsence(30);
-    json_response([
-        'status' => 'success',
-        'action' => 'Cron Job 30-Day Absence Detection',
-        'result' => $res
-    ]);
-});
+// 1. Phân hệ Đăng ký nội trú (Registration APIs)
+Router::post('/api/registration/send-otp', 'Api\\RegistrationApiController@sendOtp');
+Router::get('/api/registration/options', 'Api\\RegistrationApiController@options');
+Router::post('/api/registration/options', 'Api\\RegistrationApiController@options');
+Router::get('/api/registration/check-mssv', 'Api\\RegistrationApiController@checkMssv');
+Router::post('/api/registration/check-mssv', 'Api\\RegistrationApiController@checkMssv');
+
+// 2. Phân hệ Hồ sơ & Giữ chỗ 72h (Application APIs)
+Router::post('/api/applications/scan-release', 'Api\\ApplicationApiController@scanRelease72h');
+Router::get('/api/applications/status', 'Api\\ApplicationApiController@status');
+
+// 3. Phân hệ Kỷ luật, Rèn luyện & Quẹt thẻ Barrier (Discipline APIs)
+Router::get('/api/discipline/history', 'Api\\DisciplineApiController@history');
+Router::post('/api/discipline/scan', 'Api\\DisciplineApiController@scan');
+
+// 4. Phân hệ Sơ đồ phòng & Hạ tầng KTX (Room APIs)
+Router::get('/api/rooms', 'Api\\RoomApiController@index');
+Router::get('/api/rooms/beds', 'Api\\RoomApiController@beds');
+Router::get('/api/rooms/stats', 'Api\\RoomApiController@stats');
+
+// 5. Phân hệ Tác vụ Tự động (Cron & Automation APIs)
+Router::get('/api/cron/release-beds', 'Api\\CronApiController@triggerRelease');
+Router::post('/api/cron/release-beds', 'Api\\CronApiController@triggerRelease');
+Router::get('/api/cron/check-absence', 'Api\\CronApiController@triggerAbsence');
+Router::post('/api/cron/check-absence', 'Api\\CronApiController@triggerAbsence');
+Router::get('/cron/trigger_release', 'Api\\CronApiController@triggerRelease');
+Router::get('/cron/trigger_absence', 'Api\\CronApiController@triggerAbsence');
 
 // 4. Dispatch Request & Catch Errors
 try {

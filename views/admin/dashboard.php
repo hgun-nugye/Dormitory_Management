@@ -3,7 +3,6 @@ ob_start();
 ?>
 
 <div class="container">
-    <!-- Breadcrumb & Header -->
     <div style="margin-bottom: 24px;">
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('admin/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">Trang chủ</a>
@@ -20,9 +19,7 @@ ob_start();
         </div>
     </div>
 
-    <!-- Chỉ số toàn hệ thống -->
     <div class="grid grid-cols-4" style="gap: 18px; margin-bottom: 28px;">
-        <!-- 1. Cán bộ BQL -->
         <a href="<?= url('admin/users') ?>" style="text-decoration: none; color: inherit;">
             <div class="card stat-card" style="border-left: 4px solid #2563eb; transition: transform 0.15s ease, box-shadow 0.15s ease; cursor: pointer;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -40,7 +37,6 @@ ob_start();
             </div>
         </a>
 
-        <!-- 2. Trường Đại học liên kết -->
         <a href="<?= url('admin/universities') ?>" style="text-decoration: none; color: inherit;">
             <div class="card stat-card" style="border-left: 4px solid #10b981; transition: transform 0.15s ease, box-shadow 0.15s ease; cursor: pointer;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -58,7 +54,6 @@ ob_start();
             </div>
         </a>
 
-        <!-- 3. Đợt tuyển sinh KTX -->
         <a href="<?= url('admin/periods') ?>" style="text-decoration: none; color: inherit;">
             <div class="card stat-card" style="border-left: 4px solid #7c3aed; transition: transform 0.15s ease, box-shadow 0.15s ease; cursor: pointer;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -76,7 +71,6 @@ ob_start();
             </div>
         </a>
 
-        <!-- 4. Sinh viên & Hợp đồng -->
         <a href="<?= url('admin/students') ?>" style="text-decoration: none; color: inherit;">
             <div class="card stat-card" style="border-left: 4px solid #f59e0b; transition: transform 0.15s ease, box-shadow 0.15s ease; cursor: pointer;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -95,7 +89,6 @@ ob_start();
         </a>
     </div>
 
-    <!-- PHÂN HỆ 1: QUẢN TRỊ TÀI KHOẢN & PHÂN QUYỀN CÁN BỘ -->
     <div id="phan-quyen" class="card" style="margin-bottom: 26px;">
         <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -209,7 +202,6 @@ ob_start();
         <?php endif; ?>
     </div>
 
-    <!-- PHÂN HỆ 2: TRƯỜNG ĐẠI HỌC LIÊN KẾT & THÀNH VIÊN -->
     <div id="truong-hoc" class="card" style="margin-bottom: 26px;">
         <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <div style="display: flex; align-items: center; gap: 8px;">

@@ -4,233 +4,8 @@ ob_start();
 $isAllowed = $isAllowed ?? $scope['isAllowed'] ?? false;
 $viewType = $viewType ?? 'manager';
 ?>
-<style>
-    /* Thẻ thống kê Kế toán và Kỹ thuật */
-    .grid.grid-cols-4 .stat-card {
-        padding: 12px !important;
-        border-radius: 9px;
-        min-width: 0;
-    }
-
-    .grid.grid-cols-4 .stat-label {
-        font-size: 0.72rem !important;
-        line-height: 1.4;
-    }
-
-    .grid.grid-cols-4 .stat-val {
-        font-size: 1.25rem !important;
-        margin: 5px 0 !important;
-        line-height: 1.4;
-    }
-
-    .grid.grid-cols-4 .stat-val span {
-        font-size: 0.75rem !important;
-    }
-
-    .grid.grid-cols-4 .stat-sub {
-        font-size: 0.72rem !important;
-        line-height: 1.4;
-    }
-
-    /* Thẻ tác vụ Dashboard quản lý */
-    .kpi-action-grid .stat-card {
-        padding: 12px !important;
-        border-radius: 9px;
-        min-width: 0;
-    }
-
-    .kpi-action-grid .stat-card>div:first-child {
-        gap: 6px;
-    }
-
-    .kpi-action-grid .stat-card>div:first-child .stat-label {
-        font-size: 0.72rem !important;
-        line-height: 1.4;
-    }
-
-    .kpi-action-grid .stat-card>div:first-child i {
-        font-size: 1rem !important;
-    }
-
-    .kpi-action-grid .stat-card>div:nth-child(2) {
-        font-size: 1.4rem !important;
-        margin: 5px 0 !important;
-        line-height: 1.4;
-    }
-
-    .kpi-action-grid .stat-card>div:nth-child(3) {
-        font-size: 0.72rem !important;
-        line-height: 1.4;
-        margin-bottom: 9px !important;
-    }
-
-    .kpi-action-grid .stat-card>a {
-        padding: 6px 8px;
-        font-size: 0.75rem;
-        min-height: 30px;
-    }
-
-    /* Responsive */
-    @media (max-width: 992px) {
-        .grid.grid-cols-4 {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .kpi-action-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        }
-    }
-
-    @media (max-width: 576px) {
-
-        .grid.grid-cols-4,
-        .kpi-action-grid {
-            grid-template-columns: 1fr !important;
-        }
-    }
-
-    .kpi-action-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 16px;
-        align-items: stretch;
-    }
-
-    .kpi-action-grid .stat-card {
-        min-width: 0;
-        height: 100%;
-        box-sizing: border-box;
-    }
-
-    @media (max-width: 992px) {
-        .kpi-action-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    @media (max-width: 576px) {
-        .kpi-action-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    /* Hoạt động gần đây (Interactive Live Activity Feed) */
-    .recent-activity-link {
-        display: flex;
-        gap: 12px;
-        align-items: flex-start;
-        font-size: 0.825rem;
-        text-decoration: none;
-        padding: 11px 12px;
-        border-radius: 8px;
-        border: 1px solid #f1f5f9;
-        background: #ffffff;
-        transition: all 0.2s ease;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
-        cursor: pointer;
-    }
-
-    .recent-activity-link:hover {
-        background: #f8fafc !important;
-        border-color: #cbd5e1 !important;
-        transform: translateX(4px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
-    }
-
-    .activity-icon-wrap {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        font-size: 0.825rem;
-        margin-top: 2px;
-        transition: transform 0.2s ease;
-    }
-
-    .recent-activity-link:hover .activity-icon-wrap {
-        transform: scale(1.12);
-    }
-
-    .activity-content {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .activity-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 3px;
-    }
-
-    .activity-title {
-        font-weight: 600;
-        color: var(--text-primary);
-        font-size: 0.85rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        transition: color 0.15s ease;
-    }
-
-    .recent-activity-link:hover .activity-title {
-        color: var(--primary) !important;
-    }
-
-    .activity-time {
-        font-size: 0.72rem;
-        color: var(--text-muted);
-        white-space: nowrap;
-        flex-shrink: 0;
-    }
-
-    .activity-desc {
-        color: var(--text-secondary);
-        font-size: 0.78rem;
-        line-height: 1.4;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    .activity-footer {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-top: 6px;
-    }
-
-    .activity-cta {
-        color: var(--primary);
-        font-size: 0.72rem;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        opacity: 0.75;
-        transition: all 0.15s ease;
-    }
-
-    .recent-activity-link:hover .activity-cta {
-        opacity: 1;
-        text-decoration: underline;
-    }
-
-    .recent-activity-link:hover .activity-cta i {
-        transform: translateX(3px);
-        transition: transform 0.15s ease;
-    }
-</style>
 <div class="container">
 
-    <!-- ========================================================================= -->
-    <!-- TRƯỜNG HỢP BỊ CHẶN: RENDER THẺ CẢNH BÁO ĐỎ (RED WARNING CARD)            -->
-    <!-- ========================================================================= -->
     <?php if (empty($isAllowed)): ?>
         <div style="margin-bottom: 20px;">
             <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
@@ -260,9 +35,6 @@ $viewType = $viewType ?? 'manager';
         </div>
     <?php else: ?>
 
-        <!-- ========================================================================= -->
-        <!-- HEADER ĐIỀU HÀNH & BREADCRUMB (ĐỒNG BỘ CHUẨN STAFF SYSTEM)               -->
-        <!-- ========================================================================= -->
         <div style="margin-bottom: 20px;">
             <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
                 <a href="<?= url('staff/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">BQL KTX</a>
@@ -295,7 +67,6 @@ $viewType = $viewType ?? 'manager';
                     </p>
                 </div>
 
-                <!-- CỤM NÚT THAO TÁC HEADER (CĂN BÊN PHẢI - RIGHT ALIGNED) -->
                 <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; margin-left: auto;">
                     <a href="<?= url('staff/dashboard') ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-weight: 600;">
                         <i class="fa-solid fa-rotate" style="margin-right: 4px;"></i> Làm mới dữ liệu
@@ -314,7 +85,6 @@ $viewType = $viewType ?? 'manager';
             </div>
         </div>
 
-        <!-- THÔNG BÁO FLASH MESSAGES -->
         <?php if (!empty($flashSuccess)): ?>
             <div class="alert alert-success" style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
                 <i class="fa-solid fa-circle-check" style="margin-right: 6px; color: #16a34a;"></i> <b>Thành công:</b> <?= htmlspecialchars($flashSuccess) ?>
@@ -327,9 +97,6 @@ $viewType = $viewType ?? 'manager';
             </div>
         <?php endif; ?>
 
-        <!-- ========================================================================= -->
-        <!-- PHÂN NHÁNH 1: GIAO DIỆN KẾ TOÁN & TÀI CHÍNH (ACCOUNTING DASHBOARD)       -->
-        <!-- ========================================================================= -->
         <?php if ($viewType === 'accounting'): ?>
             <?php
             $accStats = $accountingData['stats'] ?? [];
@@ -337,7 +104,6 @@ $viewType = $viewType ?? 'manager';
             $pendingRefunds = $accountingData['pendingRefunds'] ?? [];
             ?>
 
-            <!-- 4 KPI Cards Kế toán -->
             <div class="grid grid-cols-4" style="gap: 16px; margin-bottom: 24px;">
                 <div class="card stat-card" style="border-left: 4px solid #16a34a; padding: 16px;">
                     <div class="stat-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Doanh thu đã thu</div>
@@ -372,7 +138,6 @@ $viewType = $viewType ?? 'manager';
                 </div>
             </div>
 
-            <!-- Bảng 1: Top phòng nợ cước điện nước -->
             <div class="card" style="margin-bottom: 24px; border-radius: 10px;">
                 <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
                     <span style="font-weight: 700; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
@@ -427,7 +192,6 @@ $viewType = $viewType ?? 'manager';
                 </div>
             </div>
 
-            <!-- Bảng 2: Đơn Một Cửa xin hoàn phí -->
             <div class="card" style="border-radius: 10px;">
                 <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
                     <span style="font-weight: 700; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
@@ -485,16 +249,12 @@ $viewType = $viewType ?? 'manager';
                 </div>
             </div>
 
-            <!-- ========================================================================= -->
-            <!-- PHÂN NHÁNH 2: GIAO DIỆN KỸ THUẬT VIÊN SỬA CHỮA (TECHNICAL DASHBOARD)     -->
-            <!-- ========================================================================= -->
         <?php elseif ($viewType === 'technical'): ?>
             <?php
             $tStats = $technicalData['stats'] ?? [];
             $myTickets = $technicalData['myTickets'] ?? [];
             ?>
 
-            <!-- 4 KPI Cards Kỹ thuật -->
             <div class="grid grid-cols-4" style="gap: 16px; margin-bottom: 24px;">
                 <div class="card stat-card" style="border-left: 4px solid #2563eb; padding: 16px;">
                     <div class="stat-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Tổng phiếu được giao</div>
@@ -529,7 +289,6 @@ $viewType = $viewType ?? 'manager';
                 </div>
             </div>
 
-            <!-- Danh sách phiếu của Kỹ thuật viên -->
             <div class="card" style="border-radius: 10px;">
                 <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
                     <span style="font-weight: 700; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
@@ -594,17 +353,12 @@ $viewType = $viewType ?? 'manager';
                 </div>
             </div>
 
-            <!-- ========================================================================= -->
-            <!-- PHÂN NHÁNH 3: GIAO DIỆN CÁN BỘ QUẢN LÝ (MANAGER TIERS 1-4)                -->
-            <!-- ========================================================================= -->
         <?php else: ?>
 
-            <!-- BỘ LỌC PHẠM VI PHÂN CẤP (CASCADING SCOPE FILTER BAR) -->
             <?php if (!empty($scope['canFilterKhu']) || !empty($scope['canFilterCum']) || !empty($scope['canFilterToa'])): ?>
                 <div class="card" style="padding: 14px 18px; margin-bottom: 20px; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0;">
                     <form method="GET" action="<?= url('staff/dashboard') ?>" style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
 
-                        <!-- Chọn Khu (Dành cho Admin) -->
                         <?php if (!empty($scope['canFilterKhu'])): ?>
                             <div style="display: flex; align-items: center; gap: 6px;">
                                 <select name="khu" id="filterKhu" class="form-control" style="padding: 4px 8px; font-size: 0.825rem; border-radius: 6px; height: 32px;" onchange="updateFilterOptions(); this.form.submit();">
@@ -618,7 +372,6 @@ $viewType = $viewType ?? 'manager';
                             </div>
                         <?php endif; ?>
 
-                        <!-- Chọn Cụm (Dành cho Admin & Trưởng Khu) -->
                         <?php if (!empty($scope['canFilterCum'])): ?>
                             <div style="display: flex; align-items: center; gap: 6px;">
                                 <select name="cum" id="filterCum" class="form-control" style="padding: 4px 8px; font-size: 0.825rem; border-radius: 6px; height: 32px;" onchange="this.form.submit();">
@@ -634,7 +387,6 @@ $viewType = $viewType ?? 'manager';
                             </div>
                         <?php endif; ?>
 
-                        <!-- Chọn Tòa (Dành cho Admin, Trưởng Khu & Trưởng Cụm) -->
                         <?php if (!empty($scope['canFilterToa'])): ?>
                             <div style="display: flex; align-items: center; gap: 6px;">
                                 <select name="toa" id="filterToa" class="form-control" style="padding: 4px 8px; font-size: 0.825rem; border-radius: 6px; height: 32px;" onchange="this.form.submit();">
@@ -663,10 +415,7 @@ $viewType = $viewType ?? 'manager';
                 </div>
             <?php endif; ?>
 
-
-            <!-- TRUNG TÂM ĐIỀU HÀNH - OPERATIONAL ACTION CARDS -->
             <div class="kpi-action-grid" style="margin-bottom: 24px;">
-                <!-- 1. HỒ SƠ GIỮ CHỖ -->
                 <div class="card stat-card" style="border-left: 4px solid #f59e0b; padding: 16px; border-radius: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span class="stat-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Hồ sơ giữ chỗ</span>
@@ -684,7 +433,6 @@ $viewType = $viewType ?? 'manager';
                     </a>
                 </div>
 
-                <!-- 2. PHÒNG CẦN DỒN GHÉP -->
                 <div class="card stat-card" style="border-left: 4px solid #2563eb; padding: 16px; border-radius: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span class="stat-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Phòng cần dồn ghép</span>
@@ -701,7 +449,6 @@ $viewType = $viewType ?? 'manager';
                     </a>
                 </div>
 
-                <!-- 3. SỰ CỐ BẢO TRÌ -->
                 <div class="card stat-card" style="border-left: 4px solid #dc2626; padding: 16px; border-radius: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span class="stat-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Sự cố bảo trì</span>
@@ -718,7 +465,6 @@ $viewType = $viewType ?? 'manager';
                     </a>
                 </div>
 
-                <!-- 4. CÔNG NỢ ĐIỆN NƯỚC -->
                 <div class="card stat-card" style="border-left: 4px solid #10b981; padding: 16px; border-radius: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span class="stat-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Công nợ điện nước</span>
@@ -735,7 +481,6 @@ $viewType = $viewType ?? 'manager';
                     </a>
                 </div>
 
-                <!-- 5. CẢNH BÁO VẮNG MẶT -->
                 <div class="card stat-card" style="border-left: 4px solid #8b5cf6; padding: 16px; border-radius: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span class="stat-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Cảnh báo vắng mặt</span>
@@ -752,7 +497,6 @@ $viewType = $viewType ?? 'manager';
                     </a>
                 </div>
 
-                <!-- 6. YÊU CẦU MỘT CỬA -->
                 <div class="card stat-card" style="border-left: 4px solid #0d9488; padding: 16px; border-radius: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span class="stat-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Yêu cầu Một Cửa</span>
@@ -771,10 +515,6 @@ $viewType = $viewType ?? 'manager';
 
             </div>
 
-
-            <!-- ===================================================================== -->
-            <!-- TRUNG TÂM TÁC VỤ CẤP BÁCH CẦN XỬ LÝ NGAY (URGENT ACTION CENTER)        -->
-            <!-- ===================================================================== -->
             <div class="card" style="margin-bottom: 24px; border-radius: 12px; border: 1px solid #fed7aa; background: #fffaf0;">
                 <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #ffedd5;">
                     <div style="display: flex; align-items: center; gap: 8px;">
@@ -785,7 +525,6 @@ $viewType = $viewType ?? 'manager';
                     </div>
                 </div>
 
-                <!-- Sub-nav tabs tác vụ khẩn -->
                 <div style="display: flex; gap: 8px; margin: 14px 0; border-bottom: 1px solid #fed7aa; padding-bottom: 8px;">
                     <button type="button" class="btn btn-sm urgent-tab-btn active" onclick="switchUrgentTab('app')" id="urgentTabApp" style="border-radius: 6px; font-weight: 600; font-size: 0.8rem; padding: 4px 12px; background: #ea580c; color: #ffffff; border: none;">
                         Hồ sơ sắp quá 72h (<?= count($urgentActions['applications'] ?? []) ?>)
@@ -801,7 +540,6 @@ $viewType = $viewType ?? 'manager';
                     </button>
                 </div>
 
-                <!-- 1. Danh sách hồ sơ 72h -->
                 <div id="urgentContentApp" class="urgent-content">
                     <?php if (!empty($urgentActions['applications'])): ?>
                         <div class="table-responsive">
@@ -854,7 +592,6 @@ $viewType = $viewType ?? 'manager';
                     <?php endif; ?>
                 </div>
 
-                <!-- 2. Danh sách sự cố khẩn cấp -->
                 <div id="urgentContentMaint" class="urgent-content" style="display: none;">
                     <?php if (!empty($urgentActions['maintenance'])): ?>
                         <div class="table-responsive">
@@ -901,7 +638,6 @@ $viewType = $viewType ?? 'manager';
                     <?php endif; ?>
                 </div>
 
-                <!-- 3. Danh sách vắng > 30 ngày -->
                 <div id="urgentContentAbsence" class="urgent-content" style="display: none;">
                     <?php if (!empty($urgentActions['absence'])): ?>
                         <div class="table-responsive">
@@ -948,7 +684,6 @@ $viewType = $viewType ?? 'manager';
                     <?php endif; ?>
                 </div>
 
-                <!-- 4. Danh sách đơn Một Cửa -->
                 <div id="urgentContentReq" class="urgent-content" style="display: none;">
                     <?php if (!empty($urgentActions['requests'])): ?>
                         <div class="table-responsive">
@@ -992,12 +727,8 @@ $viewType = $viewType ?? 'manager';
                 </div>
             </div>
 
-            <!-- ===================================================================== -->
-            <!-- KHỐI 2 CỘT: CÔNG SUẤT LƯU TRÚ (TRÁI) & NHẬT KÝ THỜI GIAN THỰC (PHẢI) -->
-            <!-- ===================================================================== -->
             <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; margin-bottom: 24px;">
 
-                <!-- CỘT TRÁI: CÔNG SUẤT VÀ ĐỀ XUẤT DỒN PHÒNG <= 50% -->
                 <div class="card" style="border-radius: 10px; padding: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
                         <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px;">
@@ -1008,7 +739,6 @@ $viewType = $viewType ?? 'manager';
                         </a>
                     </div>
 
-                    <!-- Danh sách phòng <= 50% -->
                     <div style="margin-top: 14px;">
                         <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">
                             Phòng công suất thấp cần ghép:
@@ -1051,7 +781,6 @@ $viewType = $viewType ?? 'manager';
                         <?php endif; ?>
                     </div>
 
-                    <!-- Thanh tiến độ công suất từng tòa -->
                     <div style="margin-top: 20px;">
                         <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px;">
                             Tỷ lệ lấp đầy các Tòa nhà:
@@ -1078,9 +807,7 @@ $viewType = $viewType ?? 'manager';
                     </div>
                 </div>
 
-                <!-- CỘT PHẢI: NHẬT KÝ THỜI GIAN THỰC & LỐI TẮT NHANH -->
                 <div style="display: flex; flex-direction: column; gap: 16px;">
-                    <!-- Nhật ký sự kiện thời gian thực -->
                     <div class="card" style="border-radius: 10px; padding: 18px; flex: 1;">
                         <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
                             <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px;">
@@ -1142,7 +869,6 @@ $viewType = $viewType ?? 'manager';
 </div>
 
 <script>
-    // Chuyển đổi tab Tác vụ cấp bách
     function switchUrgentTab(tabKey) {
         document.querySelectorAll('.urgent-content').forEach(el => el.style.display = 'none');
         document.querySelectorAll('.urgent-tab-btn').forEach(btn => {

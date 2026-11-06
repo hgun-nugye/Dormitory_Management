@@ -13,7 +13,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
 ?>
 
 <div class="container">
-    <!-- Breadcrumb & Header -->
     <div style="margin-bottom: 20px;">
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('staff/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">BQL KTX</a>
@@ -32,7 +31,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                 </p>
             </div>
 
-            <!-- CÁC NÚT THAO TÁC HEADER (ĐỒNG BỘ ADMIN & ZONES: THÊM MỚI, NHẬP FILE, XUẤT EXCEL, CẬP NHẬT TÒA, VỀ DASHBOARD) -->
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                 <?php if (!empty($isAllowed)): ?>
                     <?php if (!empty($canCrudPhong)): ?>
@@ -59,7 +57,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
         </div>
     </div>
 
-    <!-- THÔNG BÁO FLASH MESSAGE -->
     <?php if (!empty($flashSuccess)): ?>
         <div class="alert alert-success" style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
             <i class="fa-solid fa-circle-check" style="margin-right: 6px;"></i> <b>Thành công:</b> <?= $flashSuccess ?>
@@ -79,9 +76,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
     <?php endif; ?>
 
     <?php if (empty($isAllowed)): ?>
-        <!-- ================================================================= -->
-        <!-- MÀN HÌNH CHẶN 100% TRUY CẬP (DÀNH CHO NHÂN VIÊN KHÔNG PHẢI QUẢN LÝ) -->
-        <!-- ================================================================= -->
         <div class="card" style="border: 2px solid #ef4444; background: #fef2f2; border-radius: 12px; padding: 40px 30px; text-align: center; margin-top: 24px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.12);">
             <div style="width: 76px; height: 76px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; color: #dc2626; font-size: 2.2rem; border: 2px solid #fca5a5;">
                 <i class="fa-solid fa-triangle-exclamation"></i>
@@ -115,11 +109,7 @@ $isAllToas = $isAllToas ?? empty($filterToa);
         </div>
 
     <?php else: ?>
-        <!-- ================================================================= -->
-        <!-- GIAO DIỆN CHÍNH THỨC DÀNH CHO CÁN BỘ QUẢN LÝ HỢP LỆ -->
-        <!-- ================================================================= -->
 
-        <!-- THẺ THỐNG KÊ NHANH TÒA NHÀ (QUICK STATS CARDS) -->
         <div class="grid grid-cols-4" style="gap: 16px; margin-bottom: 20px;">
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Tổng số phòng</div>
@@ -156,7 +146,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
             </div>
         </div>
 
-        <!-- BIỂU MẪU CRUD: THÊM / CẬP NHẬT PHÒNG Ở (ẨN MẶC ĐỊNH, HIỆN KHI CLICK HOẶC SỬA) -->
         <div class="card" id="roomFormCard" style="<?= !empty($flashError) ? 'display: block;' : 'display: none;' ?> margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
             <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
                 <h3 id="formTitle" style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
@@ -269,7 +258,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     <strong>Tự động khởi tạo giường:</strong> Khi tạo phòng mới, hệ thống sẽ tự động khởi tạo các giường trống (<code>G1, G2, G3...</code>) theo đúng sức chứa tối đa của loại phòng đã chọn.
                 </div>
 
-                <!-- CÁC NÚT CHỨC NĂNG FORM -->
                 <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 8px; flex-wrap: wrap; gap: 10px;">
                     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                         <button type="submit" id="btnSubmitRoomForm" class="btn btn-primary" style="border-radius: 6px; padding: 10px 22px; font-weight: 600;">
@@ -288,7 +276,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
             </form>
         </div>
 
-        <!-- BẢNG DANH SÁCH PHÒNG Ở & PHÂN TRANG (CRUD TABLE NHƯ USERS) -->
         <div class="card">
             <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -297,9 +284,7 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                 </div>
             </div>
 
-            <!-- THANH TÌM KIẾM VÀ LỌC PHÂN CẤP CASCADING THEO QUYỀN HẠN (ĐỒNG BỘ GIAO DIỆN ADMIN #f8fafc) -->
             <div style="display: flex; align-items: center; gap: 12px; margin: 0 0 20px; flex-wrap: wrap; background: #f8fafc; padding: 14px 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                <!-- 1. TÌM KIẾM THÔNG MINH -->
                 <div style="position: relative; flex: 1; min-width: 240px; max-width: 360px;">
                     <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
                     <input type="text" id="searchRoomInput" class="btn-outline"
@@ -308,9 +293,7 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                         oninput="filterRooms()">
                 </div>
 
-                <!-- 2. BỘ LỌC CẤP BẬC HIERARCHICAL CASCADING (CẤP CAO HƠN CÓ NHIỀU BỘ LỌC HƠN) -->
                 <?php if ($scope['level'] === 'ALL'): ?>
-                    <!-- Admin / Giám đốc: Lọc Khu -> Cụm -> Tòa -->
                     <select id="filterKhuSelect" class="btn-outline" style="min-width: 135px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;" onchange="onKhuChange(this.value)">
                         <option value="">-- Tất cả Khu --</option>
                         <?php foreach ($availableKhus as $k): ?>
@@ -339,7 +322,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     </select>
 
                 <?php elseif ($scope['level'] === 'KHU'): ?>
-                    <!-- Trưởng Khu: Cố định Khu, lọc Cụm -> Tòa -->
                     <select class="btn-outline" style="min-width: 120px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; background: #e2e8f0; color: #475569;" disabled>
                         <option><?= htmlspecialchars($scope['availableKhus'][0]['TenKhu'] ?? ('Khu ' . $scope['maKhu'])) ?></option>
                     </select>
@@ -363,7 +345,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     </select>
 
                 <?php elseif ($scope['level'] === 'CUM'): ?>
-                    <!-- Trưởng Cụm: Cố định Cụm, lọc Tòa -->
                     <select class="btn-outline" style="min-width: 140px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; background: #e2e8f0; color: #475569;" disabled>
                         <option><?= htmlspecialchars($scope['availableCums'][0]['TenCum'] ?? ('Cụm ' . $scope['maCum'])) ?></option>
                     </select>
@@ -378,13 +359,11 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     </select>
 
                 <?php else: ?>
-                    <!-- Trưởng Tòa: Cố định Tòa -->
                     <span class="badge badge-success" style="padding: 8px 14px; font-size: 0.85rem; font-weight: 600;">
                         <?= htmlspecialchars($formatTenToa($toaInfo['TenToaNha'] ?? $maToa, $maToa)) ?>
                     </span>
                 <?php endif; ?>
 
-                <!-- 3. LỌC TẦNG -->
                 <select id="filterRoomFloor" class="btn-outline"
                     style="min-width: 130px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
                     onchange="filterRooms()">
@@ -394,7 +373,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     <?php endfor; ?>
                 </select>
 
-                <!-- 4. LỌC LOẠI PHÒNG -->
                 <select id="filterRoomType" class="btn-outline"
                     style="min-width: 170px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
                     onchange="filterRooms()">
@@ -406,7 +384,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     <?php endforeach; ?>
                 </select>
 
-                <!-- 5. LỌC TRẠNG THÁI -->
                 <select id="filterRoomStatus" class="btn-outline"
                     style="min-width: 140px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
                     onchange="filterRooms()">
@@ -416,7 +393,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     <option value="Bảo trì">Bảo trì</option>
                 </select>
 
-                <!-- 6. NÚT XÓA BỘ LỌC -->
                 <div>
                     <button type="button" class="btn btn-outline btn-sm" onclick="clearRoomFilters()" style="border-radius: 6px; color: #dc2626; border-color: #fecaca; background: #fff; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; padding: 8px 14px;">
                         <i class="fa-solid fa-filter-circle-xmark" style="margin-right: 4px;"></i> Xóa bộ lọc
@@ -424,7 +400,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                 </div>
             </div>
 
-            <!-- BẢNG DANH SÁCH PHÒNG: MỖI PHÒNG LÀ 1 TABLE ROW GỌN GÀNG -->
             <?php if (!empty($phongList)): ?>
                 <div class="table-responsive">
                     <table class="data-table" id="tableStaffRooms">
@@ -479,14 +454,12 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                     data-status="<?= $roomStatus ?>"
                                     style="<?= $isMaintenance ? 'background: #fffbeb;' : '' ?>">
 
-                                    <!-- 1. Mã phòng -->
                                     <td>
                                         <b style="color: var(--primary); font-size: 0.95rem; font-family: monospace;">
                                             <?= htmlspecialchars($p['MaPhong']) ?>
                                         </b>
                                     </td>
 
-                                    <!-- 2. Số phòng & Tầng -->
                                     <td>
                                         <b>Phòng <?= htmlspecialchars($p['SoPhong']) ?></b>
                                         <div style="font-size: 0.75rem; color: var(--text-muted);">
@@ -494,7 +467,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                         </div>
                                     </td>
 
-                                    <!-- 3. Loại phòng & Giá -->
                                     <td>
                                         <div style="font-weight: 600; color: #1e293b; font-size: 0.85rem;">
                                             <?= htmlspecialchars($p['TenLoaiPhong'] ?? 'Tiêu chuẩn') ?>
@@ -504,7 +476,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                         </div>
                                     </td>
 
-                                    <!-- 4. Sĩ số & Tiến độ -->
                                     <td style="vertical-align: middle;">
                                         <div style="min-width: 105px; max-width: 125px;">
                                             <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px;">
@@ -521,10 +492,8 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                         </div>
                                     </td>
 
-                                    <!-- 5. Sơ đồ Giường -->
                                     <td style="vertical-align: middle;">
                                         <?php
-                                        // Kiểm tra số giường đã có người và tổng số giường
                                         $totalBeds = count($beds);
                                         $occupiedBeds = 0;
 
@@ -534,7 +503,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                             }
                                         }
 
-                                        // Phòng FULL khi tất cả giường đều có người
                                         $isRoomFull = ($totalBeds > 0 && $occupiedBeds === $totalBeds);
                                         ?>
 
@@ -547,21 +515,18 @@ $isAllToas = $isAllToas ?? empty($filterToa);
 
                                                 if ($bOccupied) {
                                                     if ($bLeader) {
-                                                        // Giường trưởng phòng: VÀNG
                                                         $pillBg = '#fef3c7';
                                                         $pillColor = '#b45309';
                                                         $pillBorder = '#fde68a';
                                                         $pillIcon = 'fa-solid fa-star';
                                                         $pillTitle = $g['KyHieuGiuong'] . ': ' . ($g['HoVaTen'] ?? 'Sinh viên') . ' (Trưởng phòng)';
                                                     } elseif ($isRoomFull) {
-                                                        // Giường thuộc phòng FULL: XANH LÁ
                                                         $pillBg = '#dcfce7';
                                                         $pillColor = '#15803d';
                                                         $pillBorder = '#bbf7d0';
                                                         $pillIcon = 'fa-solid fa-user';
                                                         $pillTitle = $g['KyHieuGiuong'] . ': ' . ($g['HoVaTen'] ?? 'Sinh viên') . ' (Phòng đã FULL)';
                                                     } else {
-                                                        // Giường đang sử dụng nhưng phòng chưa FULL: XANH DƯƠNG
                                                         $pillBg = '#dbeafe';
                                                         $pillColor = '#1d4ed8';
                                                         $pillBorder = '#bfdbfe';
@@ -569,14 +534,12 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                                         $pillTitle = $g['KyHieuGiuong'] . ': ' . ($g['HoVaTen'] ?? 'Sinh viên') . ' (' . ($g['MSSVTaiTruong'] ?? '') . ')';
                                                     }
                                                 } elseif ($bLocked) {
-                                                    // Giường bảo trì: ĐỎ
                                                     $pillBg = '#fee2e2';
                                                     $pillColor = '#991b1b';
                                                     $pillBorder = '#fecaca';
                                                     $pillIcon = 'fa-solid fa-lock';
                                                     $pillTitle = $g['KyHieuGiuong'] . ': Đang bảo trì';
                                                 } else {
-                                                    // Giường trống: XÁM
                                                     $pillBg = '#f8fafc';
                                                     $pillColor = '#64748b';
                                                     $pillBorder = '#e2e8f0';
@@ -596,7 +559,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                         </div>
                                     </td>
 
-                                    <!-- 6. Trưởng phòng -->
                                     <td style="vertical-align: middle;">
                                         <?php if (!empty($p['TruongPhong'])): ?>
                                             <span style="display: inline-block; padding: 3px 8px; border-radius: 6px; background: #f0fdf4; color: #166534; font-size: 0.8rem; font-weight: 600; border: none;" title="MSSV: <?= htmlspecialchars($p['TruongPhong']) ?>">
@@ -615,7 +577,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                         <?php endif; ?>
                                     </td>
 
-                                    <!-- 7. Trạng thái (BỎ VIỀN 100%) -->
                                     <td style="vertical-align: middle; text-align: center;">
                                         <?php
                                         if ($isMaintenance) {
@@ -637,9 +598,7 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                         </span>
                                     </td>
 
-                                    <!-- 8. Thao tác -->
                                     <td style="text-align: right; white-space: nowrap;">
-                                        <!-- Nút Xem chi tiết giường -->
                                         <button type="button" class="btn btn-outline btn-sm"
                                             style="border-radius: 6px; margin-right: 4px;"
                                             onclick="openBedDetailModal('<?= htmlspecialchars($p['MaPhong']) ?>')"
@@ -647,7 +606,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                             <i class="fa-solid fa-bed" style="margin-right: 4px;"></i> Giường
                                         </button>
 
-                                        <!-- Nút Sửa -->
                                         <button type="button" class="btn btn-outline btn-sm"
                                             style="border-radius: 6px; margin-right: 4px;"
                                             onclick='editRoom(<?= json_encode($p, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)'
@@ -655,7 +613,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                             <i class="fa-solid fa-pen-to-square" style="margin-right: 4px;"></i> Sửa
                                         </button>
 
-                                        <!-- Nút Bảo trì / Mở lại hoạt động -->
                                         <form method="POST" action="<?= url('staff/rooms/toggle-status') ?>" style="display: inline;" onsubmit="return confirm('<?= $isMaintenance ? "Xác nhận mở lại hoạt động cho phòng " . $p['MaPhong'] . "?" : "Xác nhận chuyển phòng " . $p['MaPhong'] . " sang trạng thái Bảo trì?" ?>');">
                                             <?= csrf_field() ?>
                                             <input type="hidden" name="maPhong" value="<?= htmlspecialchars($p['MaPhong']) ?>">
@@ -666,7 +623,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                             </button>
                                         </form>
 
-                                        <!-- Nút Xóa (chỉ hiển thị nếu phòng trống không có sinh viên) -->
                                         <?php if ($occupied === 0): ?>
                                             <button type="button" class="btn btn-outline btn-sm"
                                                 style="border-radius: 6px; color: #dc2626; border-color: #fecaca; background: #fff;"
@@ -682,7 +638,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     </table>
                 </div>
 
-                <!-- THANH PHÂN TRANG (PAGINATION CONTROLS NHƯ USERS) -->
                 <div id="roomPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
                     <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
                         <span id="roomPaginationInfo" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
@@ -701,7 +656,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     </div>
 
                     <div id="roomPaginationControls" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
-                        <!-- Sẽ được sinh động bằng Javascript -->
                     </div>
                 </div>
             <?php else: ?>
@@ -709,9 +663,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
             <?php endif; ?>
         </div>
 
-        <!-- ========================================================================= -->
-        <!-- MODAL IMPORT DANH SÁCH PHÒNG TỪ FILE CSV (GIỐNG MẪU USERS) -->
-        <!-- ========================================================================= -->
         <div id="importRoomModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 20px 16px; box-sizing: border-box; overflow-y: auto;">
             <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 620px; max-height: calc(100vh - 40px); display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
                 <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; flex-shrink: 0;">
@@ -781,12 +732,8 @@ $isAllToas = $isAllToas ?? empty($filterToa);
             </div>
         </div>
 
-        <!-- ========================================================================= -->
-        <!-- MODAL CHI TIẾT SƠ ĐỒ GIƯỜNG & LƯU TRÚ (BED DETAILS & MANAGEMENT MODAL) -->
-        <!-- ========================================================================= -->
         <div id="bedDetailModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;">
             <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 1000px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
-                <!-- Header -->
                 <div style="padding: 16px 22px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc;">
                     <div style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">
                         <span>Chi tiết Giường & Sinh viên cư trú - Phòng <span id="modalBedRoomCode" style="color: var(--primary);"></span></span>
@@ -796,13 +743,10 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     </button>
                 </div>
 
-                <!-- Body (Scrollable) -->
                 <div style="padding: 20px; overflow-y: auto; flex: 1;">
                     <div id="modalBedRoomSummary" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin-bottom: 18px; font-size: 0.85rem; color: #334155; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                        <!-- Sinh bằng JS -->
                     </div>
 
-                    <!-- Bảng các giường -->
                     <div class="table-responsive" style="margin-bottom: 20px;">
                         <table class="data-table" style="margin: 0; font-size: 0.85rem;">
                             <thead>
@@ -819,12 +763,10 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                 </tr>
                             </thead>
                             <tbody id="modalBedTableBody">
-                                <!-- Sinh bằng JS -->
                             </tbody>
                         </table>
                     </div>
 
-                    <!-- Form Thêm giường phụ nhanh -->
                     <div id="addBedBoxWrapper" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px;">
                         <div id="addBedBoxHeader" style="font-weight: 700; font-size: 0.85rem; color: #1e293b; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
                             <i class="fa-solid fa-plus-circle" style="color: var(--primary);"></i>
@@ -855,7 +797,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     </div>
                 </div>
 
-                <!-- Footer -->
                 <div style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: flex-end;">
                     <button type="button" class="btn btn-outline" onclick="closeBedDetailModal()" style="border-radius: 6px; padding: 7px 18px;">
                         Đóng
@@ -864,7 +805,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
             </div>
         </div>
 
-        <!-- MODAL XÁC NHẬN XÓA PHÒNG -->
         <div id="modalDeleteRoom" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); z-index: 999999; align-items: center; justify-content: center; padding: 16px;">
             <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 480px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); overflow: hidden; margin: auto;">
                 <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #fef2f2;">
@@ -896,7 +836,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
             </div>
         </div>
 
-        <!-- MODAL XÁC NHẬN XÓA SINH VIÊN KHỎI GIƯỜNG -->
         <div id="modalRemoveStudent" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(2px); z-index: 1000001; align-items: center; justify-content: center; padding: 16px;">
             <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); overflow: hidden; margin: auto; border: 1px solid #fecaca;">
                 <div style="padding: 16px 20px; border-bottom: 1px solid #fee2e2; display: flex; justify-content: space-between; align-items: center; background: #fef2f2;">
@@ -946,9 +885,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
             </div>
         </div>
 
-        <!-- ========================================================================= -->
-        <!-- MODAL CẬP NHẬT THÔNG TIN TÒA NHÀ (RU TÒA NHÀ) -->
-        <!-- ========================================================================= -->
         <div id="modalUpdateToa" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 20px 16px; box-sizing: border-box;">
             <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 540px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
                 <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc;">
@@ -1025,7 +961,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
             </div>
         </div>
 
-        <!-- JAVASCRIPT XỬ LÝ PHÂN TRANG, BỘ LỌC, EXPORT, IMPORT VÀ MODAL GIƯỜNG -->
         <script>
             const currentMaToa = <?= json_encode($maToa) ?>;
             const currentScopeLevel = <?= json_encode($scope['level'] ?? 'TOA') ?>;
@@ -1110,9 +1045,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                 updateRoomCodePreview();
             }
 
-            // =========================================================================
-            // 1. PHÂN TRANG VÀ LỌC TÌM KIẾM PHÒNG (REAL-TIME PAGINATION & FILTER)
-            // =========================================================================
             let roomCurrentPage = 1;
             let roomPageSize = 10;
             let roomMatchedRows = [];
@@ -1152,7 +1084,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     }
                 });
 
-                // Xử lý dòng thông báo khi không có kết quả
                 let noResultRow = document.getElementById('noRoomSearchResult');
                 if (roomMatchedRows.length === 0 && allRows.length > 0) {
                     if (!noResultRow) {
@@ -1188,7 +1119,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     }
                 });
 
-                // Cập nhật thông tin phân trang
                 const infoEl = document.getElementById('roomPaginationInfo');
                 if (infoEl) {
                     if (total === 0) {
@@ -1205,7 +1135,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     totalBadge.innerText = total + ' phòng';
                 }
 
-                // Cập nhật số lượng trên nút Xuất Excel
                 const exportBtnText = document.getElementById('btnExportText');
                 if (exportBtnText) {
                     const allRoomRows = document.querySelectorAll('#roomTableBody tr.room-row');
@@ -1216,7 +1145,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     }
                 }
 
-                // Cập nhật các nút phân trang
                 const controlsEl = document.getElementById('roomPaginationControls');
                 if (!controlsEl) return;
 
@@ -1227,15 +1155,12 @@ $isAllToas = $isAllToas ?? empty($filterToa);
 
                 let html = '';
 
-                // Nút Đầu (<<)
                 const disabledFirst = roomCurrentPage === 1 ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : 'style="padding: 5px 9px; border-radius: 6px;"';
                 html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRoomPage(1)" ${disabledFirst} title="Trang đầu"><i class="fa-solid fa-angles-left"></i></button>`;
 
-                // Nút Trước (<)
                 const disabledPrev = roomCurrentPage === 1 ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : 'style="padding: 5px 9px; border-radius: 6px;"';
                 html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRoomPage(${roomCurrentPage - 1})" ${disabledPrev} title="Trang trước"><i class="fa-solid fa-angle-left"></i></button>`;
 
-                // Các nút số trang (hiển thị thông minh)
                 let startPage = Math.max(1, roomCurrentPage - 2);
                 let endPage = Math.min(totalPages, roomCurrentPage + 2);
 
@@ -1261,11 +1186,9 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRoomPage(${totalPages})" style="padding: 5px 10px; border-radius: 6px;">${totalPages}</button>`;
                 }
 
-                // Nút Sau (>)
                 const disabledNext = roomCurrentPage === totalPages ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : 'style="padding: 5px 9px; border-radius: 6px;"';
                 html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRoomPage(${roomCurrentPage + 1})" ${disabledNext} title="Trang sau"><i class="fa-solid fa-angle-left fa-rotate-180"></i></button>`;
 
-                // Nút Cuối (>>)
                 const disabledLast = roomCurrentPage === totalPages ? 'disabled style="opacity: 0.45; cursor: not-allowed; padding: 5px 9px; border-radius: 6px;"' : 'style="padding: 5px 9px; border-radius: 6px;"';
                 html += `<button type="button" class="btn btn-outline btn-sm" onclick="goToRoomPage(${totalPages})" ${disabledLast} title="Trang cuối"><i class="fa-solid fa-angles-right"></i></button>`;
 
@@ -1306,9 +1229,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                 filterRooms();
             }
 
-            // =========================================================================
-            // 2. XUẤT FILE CSV THEO ĐÚNG KẾT QUẢ ĐANG LỌC (GIỐNG MẪU USERS)
-            // =========================================================================
             function exportFilteredRooms() {
                 if (!roomMatchedRows || roomMatchedRows.length === 0) {
                     alert('Không có phòng nào phù hợp với bộ lọc hiện tại để xuất file!');
@@ -1353,9 +1273,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                 form.submit();
             }
 
-            // =========================================================================
-            // 3. QUẢN LÝ BIỂU MẪU THÊM MỚI / CHỈNH SỬA PHÒNG (#roomFormCard)
-            // =========================================================================
             function toggleRoomForm() {
                 const card = document.getElementById('roomFormCard');
                 if (card.style.display === 'none' || card.style.display === '') {
@@ -1461,7 +1378,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                 document.getElementById('btnSubmitRoomText').innerText = 'Lưu cập nhật phòng';
                 document.getElementById('roomAutoBedNotice').style.display = 'none';
 
-                // Nạp danh sách sinh viên đang cư trú vào dropdown chọn Trưởng phòng
                 const tpBox = document.getElementById('roomTruongPhongBox');
                 const tpSelect = document.getElementById('roomTruongPhong');
                 const beds = bedsData[room.MaPhong] || [];
@@ -1486,9 +1402,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                 });
             }
 
-            // =========================================================================
-            // 4. MODAL CHI TIẾT SƠ ĐỒ GIƯỜNG & CƯ TRÚ THEO PHÒNG (#bedDetailModal)
-            // =========================================================================
             function openBedDetailModal(maPhong) {
                 const room = roomsData.find(r => r.MaPhong === maPhong);
                 const beds = bedsData[maPhong] || [];
@@ -1498,7 +1411,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
 
                 const maxCap = room ? parseInt(room.SoGiuongToiDa || 4) : 4;
 
-                // RÀNG BUỘC: Kiểm tra số giường tối đa theo Loại phòng
                 const addBedForm = document.getElementById('addBedForm');
                 const addBedHeader = document.getElementById('addBedBoxHeader');
                 const maxNotice = document.getElementById('addBedMaxNotice');
@@ -1518,7 +1430,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                     document.getElementById('addBedModalFormKyHieu').value = 'G' + (beds.length + 1);
                 }
 
-                // Summary info
                 const summaryEl = document.getElementById('modalBedRoomSummary');
                 const occupied = room ? parseInt(room.SoSVDangO || 0) : 0;
                 const fillPercent = maxCap > 0 ? Math.round((occupied / maxCap) * 100) : 0;
@@ -1545,7 +1456,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
 
                 summaryEl.innerHTML = summaryHtml;
 
-                // Bảng giường
                 const tbody = document.getElementById('modalBedTableBody');
                 if (beds.length === 0) {
                     tbody.innerHTML = `
@@ -1567,18 +1477,15 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                         const rowBg = isLocked ? 'background:#fffbeb;' : (isOccupied ? 'background:#ffffff;' : 'background:#fafafa;');
 
                         html += `<tr style="${rowBg}">`;
-                        // Mã giường
                         html += `
                             <td>
                                 <b style="color: #0f172a;">${g.KyHieuGiuong}</b>
                                 <div style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">${g.MaGiuong}</div>
                             </td>
                         `;
-                        // Tầng giường
                         html += `<td>${parseInt(g.ViTriTangGiuong) === 2 ? 'Tầng 2 (Trên)' : 'Tầng 1 (Dưới)'}</td>`;
 
                         if (isOccupied) {
-                            // SV lưu trú
                             html += `
                                 <td>
                                     <b>${g.HoVaTen || 'Sinh viên'}</b>
@@ -1602,7 +1509,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                     <div style="display: flex; gap: 4px; justify-content: flex-end; flex-wrap: wrap;">
                             `;
 
-                            // Nút nhận phòng thực tế
                             if (!isCheckedIn && g.MaHopDong) {
                                 html += `
                                     <form method="POST" action="<?= url('staff/rooms/confirm-checkin') ?>" style="display:inline;" onsubmit="return confirm('Xác nhận sinh viên ${g.HoVaTen} đã đến nhận phòng thực tế?');">
@@ -1615,7 +1521,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                 `;
                             }
 
-                            // Nút gán/hủy Trưởng phòng
                             if (isLeader) {
                                 html += `
                                     <form method="POST" action="<?= url('staff/rooms/assign-leader') ?>" style="display:inline;" onsubmit="return confirm('Xác nhận hủy vai trò Trưởng phòng của sinh viên ${g.HoVaTen}?');">
@@ -1641,7 +1546,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                 `;
                             }
 
-                            // Nút toggle CT01
                             if (g.MaHopDong) {
                                 html += `
                                     <form method="POST" action="<?= url('staff/rooms/toggle-ct01') ?>" style="display:inline;">
@@ -1655,7 +1559,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                                 `;
                             }
 
-                            // Nút Xóa sinh viên khỏi giường (Mở Modal xác nhận)
                             const safeHoTen = (g.HoVaTen || 'Sinh viên').replace(/'/g, "\\'");
                             const safeMssv = (g.MSSVTaiTruong || g.MaSinhVien || '').replace(/'/g, "\\'");
                             const safeTruong = (g.TenTruong || 'ĐHQG-HCM').replace(/'/g, "\\'");
@@ -1672,7 +1575,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
 
                             html += `</div></td>`;
                         } else {
-                            // Giường trống / bảo trì
                             html += `
                                 <td colspan="4" style="color: var(--text-muted); font-style: italic;">
                                     ${isLocked ? '<span style="color:#d97706; font-weight:600;"><i class="fa-solid fa-lock"></i> Giường đang bảo trì</span>' : 'Giường trống'}
@@ -1737,9 +1639,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                 if (el) el.style.display = 'none';
             }
 
-            // =========================================================================
-            // 5. CÁC HÀM XỬ LÝ MODAL KHÁC
-            // =========================================================================
             function openImportRoomModal() {
                 document.getElementById('importRoomModal').style.display = 'flex';
             }
@@ -1773,7 +1672,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                 if (el) el.style.display = 'none';
             }
 
-            // Phím Escape để đóng modal (ưu tiên modal xác nhận trên cùng trước)
             window.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
                     const removeModal = document.getElementById('modalRemoveStudent');
@@ -1791,7 +1689,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                 }
             });
 
-            // Đóng modal khi click ra ngoài vùng backdrop
             window.addEventListener('click', function(e) {
                 const importModal = document.getElementById('importRoomModal');
                 if (e.target === importModal) {
@@ -1811,7 +1708,6 @@ $isAllToas = $isAllToas ?? empty($filterToa);
                 }
             });
 
-            // Khởi tạo phân trang và lọc khi trang được tải xong
             document.addEventListener('DOMContentLoaded', function() {
                 filterRooms();
             });

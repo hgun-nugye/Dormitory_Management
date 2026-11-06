@@ -734,28 +734,7 @@ class DisciplineController extends Controller
      */
     public function history(): void
     {
-        header('Content-Type: application/json; charset=utf-8');
-
-        $user = Auth::user();
-        $scope = $this->getStaffScope($user);
-
-        if (!$scope['isAllowed']) {
-            echo json_encode(['success' => false, 'message' => 'Từ chối quyền truy cập!']);
-            exit;
-        }
-
-        $maSinhVien = trim($_GET['sv'] ?? '');
-        $namHoc = trim($_GET['nam'] ?? '2026-2027');
-        $hocKy = (int)($_GET['hk'] ?? 1);
-
-        if (empty($maSinhVien)) {
-            echo json_encode(['success' => false, 'message' => 'Thiếu mã sinh viên']);
-            exit;
-        }
-
-        $data = AttendanceDisciplineService::getStudentDisciplineHistory($maSinhVien, $namHoc, $hocKy);
-        echo json_encode(['success' => true, 'data' => $data], JSON_UNESCAPED_UNICODE);
-        exit;
+        (new \App\Controllers\Api\DisciplineApiController())->history();
     }
 
     /**
@@ -799,9 +778,7 @@ class DisciplineController extends Controller
             if (!empty($toaParam) && $toaParam !== 'all') $filterToa = $toaParam;
         }
 
-        // =====================================================================
-        // TRƯỜNG HỢP 1: TAB CẢNH BÁO VẮNG MẶT > 30 NGÀY
-        // =====================================================================
+        // Trường hợp 1: Tab Cảnh báo vắng mặt > 30 ngày
         if ($tab === 'canh-bao') {
             $absenceData = AttendanceDisciplineService::detectLongTermAbsence(30, $filterCum, $filterToa, $filterKhu);
             $warnings = $absenceData['warnings'] ?? [];
@@ -838,9 +815,7 @@ class DisciplineController extends Controller
             exit;
         }
 
-        // =====================================================================
-        // TRƯỜNG HỢP 2: TAB NHẬT KÝ QUÉT THẺ BARRIER
-        // =====================================================================
+        // Trường hợp 2: Tab Nhật ký quét thẻ Barrier
         if ($tab === 'barrier') {
             $search = trim($_GET['search'] ?? '');
             $huongDi = trim($_GET['huongDi'] ?? '');
@@ -884,9 +859,7 @@ class DisciplineController extends Controller
             exit;
         }
 
-        // =====================================================================
-        // TRƯỜNG HỢP 3: TAB ĐIỂM RÈN LUYỆN NỘI TRÚ (MẶC ĐỊNH)
-        // =====================================================================
+        // Trường hợp 3: Tab Điểm rèn luyện nội trú (Mặc định)
         $data = AttendanceDisciplineService::exportTrainingPointsByUniversity($hocKy, $namHoc, !empty($maTruong) ? $maTruong : null);
 
         $fileName = "BaoCao_DiemRenLuyen_HK{$hocKy}_{$namHoc}_" . date('Ymd_His') . ".csv";

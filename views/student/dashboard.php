@@ -7,7 +7,6 @@ $hoSoDangKy = $hoSoDangKy ?? null;
 $hoaDons = $hoaDons ?? [];
 $phieuBaoHong = $phieuBaoHong ?? [];
 
-// Calculate unpaid bills and days remaining in contract
 $unpaidCount = 0;
 $totalUnpaid = 0;
 foreach ($hoaDons as $hd) {
@@ -26,32 +25,13 @@ if (!empty($hopDong['NgayKetThuc'])) {
 }
 ?>
 
-<style>
-.student-dashboard{padding-bottom:32px}
-.student-dashboard .student-welcome{position:relative;overflow:hidden;border:1px solid #d9e8f3!important;border-radius:18px;background:linear-gradient(120deg,#fff 0%,#f3f9fd 68%,#eaf5fb 100%)!important;box-shadow:0 12px 30px rgba(20,61,91,.07)!important}
-.student-dashboard .student-welcome:after{content:"";position:absolute;right:-48px;top:-100px;width:240px;height:240px;border:1px solid rgba(23,105,170,.12);border-radius:50%;box-shadow:0 0 0 26px rgba(23,105,170,.035),0 0 0 54px rgba(23,105,170,.025);pointer-events:none}
-.student-dashboard .student-welcome>div{position:relative;z-index:1}
-.student-dashboard .student-welcome>div>div:first-child>div:first-child{box-shadow:0 5px 14px rgba(23,105,170,.12)}
-.student-dashboard .student-kpis{gap:16px!important}
-.student-dashboard .student-kpis .stat-card{min-height:136px;border:1px solid #e3eaf1;border-top-width:3px!important;border-radius:14px;box-shadow:0 5px 17px rgba(19,48,72,.04);transition:transform .18s ease,box-shadow .18s ease}
-.student-dashboard .student-kpis .stat-card:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(19,48,72,.09)}
-.student-dashboard .card{border-radius:14px;box-shadow:0 5px 17px rgba(19,48,72,.045)}
-.student-dashboard .card-title{padding-bottom:13px;border-bottom:1px solid #edf1f5}
-.student-dashboard .data-table tbody tr:hover{background:#f5faff}
-.student-dashboard .action-item{border:1px solid #e4ebf2!important;border-radius:12px!important;background:linear-gradient(110deg,#fff,#f9fbfd);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
-.student-dashboard .action-item:hover{transform:translateY(-2px);border-color:#bdd6e9!important;box-shadow:0 8px 18px rgba(23,65,96,.08)}
-@media(max-width:700px){.student-dashboard{padding:0 14px 24px}.student-dashboard .student-welcome{padding:20px!important}.student-dashboard .student-kpis .stat-card{min-height:116px}.student-dashboard .card{padding:17px}.student-dashboard .table-responsive{overflow-x:auto}}
-</style>
-
 <div class="container student-dashboard">
-    <!-- Breadcrumb -->
     <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
         <a href="<?= url('/') ?>" style="color: var(--text-muted); text-decoration: none;"><i class="fa-solid fa-house"></i> Trang chủ</a>
         <span>/</span>
         <span style="color: var(--text-primary); font-weight: 600;">Cổng thông tin sinh viên</span>
     </div>
 
-    <!-- Student Welcome Banner -->
     <div class="card student-welcome" style="margin-bottom: 24px; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);  box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
             <div style="display: flex; align-items: center; gap: 18px;">
@@ -85,9 +65,7 @@ if (!empty($hopDong['NgayKetThuc'])) {
         </div>
     </div>
 
-    <!-- 4 KPI Stat Cards -->
     <div class="grid grid-cols-4 student-kpis" style="margin-bottom: 24px;">
-        <!-- Stat 1: Chỗ ở -->
         <div class="card stat-card" style="border-top: 3px solid #3b82f6;">
             <span class="stat-label"><i class="fa-solid fa-bed" style="color: #3b82f6; margin-right: 6px;"></i> Phòng & Giường</span>
             <div class="stat-val" style="font-size: 1.4rem;">
@@ -102,7 +80,6 @@ if (!empty($hopDong['NgayKetThuc'])) {
             </span>
         </div>
 
-        <!-- Stat 2: Hợp đồng -->
         <div class="card stat-card" style="border-top: 3px solid #10b981;">
             <span class="stat-label"><i class="fa-solid fa-file-contract" style="color: #10b981; margin-right: 6px;"></i> Hợp đồng lưu trú</span>
             <div class="stat-val" style="font-size: 1.4rem; color: #10b981;">
@@ -123,7 +100,6 @@ if (!empty($hopDong['NgayKetThuc'])) {
             </span>
         </div>
 
-        <!-- Stat 3: Công nợ lệ phí -->
         <div class="card stat-card" style="border-top: 3px solid <?= $unpaidCount > 0 ? '#ef4444' : '#10b981' ?>;">
             <span class="stat-label"><i class="fa-solid fa-receipt" style="color: <?= $unpaidCount > 0 ? '#ef4444' : '#10b981' ?>; margin-right: 6px;"></i> Lệ phí cần nộp</span>
             <div class="stat-val" style="font-size: 1.4rem; color: <?= $unpaidCount > 0 ? '#b91c1c' : '#15803d' ?>;">
@@ -134,7 +110,6 @@ if (!empty($hopDong['NgayKetThuc'])) {
             </span>
         </div>
 
-        <!-- Stat 4: Yêu cầu & Báo hỏng -->
         <div class="card stat-card" style="border-top: 3px solid #8b5cf6;">
             <span class="stat-label"><i class="fa-solid fa-screwdriver-wrench" style="color: #8b5cf6; margin-right: 6px;"></i> Báo hỏng & Sự cố</span>
             <div class="stat-val" style="font-size: 1.4rem; color: #7c3aed;">
@@ -146,11 +121,8 @@ if (!empty($hopDong['NgayKetThuc'])) {
         </div>
     </div>
 
-    <!-- Main Content 2 Columns -->
     <div class="grid grid-cols-2" style="margin-bottom: 24px;">
-        <!-- COLUMN 1: ROOM & INVOICES -->
         <div style="display: flex; flex-direction: column; gap: 24px;">
-            <!-- Room & Contract Details -->
             <div class="card">
                 <div class="card-title">
                     <span>Thông tin chỗ ở hiện tại</span>
@@ -217,7 +189,6 @@ if (!empty($hopDong['NgayKetThuc'])) {
                 <?php endif; ?>
             </div>
 
-            <!-- Invoices List -->
             <div class="card">
                 <div class="card-title">
                     <span>Hóa đơn lệ phí & dịch vụ</span>
@@ -266,9 +237,7 @@ if (!empty($hopDong['NgayKetThuc'])) {
             </div>
         </div>
 
-        <!-- COLUMN 2: SERVICES & REPAIRS -->
         <div style="display: flex; flex-direction: column; gap: 24px;">
-            <!-- Quick Actions Service -->
             <div class="card">
                 <div class="card-title">
                     <span>Dịch vụ một cửa trực tuyến</span>
@@ -324,7 +293,6 @@ if (!empty($hopDong['NgayKetThuc'])) {
                 </div>
             </div>
 
-            <!-- Maintenance & Repair Tickets -->
             <div class="card">
                 <div class="card-title">
                     <span>Phiếu báo hỏng kỹ thuật</span>

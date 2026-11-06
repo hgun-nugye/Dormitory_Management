@@ -74,7 +74,7 @@ class UniversityController extends Controller
 
         try {
             if ($isEdit === 1) {
-                // ==================== CẬP NHẬT (UPDATE) ====================
+                // Cập nhật (Update)
                 $existing = Database::fetch("SELECT * FROM TruongDaiHoc WHERE MaTruong = :ma", ['ma' => $maTruong]);
                 if (!$existing) {
                     Session::flash('error', "Không tìm thấy trường Đại học '{$maTruong}' để cập nhật!");
@@ -96,7 +96,7 @@ class UniversityController extends Controller
 
                 Session::flash('success', "Đã cập nhật thông tin trường Đại học '{$tenTruong}' ({$maTruong}) thành công!");
             } else {
-                // ==================== THÊM MỚI (CREATE) ====================
+                // Thêm mới (Create)
                 $dup = Database::fetch("SELECT MaTruong FROM TruongDaiHoc WHERE MaTruong = :ma", ['ma' => $maTruong]);
                 if ($dup) {
                     Session::flash('error', "Mã trường '{$maTruong}' đã tồn tại trong hệ thống. Vui lòng chọn mã khác!");

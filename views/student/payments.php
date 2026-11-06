@@ -12,21 +12,18 @@ $latestUtility = !empty($chiSoDienNuoc) ? $chiSoDienNuoc[0] : null;
 ?>
 
 <div class="container">
-    <!-- Breadcrumb -->
     <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
         <a href="<?= url('/') ?>" style="color: var(--text-muted); text-decoration: none;">Trang chủ</a>
         <span>/</span>
         <span style="color: var(--text-primary); font-weight: 600;">Thông tin thanh toán</span>
     </div>
 
-    <!-- Page Header -->
     <div class="page-header">
         <div>
             <h1 class="page-title">Thông tin thanh toán</h1>
         </div>
     </div>
 
-    <!-- 3 Summary KPI Cards -->
     <div class="grid grid-cols-4" style="margin-bottom: 24px;">
         <div class="card stat-card" style="border-top: 3px solid <?= $tongCongNo > 0 ? '#ef4444' : '#10b981' ?>;">
             <span class="stat-label">Tổng công nợ hiện tại</span>
@@ -73,7 +70,6 @@ $latestUtility = !empty($chiSoDienNuoc) ? $chiSoDienNuoc[0] : null;
         </div>
     </div>
 
-    <!-- KHỐI 1: DANH SÁCH HÓA ĐƠN -->
     <div class="card" style="margin-bottom: 24px;">
         <div class="card-title">
             <span>Danh sách hóa đơn lệ phí</span>
@@ -136,14 +132,12 @@ $latestUtility = !empty($chiSoDienNuoc) ? $chiSoDienNuoc[0] : null;
             </table>
         </div>
 
-        <!-- Thanh phân trang hóa đơn (5 mục / trang) -->
         <div id="invoicePaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
             <span id="invoicePaginationInfo" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;"></span>
             <div id="invoicePaginationControls" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;"></div>
         </div>
     </div>
 
-    <!-- KHỐI 2: CHỈ SỐ ĐIỆN NƯỚC CỦA PHÒNG -->
     <div class="card" style="margin-bottom: 24px;">
         <div class="card-title">
             <span>Bảng theo dõi điện - nước phòng ở định kỳ</span>
@@ -199,7 +193,6 @@ $latestUtility = !empty($chiSoDienNuoc) ? $chiSoDienNuoc[0] : null;
         </div>
     </div>
 
-    <!-- KHỐI 3: LỊCH SỬ GIAO DỊCH THANH TOÁN -->
     <div class="card">
         <div class="card-title">
             <span>Lịch sử giao dịch thanh toán đã ghi nhận</span>
@@ -246,7 +239,6 @@ $latestUtility = !empty($chiSoDienNuoc) ? $chiSoDienNuoc[0] : null;
         </div>
     </div>
 
-    <!-- KHỐI 4: HƯỚNG DẪN CHUYỂN KHOẢN THANH TOÁN -->
     <div id="payment-instruction" class="card" style="margin-top: 24px; background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%); border: 1px solid #bfdbfe;">
         <div class="card-title">
             <span style="color: #1e40af;">
@@ -255,7 +247,6 @@ $latestUtility = !empty($chiSoDienNuoc) ? $chiSoDienNuoc[0] : null;
         </div>
 
         <div class="payment-info-grid" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: stretch;">
-            <!-- KHUNG 1: THÔNG TIN TÀI KHOẢN -->
             <div class="payment-info-box" style="padding: 18px; background: #ffffff; border: 1px solid #dbeafe; border-radius: 10px; font-size: 0.875rem; color: var(--text-secondary); line-height: 1.7; display: flex; flex-direction: column;">
                 <div style="font-weight: 700; color: #1e40af; margin-bottom: 12px;">Thông tin tài khoản thụ hưởng</div>
                 <p style="margin: 0 0 12px;">Sinh viên thanh toán lệ phí nội trú và tiền điện nước theo thông tin tài khoản chuyên thu chính thức:</p>
@@ -272,7 +263,6 @@ $latestUtility = !empty($chiSoDienNuoc) ? $chiSoDienNuoc[0] : null;
                 </div>
             </div>
 
-            <!-- KHUNG 2: LƯU Ý ĐỐI SOÁT -->
             <div class="payment-info-box" style="padding: 18px; background: #ffffff; border: 1px solid #dbeafe; border-radius: 10px; font-size: 0.875rem; color: var(--text-secondary); line-height: 1.7; display: flex; flex-direction: column;">
                 <div style="font-weight: 700; color: #1e40af; margin-bottom: 12px;">Lưu ý đối soát giao dịch</div>
                 <div style="background: #f8fafc; padding: 14px 16px; border-radius: 8px; border: 1px solid #dbeafe; flex: 1;">
@@ -285,14 +275,6 @@ $latestUtility = !empty($chiSoDienNuoc) ? $chiSoDienNuoc[0] : null;
             </div>
         </div>
     </div>
-
-    <style>
-        @media (max-width: 768px) {
-            .payment-info-grid {
-                grid-template-columns: 1fr !important;
-            }
-        }
-    </style>
 </div>
 
 <script>
@@ -306,7 +288,6 @@ $latestUtility = !empty($chiSoDienNuoc) ? $chiSoDienNuoc[0] : null;
         const controlsEl = document.getElementById('invoicePaginationControls');
         const barEl = document.getElementById('invoicePaginationBar');
 
-        // Nếu số lượng hóa đơn <= 5, hiển thị trọn vẹn và ẩn thanh nút phân trang
         if (total <= INVOICES_PER_PAGE) {
             rows.forEach(row => {
                 row.style.display = '';

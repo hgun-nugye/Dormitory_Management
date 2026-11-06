@@ -3,7 +3,6 @@ ob_start();
 ?>
 
 <div class="container">
-    <!-- Breadcrumb & Header -->
     <div style="margin-bottom: 20px;">
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('staff/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">BQL Cụm KTX</a>
@@ -21,7 +20,6 @@ ob_start();
                     </span>
                 </p>
             </div>
-            <!-- CÁC NÚT THAO TÁC HEADER (GIỐNG PHÒNG VÀ USERS: IMPORT, EXPORT, TEMPLATE) -->
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                 <button type="button" class="btn btn-outline" onclick="openImportZoneModal()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #2563eb; border-color: #bfdbfe; background: #eff6ff;" title="Nhập danh sách phòng từ file CSV">
                     <i class="fa-solid fa-file-import"></i> Nhập file
@@ -36,7 +34,6 @@ ob_start();
         </div>
     </div>
 
-    <!-- FLASH MESSAGES -->
     <?php if (!empty($flashSuccess)): ?>
         <div class="alert alert-success" style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
             <i class="fa-solid fa-circle-check" style="margin-right: 6px;"></i> <b>Thành công:</b> <?= $flashSuccess ?>
@@ -55,7 +52,6 @@ ob_start();
         </div>
     <?php endif; ?>
 
-    <!-- TABS ĐIỀU HƯỚNG SUB-TABS HẠ TẦNG -->
     <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; flex-wrap: wrap;">
         <button type="button" class="tab-btn active" id="tabBtnPhong" onclick="switchZoneTab('phong')" style="background:none; border:none; padding: 10px 18px; font-size: 0.95rem; font-weight: 700; cursor: pointer; border-radius: 8px; color: var(--primary); background: #eff6ff;">
             Danh mục Phòng ở (<span id="tabCountPhong"><?= count($phongList ?? []) ?></span>)
@@ -110,12 +106,8 @@ ob_start();
         </button>
     </div>
 
-    <!-- ===================================================================== -->
-    <!-- TAB 1: DANH MỤC PHÒNG Ở & FORM THÊM / SỬA PHÒNG -->
-    <!-- ===================================================================== -->
     <div id="tabContentPhong" style="display: block;">
 
-        <!-- FORM THÊM / SỬA PHÒNG Ở (ẨN MẶC ĐỊNH, HIỂN THỊ KHI BẤM THÊM / SỬA) -->
         <div class="card" id="cardFormRoom" style="display: none; margin-bottom: 24px; border: 2px solid #bfdbfe; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);">
             <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
                 <div id="titleFormRoom" style="font-weight: 700; color: #1e3a8a; font-size: 1.05rem;">
@@ -224,7 +216,6 @@ ob_start();
             </form>
         </div>
 
-        <!-- BẢNG DANH SÁCH PHÒNG Ở: CÁC THANH, FILTER NẰM TRONG DIV CARD VỚI TABLE VÀ PHÂN TRANG -->
         <div class="card" style="margin-bottom: 24px;">
             <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -240,9 +231,7 @@ ob_start();
                 </div>
             </div>
 
-            <!-- THANH TÌM KIẾM VÀ LỌC ĐA TIÊU CHÍ NẰM TRONG DIV CARD VỚI TABLE (GIỐNG PHÒNG) -->
             <div style="display: flex; align-items: center; gap: 12px; margin: 0 0 20px; flex-wrap: wrap; background: #f8fafc; padding: 14px 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                <!-- 1. TÌM KIẾM TỪ KHÓA -->
                 <div style="position: relative; flex: 1; min-width: 240px; max-width: 380px;">
                     <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
                     <input type="text" id="searchRoomInput" class="btn-outline"
@@ -251,7 +240,6 @@ ob_start();
                         oninput="filterRooms()">
                 </div>
 
-                <!-- 2. LỌC CỤM NHÀ -->
                 <select id="filterSelectCum" class="btn-outline"
                     style="min-width: 170px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
                     onchange="onCascadeCumChange()">
@@ -263,7 +251,6 @@ ob_start();
                     <?php endforeach; ?>
                 </select>
 
-                <!-- 3. LỌC TÒA NHÀ (CASCADE THEO CỤM) -->
                 <select id="filterSelectToa" class="btn-outline"
                     style="min-width: 170px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
                     onchange="onCascadeToaChange()">
@@ -275,7 +262,6 @@ ob_start();
                     <?php endforeach; ?>
                 </select>
 
-                <!-- 4. LỌC TẦNG -->
                 <select id="filterRoomFloor" class="btn-outline"
                     style="min-width: 140px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
                     onchange="filterRooms()">
@@ -285,7 +271,6 @@ ob_start();
                     <?php endfor; ?>
                 </select>
 
-                <!-- 5. LỌC LOẠI PHÒNG -->
                 <select id="filterRoomType" class="btn-outline"
                     style="min-width: 170px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
                     onchange="filterRooms()">
@@ -297,7 +282,6 @@ ob_start();
                     <?php endforeach; ?>
                 </select>
 
-                <!-- 6. LỌC TRẠNG THÁI -->
                 <select id="filterRoomStatus" class="btn-outline"
                     style="min-width: 160px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
                     onchange="filterRooms()">
@@ -307,7 +291,6 @@ ob_start();
                     <option value="Bảo trì">Bảo trì</option>
                 </select>
 
-                <!-- 7. NÚT XÓA BỘ LỌC -->
                 <div>
                     <button type="button" class="btn btn-outline btn-sm" onclick="clearRoomFilters()" style="border-radius: 6px; color: #dc2626; border-color: #fecaca; background: #fff; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; padding: 8px 14px;">
                         <i class="fa-solid fa-filter-circle-xmark" style="margin-right: 4px;"></i> Xóa bộ lọc
@@ -337,7 +320,6 @@ ob_start();
                                 $occupied = (int)($p['SoSVDangO'] ?? 0);
                                 $beds = $giuongByPhong[$p['MaPhong']] ?? [];
 
-                                // Kiểm tra số giường đã có người và tổng số giường
                                 $totalBeds = count($beds);
                                 $occupiedBeds = 0;
 
@@ -350,11 +332,8 @@ ob_start();
                                     }
                                 }
 
-                                // Phòng FULL khi tất cả giường hiện có đều có người
                                 $isRoomFull = ($totalBeds > 0 && $occupiedBeds === $totalBeds);
 
-
-                                // Đếm số giường theo trạng thái
                                 $emptyBedsCount = 0;
                                 $maintenanceBedsCount = 0;
                                 foreach ($beds as $bg) {
@@ -366,20 +345,16 @@ ob_start();
                                     }
                                 }
 
-                                // Số chỗ còn trống có thể tiếp nhận
                                 $uncreatedBeds = max(0, $maxCap - count($beds));
                                 $vacant = $emptyBedsCount + $uncreatedBeds;
                                 $percent = $maxCap > 0 ? min(100, round(($occupied / $maxCap) * 100)) : 0;
 
-                                // Nhận diện trạng thái bảo trì:
-                                // Thuộc tính TrangThaiPhong chứa 'bảo trì' / 'khóa' HOẶC toàn bộ giường hiện có đang bảo trì và chưa có người ở
                                 $rawStatus = trim($p['TrangThaiPhong'] ?? '');
                                 $isMaintenance = str_contains(mb_strtolower($rawStatus), 'bảo trì')
                                     || str_contains(mb_strtolower($rawStatus), 'bao tri')
                                     || str_contains(mb_strtolower($rawStatus), 'khóa')
                                     || str_contains(mb_strtolower($rawStatus), 'khoa');
 
-                                // Nhận diện phòng đầy:
                                 $isFull = !$isMaintenance && (($occupied >= $maxCap && $maxCap > 0) || in_array($rawStatus, ['Đã đầy', 'Đầy', 'Đầy chỗ'], true));
 
                                 if ($isMaintenance) {
@@ -429,13 +404,11 @@ ob_start();
                                             <div style="width: <?= $percent ?>%; height: 100%; background: <?= $isMaintenance ? '#f59e0b' : ($percent >= 100 ? '#16a34a' : '#2563eb') ?>;"></div>
                                         </div>
                                     </td>
-                                    <!-- 6. Sơ đồ Giường -->
                                     <td style="vertical-align: middle;">
                                         <div style="display: flex; gap: 5px; align-items: center; flex-wrap: wrap; max-width: 170px;">
 
                                             <?php foreach ($beds as $bg): ?>
                                                 <?php
-                                                // Xác định trạng thái giường
                                                 $bedStatus = trim($bg['TrangThaiGiuong'] ?? '');
 
                                                 $bOccupied = (
@@ -448,13 +421,11 @@ ob_start();
                                                     $bedStatus === 'Đang bảo trì'
                                                 );
 
-                                                // Xác định giường trưởng phòng
                                                 $bLeader = (
                                                     !empty($p['TruongPhong']) &&
                                                     $p['TruongPhong'] === ($bg['MaSinhVien'] ?? '')
                                                 );
 
-                                                // Mặc định
                                                 $pillBg = '#f8fafc';
                                                 $pillColor = '#64748b';
                                                 $pillBorder = '#e2e8f0';
@@ -464,7 +435,6 @@ ob_start();
                                                 if ($bOccupied) {
 
                                                     if ($bLeader) {
-                                                        // Giường trưởng phòng: VÀNG
                                                         $pillBg = '#fef3c7';
                                                         $pillColor = '#b45309';
                                                         $pillBorder = '#fde68a';
@@ -474,7 +444,6 @@ ob_start();
                                                             . ($bg['HoVaTen'] ?? 'Sinh viên')
                                                             . ' (Trưởng phòng)';
                                                     } elseif ($isRoomFull) {
-                                                        // Giường thuộc phòng FULL: XANH LÁ
                                                         $pillBg = '#dcfce7';
                                                         $pillColor = '#15803d';
                                                         $pillBorder = '#bbf7d0';
@@ -484,7 +453,6 @@ ob_start();
                                                             . ($bg['HoVaTen'] ?? 'Sinh viên')
                                                             . ' (Phòng đã FULL)';
                                                     } else {
-                                                        // Giường có người, phòng chưa FULL: XANH DƯƠNG
                                                         $pillBg = '#dbeafe';
                                                         $pillColor = '#1d4ed8';
                                                         $pillBorder = '#bfdbfe';
@@ -497,7 +465,6 @@ ob_start();
                                                             . ')';
                                                     }
                                                 } elseif ($bLocked) {
-                                                    // Giường bảo trì: ĐỎ
                                                     $pillBg = '#fee2e2';
                                                     $pillColor = '#991b1b';
                                                     $pillBorder = '#fecaca';
@@ -505,7 +472,6 @@ ob_start();
 
                                                     $pillTitle = $bg['KyHieuGiuong'] . ': Đang bảo trì';
                                                 } else {
-                                                    // Giường trống: XÁM
                                                     $pillBg = '#f8fafc';
                                                     $pillColor = '#64748b';
                                                     $pillBorder = '#e2e8f0';
@@ -585,7 +551,6 @@ ob_start();
                     </table>
                 </div>
 
-                <!-- THANH PHÂN TRANG (PAGINATION CONTROLS GIỐNG PHÒNG VÀ USERS) -->
                 <div id="roomPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
                     <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
                         <span id="roomPaginationInfo" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
@@ -604,7 +569,6 @@ ob_start();
                     </div>
 
                     <div id="roomPaginationControls" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
-                        <!-- Sinh tự động bằng Javascript -->
                     </div>
                 </div>
             <?php else: ?>
@@ -613,12 +577,8 @@ ob_start();
         </div>
     </div>
 
-    <!-- ===================================================================== -->
-    <!-- TAB 2: DANH MỤC TÒA NHÀ & FORM THÊM / SỬA TÒA NHÀ -->
-    <!-- ===================================================================== -->
     <div id="tabContentToa" style="display: none;">
 
-        <!-- FORM THÊM / SỬA TÒA NHÀ (ẨN MẶC ĐỊNH) -->
         <div class="card" id="cardFormToa" style="display: none; margin-bottom: 24px; border: 2px solid #bfdbfe; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);">
             <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
                 <div id="titleFormToa" style="font-weight: 700; color: #1e3a8a; font-size: 1.05rem;">
@@ -710,7 +670,6 @@ ob_start();
             </form>
         </div>
 
-        <!-- BẢNG DANH SÁCH TÒA NHÀ TRONG PHẠM VI (TÍCH HỢP TÌM KIẾM & PHÂN TRANG) -->
         <div class="card" style="margin-bottom: 24px;">
             <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -726,7 +685,6 @@ ob_start();
                 </div>
             </div>
 
-            <!-- THANH TÌM KIẾM VÀ LỌC TÒA NHÀ -->
             <div style="display: flex; align-items: center; gap: 12px; margin: 0 0 20px; flex-wrap: wrap; background: #f8fafc; padding: 14px 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
                 <div style="position: relative; flex: 1; min-width: 240px; max-width: 380px;">
                     <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
@@ -865,7 +823,6 @@ ob_start();
                     </table>
                 </div>
 
-                <!-- THANH PHÂN TRANG TÒA NHÀ -->
                 <div id="toaPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
                     <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
                         <span id="toaPaginationInfo" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
@@ -889,12 +846,8 @@ ob_start();
         </div>
     </div>
 
-    <!-- ===================================================================== -->
-    <!-- TAB 3: DANH MỤC CỤM NHÀ & FORM THÊM / SỬA CỤM NHÀ -->
-    <!-- ===================================================================== -->
     <div id="tabContentCum" style="display: none;">
 
-        <!-- FORM THÊM / SỬA CỤM NHÀ (ẨN MẶC ĐỊNH) -->
         <div class="card" id="cardFormCum" style="display: none; margin-bottom: 24px; border: 2px solid #bfdbfe; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);">
             <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
                 <div id="titleFormCum" style="font-weight: 700; color: #1e3a8a; font-size: 1.05rem;">
@@ -973,7 +926,6 @@ ob_start();
             </form>
         </div>
 
-        <!-- BẢNG DANH SÁCH CỤM NHÀ (TÍCH HỢP TÌM KIẾM & PHÂN TRANG) -->
         <div class="card" style="margin-bottom: 24px;">
             <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -989,7 +941,6 @@ ob_start();
                 </div>
             </div>
 
-            <!-- THANH TÌM KIẾM VÀ LỌC CỤM NHÀ -->
             <div style="display: flex; align-items: center; gap: 12px; margin: 0 0 20px; flex-wrap: wrap; background: #f8fafc; padding: 14px 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
                 <div style="position: relative; flex: 1; min-width: 240px; max-width: 420px;">
                     <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
@@ -1096,7 +1047,6 @@ ob_start();
                     </table>
                 </div>
 
-                <!-- THANH PHÂN TRANG CỤM NHÀ -->
                 <div id="cumPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
                     <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
                         <span id="cumPaginationInfo" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
@@ -1120,12 +1070,8 @@ ob_start();
         </div>
     </div>
 
-    <!-- ===================================================================== -->
-    <!-- TAB 4: DANH MỤC KHU KTX & FORM THÊM / SỬA KHU KTX -->
-    <!-- ===================================================================== -->
     <div id="tabContentKhu" style="display: none;">
 
-        <!-- FORM THÊM / SỬA KHU KTX (ẨN MẶC ĐỊNH) -->
         <div class="card" id="cardFormKhu" style="display: none; margin-bottom: 24px; border: 2px solid #bfdbfe; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);">
             <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
                 <div id="titleFormKhu" style="font-weight: 700; color: #1e3a8a; font-size: 1.05rem;">
@@ -1183,7 +1129,6 @@ ob_start();
             </form>
         </div>
 
-        <!-- BẢNG DANH MỤC KHU KTX (TÍCH HỢP TÌM KIẾM & PHÂN TRANG) -->
         <div class="card" style="margin-bottom: 24px;">
             <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -1199,7 +1144,6 @@ ob_start();
                 </div>
             </div>
 
-            <!-- THANH TÌM KIẾM KHU KTX -->
             <div style="display: flex; align-items: center; gap: 12px; margin: 0 0 20px; flex-wrap: wrap; background: #f8fafc; padding: 14px 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
                 <div style="position: relative; flex: 1; min-width: 240px; max-width: 420px;">
                     <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
@@ -1286,7 +1230,6 @@ ob_start();
                     </table>
                 </div>
 
-                <!-- THANH PHÂN TRANG KHU KTX -->
                 <div id="khuPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
                     <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
                         <span id="khuPaginationInfo" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
@@ -1310,9 +1253,6 @@ ob_start();
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL IMPORT DANH SÁCH PHÒNG TỪ FILE CSV (GIỐNG MẪU PHÒNG & USERS) -->
-<!-- ========================================================================= -->
 <div id="importZoneModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 20px 16px; box-sizing: border-box; overflow-y: auto;">
     <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 620px; max-height: calc(100vh - 40px); display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
         <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; flex-shrink: 0;">
@@ -1380,14 +1320,10 @@ ob_start();
 </div>
 
 <script>
-    // Dữ liệu danh mục tham chiếu cho Cascade & Form
     const allToasData = <?= json_encode($toaList ?? [], JSON_UNESCAPED_UNICODE) ?>;
     const allCumsData = <?= json_encode($cumList ?? [], JSON_UNESCAPED_UNICODE) ?>;
     const allKhusData = <?= json_encode($khuList ?? [], JSON_UNESCAPED_UNICODE) ?>;
 
-    // =========================================================================
-    // 1. QUẢN LÝ TABS ĐIỀU HƯỚNG
-    // =========================================================================
     function switchZoneTab(tab) {
         const tabs = ['phong', 'toa', 'cum', 'khu'];
         tabs.forEach(t => {
@@ -1409,9 +1345,6 @@ ob_start();
         });
     }
 
-    // =========================================================================
-    // 2. PHÂN TRANG VÀ LỌC PHÒNG Ở (REAL-TIME PAGINATION & FILTER NHƯ USERS & ROOMS)
-    // =========================================================================
     let roomCurrentPage = 1;
     let roomPageSize = 10;
     let roomMatchedRows = [];
@@ -1477,7 +1410,6 @@ ob_start();
         const tabBadge = document.getElementById('tabCountPhong');
         if (tabBadge) tabBadge.innerText = total;
 
-        // Cập nhật thông tin phân trang
         const infoEl = document.getElementById('roomPaginationInfo');
         if (infoEl) {
             if (total === 0) {
@@ -1489,14 +1421,12 @@ ob_start();
             }
         }
 
-        // Tạo nút phân trang
         const controlsEl = document.getElementById('roomPaginationControls');
         if (!controlsEl) return;
         controlsEl.innerHTML = '';
 
         if (totalPages <= 1) return;
 
-        // First & Prev
         const btnFirst = document.createElement('button');
         btnFirst.type = 'button';
         btnFirst.className = 'btn btn-outline btn-sm';
@@ -1515,7 +1445,6 @@ ob_start();
         btnPrev.style.borderRadius = '6px';
         controlsEl.appendChild(btnPrev);
 
-        // Page buttons
         let startPage = Math.max(1, roomCurrentPage - 2);
         let endPage = Math.min(totalPages, roomCurrentPage + 2);
         if (startPage > 1) {
@@ -1540,7 +1469,6 @@ ob_start();
             controlsEl.appendChild(dot);
         }
 
-        // Next & Last
         const btnNext = document.createElement('button');
         btnNext.type = 'button';
         btnNext.className = 'btn btn-outline btn-sm';
@@ -1576,7 +1504,6 @@ ob_start();
         if (document.getElementById('filterSelectCum')) document.getElementById('filterSelectCum').value = '';
         if (document.getElementById('filterSelectToa')) {
             document.getElementById('filterSelectToa').value = '';
-            // Reset danh sách tòa
             updateToaFilterOptions('');
         }
         if (document.getElementById('filterRoomFloor')) document.getElementById('filterRoomFloor').value = '';
@@ -1612,9 +1539,6 @@ ob_start();
         });
     }
 
-    // =========================================================================
-    // 3. PHÂN TRANG VÀ LỌC TÒA NHÀ (TAB 2)
-    // =========================================================================
     let toaCurrentPage = 1;
     let toaPageSize = 10;
     let toaMatchedRows = [];
@@ -1714,9 +1638,6 @@ ob_start();
         filterToas();
     }
 
-    // =========================================================================
-    // 4. PHÂN TRANG VÀ LỌC CỤM NHÀ (TAB 3)
-    // =========================================================================
     let cumCurrentPage = 1;
     let cumPageSize = 10;
     let cumMatchedRows = [];
@@ -1808,9 +1729,6 @@ ob_start();
         filterCums();
     }
 
-    // =========================================================================
-    // 5. PHÂN TRANG VÀ LỌC KHU KTX (TAB 4)
-    // =========================================================================
     let khuCurrentPage = 1;
     let khuPageSize = 10;
     let khuMatchedRows = [];
@@ -1895,9 +1813,6 @@ ob_start();
         filterKhus();
     }
 
-    // =========================================================================
-    // 6. XUẤT VÀ NHẬP CSV (EXPORT & IMPORT MODAL)
-    // =========================================================================
     function openImportZoneModal() {
         const modal = document.getElementById('importZoneModal');
         if (modal) {
@@ -1939,7 +1854,6 @@ ob_start();
             idsInp.value = matchedIds.join(',');
             form.appendChild(idsInp);
         } else {
-            // Lấy theo bộ lọc
             const cumVal = document.getElementById('filterSelectCum')?.value || '';
             const toaVal = document.getElementById('filterSelectToa')?.value || '';
             const floorVal = document.getElementById('filterRoomFloor')?.value || '';
@@ -1995,9 +1909,6 @@ ob_start();
         form.submit();
     }
 
-    // =========================================================================
-    // 7. QUẢN LÝ BIỂU MẪU CRUD PHÒNG Ở (FORM ROOM)
-    // =========================================================================
     function onRoomFormCumChange() {
         const cumVal = document.getElementById('roomFormCum')?.value || '';
         const selectToa = document.getElementById('roomFormToa');
@@ -2166,9 +2077,6 @@ ob_start();
         }
     }
 
-    // =========================================================================
-    // 8. QUẢN LÝ BIỂU MẪU CRUD TÒA NHÀ (FORM TOA)
-    // =========================================================================
     function editToa(btn) {
         const raw = btn.getAttribute('data-item');
         if (!raw) return;
@@ -2273,9 +2181,6 @@ ob_start();
         }
     }
 
-    // =========================================================================
-    // 9. QUẢN LÝ BIỂU MẪU CRUD CỤM NHÀ (FORM CUM)
-    // =========================================================================
     function editCum(btn) {
         const raw = btn.getAttribute('data-item');
         if (!raw) return;
@@ -2379,9 +2284,6 @@ ob_start();
         }
     }
 
-    // =========================================================================
-    // 10. QUẢN LÝ BIỂU MẪU CRUD KHU KTX (FORM KHU)
-    // =========================================================================
     function editKhu(btn) {
         const raw = btn.getAttribute('data-item');
         if (!raw) return;
@@ -2483,14 +2385,10 @@ ob_start();
         }
     }
 
-    // =========================================================================
-    // KHỞI TẠO KHI TẢI TRANG
-    // =========================================================================
     document.addEventListener('DOMContentLoaded', function() {
         const initialTab = '<?= $scope["defaultTab"] ?? "phong" ?>';
         switchZoneTab(initialTab);
 
-        // Khởi tạo phân trang cho toàn bộ các tab
         filterRooms();
         filterToas();
         filterCums();

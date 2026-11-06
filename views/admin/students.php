@@ -3,7 +3,6 @@ ob_start();
 ?>
 
 <div class="container">
-    <!-- Breadcrumb & Header -->
     <div style="margin-bottom: 20px;">
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('admin/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">Quản trị hệ thống</a>
@@ -15,7 +14,6 @@ ob_start();
             <div>
                 <h1 class="page-title">Quản lý Tài khoản Sinh viên</h1>
             </div>
-            <!-- CÁC NÚT THAO TÁC HEADER (GIỐNG CÁN BỘ & PHÒNG: TẢI MẪU, NHẬP FILE, XUẤT FILE) -->
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                 <button type="button" class="btn btn-primary" id="btnToggleAddStudent" onclick="showCreateStudentForm()" style="border-radius: 6px; font-weight: 600; padding: 7px 14px; display: inline-flex; align-items: center;">
                     <i class="fa-solid fa-user-plus" style="margin-right: 6px;"></i> Thêm sinh viên mới
@@ -32,8 +30,6 @@ ob_start();
             </div>
         </div>
     </div>
-
-    <!-- THÔNG BÁO FLASH MESSAGE -->
     <?php if (!empty($flashSuccess)): ?>
         <div class="alert alert-success" style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
             <i class="fa-solid fa-circle-check" style="margin-right: 6px;"></i> <b>Thành công:</b> <?= $flashSuccess ?>
@@ -51,8 +47,6 @@ ob_start();
             <i class="fa-solid fa-circle-xmark" style="margin-right: 6px;"></i> <b>Lỗi:</b> <?= htmlspecialchars($flashError) ?>
         </div>
     <?php endif; ?>
-
-    <!-- BIỂU MẪU CRUD: THÊM / CẬP NHẬT TÀI KHOẢN SINH VIÊN (ẨN MẶC ĐỊNH) -->
     <div class="card" id="studentFormCard" style="<?= !empty($flashError) ? 'display: block;' : 'display: none;' ?> margin-bottom: 24px; border: 2px solid #bfdbfe; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);">
         <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
             <h3 id="formTitle" style="font-size: 1.05rem; font-weight: 700; color: #1e3a8a; margin: 0; display: flex; align-items: center; gap: 8px;">
@@ -67,8 +61,6 @@ ob_start();
         <form id="studentActionForm" action="<?= url('admin/students/save') ?>" method="POST">
             <?= csrf_field() ?>
             <input type="hidden" name="maTaiKhoan" id="studentMaTaiKhoan" value="0">
-
-            <!-- HÀNG 1: MSSV, HỌ VÀ TÊN, TRƯỜNG ĐẠI HỌC -->
             <div class="grid grid-cols-3" style="gap: 16px; margin-bottom: 16px;">
                 <div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">
@@ -99,8 +91,6 @@ ob_start();
                     </select>
                 </div>
             </div>
-
-            <!-- HÀNG 2: GIỚI TÍNH, NGÀY SINH, CCCD, KHÓA TUYỂN SINH -->
             <div class="grid grid-cols-4" style="gap: 16px; margin-bottom: 16px;">
                 <div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">
@@ -130,8 +120,6 @@ ob_start();
                     <input type="number" id="studentKhoaTuyenSinh" name="khoaTuyenSinh" min="2015" max="2035" value="<?= date('Y') ?>" class="btn-outline" style="width: 100%; padding: 10px; border-radius: 6px; font-size: 0.9rem;">
                 </div>
             </div>
-
-            <!-- HÀNG 3: SĐT, EMAIL, TRẠNG THÁI NỘI TRÚ, VAI TRÒ -->
             <div class="grid grid-cols-4" style="gap: 16px; margin-bottom: 16px;">
                 <div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">
@@ -166,8 +154,6 @@ ob_start();
                     </select>
                 </div>
             </div>
-
-            <!-- HÀNG 4: MẬT KHẨU KHỞI TẠO (CHỈ HIỂN THỊ KHI THÊM MỚI SINH VIÊN) -->
             <div id="boxStudentPassword" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 18px;">
                 <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #1e293b; margin-bottom: 6px;">
                     Mật khẩu khởi tạo ban đầu (Mặc định: <code>123456</code> nếu để trống):
@@ -197,8 +183,6 @@ ob_start();
             </div>
         </form>
     </div>
-
-    <!-- BẢNG DANH SÁCH TÀI KHOẢN SINH VIÊN: CÁC THANH, FILTER NẰM TRONG DIV CARD VỚI TABLE VÀ PHÂN TRANG -->
     <div class="card" style="margin-bottom: 24px;">
         <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -206,10 +190,7 @@ ob_start();
                 <span class="badge badge-info" id="studentTotalBadge"><?= count($studentList ?? []) ?> sinh viên</span>
             </div>
         </div>
-
-        <!-- THANH TÌM KIẾM VÀ LỌC ĐA TIÊU CHÍ NẰM TRONG DIV CARD VỚI TABLE (GIỐNG USERS & PHÒNG) -->
         <div style="display: flex; align-items: center; gap: 12px; margin: 0 0 20px; flex-wrap: wrap; background: #f8fafc; padding: 14px 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
-            <!-- 1. TÌM KIẾM TỪ KHÓA -->
             <div style="position: relative; flex: 1; min-width: 240px; max-width: 380px;">
                 <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
                 <input type="text" id="searchStudentInput" class="btn-outline"
@@ -217,8 +198,6 @@ ob_start();
                     style="width: 100%; padding: 8px 12px 8px 36px; border-radius: 6px; font-size: 0.9rem;"
                     oninput="filterStudents()">
             </div>
-
-            <!-- 2. LỌC TRƯỜNG ĐẠI HỌC -->
             <select id="filterStudentTruong" class="btn-outline"
                 style="min-width: 180px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
                 onchange="filterStudents()">
@@ -229,8 +208,6 @@ ob_start();
                     </option>
                 <?php endforeach; ?>
             </select>
-
-            <!-- 3. LỌC GIỚI TÍNH -->
             <select id="filterStudentGender" class="btn-outline"
                 style="min-width: 140px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
                 onchange="filterStudents()">
@@ -238,8 +215,6 @@ ob_start();
                 <option value="Nam">Nam</option>
                 <option value="Nữ">Nữ</option>
             </select>
-
-            <!-- 4. LỌC TRẠNG THÁI TÀI KHOẢN -->
             <select id="filterStudentAccStatus" class="btn-outline"
                 style="min-width: 160px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
                 onchange="filterStudents()">
@@ -247,8 +222,6 @@ ob_start();
                 <option value="1">Đang hoạt động</option>
                 <option value="0">Đang bị khóa</option>
             </select>
-
-            <!-- 5. LỌC TÌNH TRẠNG NỘI TRÚ -->
             <select id="filterStudentResStatus" class="btn-outline"
                 style="min-width: 160px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
                 onchange="filterStudents()">
@@ -258,8 +231,6 @@ ob_start();
                 <option value="Tạm vắng">Tạm vắng</option>
                 <option value="Đã trả phòng">Đã trả phòng</option>
             </select>
-
-            <!-- 6. LỌC VAI TRÒ -->
             <select id="filterStudentRole" class="btn-outline"
                 style="min-width: 150px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;"
                 onchange="filterStudents()">
@@ -267,8 +238,6 @@ ob_start();
                 <option value="SINH_VIEN">Sinh viên</option>
                 <option value="TRUONG_PHONG">Trưởng phòng</option>
             </select>
-
-            <!-- 7. NÚT XÓA BỘ LỌC -->
             <div>
                 <button type="button" class="btn btn-outline btn-sm" onclick="clearStudentFilters()" style="border-radius: 6px; color: #dc2626; border-color: #fecaca; background: #fff; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; padding: 8px 14px;">
                     <i class="fa-solid fa-filter-circle-xmark" style="margin-right: 4px;"></i> Xóa bộ lọc
@@ -318,8 +287,6 @@ ob_start();
                                 data-role="<?= htmlspecialchars($s['MaVaiTro'] ?? 'SINH_VIEN', ENT_QUOTES, 'UTF-8') ?>"
                                 data-search="<?= htmlspecialchars($searchVal, ENT_QUOTES, 'UTF-8') ?>"
                                 style="<?= !$isActive ? 'background: #fef2f2;' : '' ?>">
-
-                                <!-- 1. MSSV / Tài khoản -->
                                 <td>
                                     <b style="color: var(--primary); font-size: 0.95rem; font-family: monospace;">
                                         <?= htmlspecialchars($s['MaSinhVien']) ?>
@@ -328,8 +295,6 @@ ob_start();
                                         Tạo: <?= !empty($s['NgayTao']) ? date('d/m/Y', strtotime($s['NgayTao'])) : '---' ?>
                                     </div>
                                 </td>
-
-                                <!-- 2. Họ và tên & Liên hệ -->
                                 <td>
                                     <div style="font-weight: 700; color: #0f172a; font-size: 0.95rem;">
                                         <?= htmlspecialchars($s['HoVaTen']) ?>
@@ -343,8 +308,6 @@ ob_start();
                                         <?php endif; ?>
                                     </div>
                                 </td>
-
-                                <!-- 3. Trường ĐH & Khóa -->
                                 <td>
                                     <div style="font-weight: 600; color: #1e293b; font-size: 0.85rem;">
                                         <?= htmlspecialchars($s['TenTruong'] ?? $s['MaTruong']) ?>
@@ -356,8 +319,6 @@ ob_start();
                                         <?php endif; ?>
                                     </div>
                                 </td>
-
-                                <!-- 4. CCCD, Giới tính, Ngày sinh -->
                                 <td>
                                     <div>
                                         <?php if ($s['GioiTinh'] === 'Nữ'): ?>
@@ -375,8 +336,6 @@ ob_start();
                                         CCCD: <?= !empty($s['SoCCCD']) ? htmlspecialchars($s['SoCCCD']) : '<i>Chưa cập nhật</i>' ?>
                                     </div>
                                 </td>
-
-                                <!-- 5. Chỗ ở KTX & Tình trạng nội trú -->
                                 <td>
                                     <?php if (!empty($s['MaPhong'])): ?>
                                         <div style="font-weight: 700; color: #15803d; font-size: 0.85rem;">
@@ -398,8 +357,6 @@ ob_start();
                                         <?php endif; ?>
                                     </div>
                                 </td>
-
-                                <!-- 6. Vai trò -->
                                 <td>
                                     <?php if ($isLeader): ?>
                                         <span class="badge badge-warning" style="font-weight: 700; font-size: 0.775rem;">
@@ -409,8 +366,6 @@ ob_start();
                                         <span class="badge badge-primary" style="font-size: 0.775rem;">Sinh viên</span>
                                     <?php endif; ?>
                                 </td>
-
-                                <!-- 7. Trạng thái tài khoản -->
                                 <td>
                                     <?php if ($isActive): ?>
                                         <span class="badge badge-success" style="font-weight: 600;">
@@ -422,34 +377,25 @@ ob_start();
                                         </span>
                                     <?php endif; ?>
                                 </td>
-
-                                <!-- 8. Thao tác -->
                                 <td style="text-align: right; white-space: nowrap;">
-                                    <!-- Nút Sửa -->
                                     <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px; margin-right: 4px; padding: 4px 8px;"
                                         data-item="<?= htmlspecialchars(json_encode($s, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"
                                         onclick="editStudent(this)"
                                         title="Chỉnh sửa thông tin sinh viên">
                                         <i class="fa-solid fa-pen-to-square" style="margin-right: 5px;"></i> Sửa
                                     </button>
-
-                                    <!-- Nút Reset / Đổi Mật khẩu -->
                                     <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px; margin-right: 4px; padding: 4px 8px; color: #7c3aed; border-color: #ddd6fe; background: #faf5ff;"
                                         data-item="<?= htmlspecialchars(json_encode($s, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"
                                         onclick="openChangePasswordModal(this)"
                                         title="Đổi hoặc Đặt lại mật khẩu tài khoản sinh viên">
                                         <i class="fa-solid fa-key" style="margin-right: 5px;"></i> Đổi MK
                                     </button>
-
-                                    <!-- Nút Khóa / Mở khóa -->
                                     <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px; margin-right: 4px; padding: 4px 8px; <?= $isActive ? 'color: #d97706; border-color: #fde68a; background: #fffbeb;' : 'color: #16a34a; border-color: #bbf7d0; background: #f0fdf4;' ?>"
                                         data-item="<?= htmlspecialchars(json_encode($s, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"
                                         onclick="openToggleLockModal(this)"
                                         title="<?= $isActive ? 'Khóa tài khoản sinh viên' : 'Mở khóa tài khoản sinh viên' ?>">
                                         <i class="fa-solid <?= $isActive ? 'fa-lock' : 'fa-lock-open' ?>" style="margin-right: 5px;"></i> <?= $isActive ? 'Khóa' : 'Mở' ?>
                                     </button>
-
-                                    <!-- Nút Xóa -->
                                     <button type="button" class="btn btn-outline btn-sm" style="border-radius: 6px; color: #dc2626; border-color: #fecaca; background: #fff; padding: 4px 8px;"
                                         data-item="<?= htmlspecialchars(json_encode($s, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"
                                         onclick="confirmDeleteStudent(this)"
@@ -467,8 +413,6 @@ ob_start();
                     </tbody>
                 </table>
             </div>
-
-            <!-- THANH PHÂN TRANG (PAGINATION CONTROLS GIỐNG USERS & PHÒNG) -->
             <div id="studentPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
                 <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
                     <span id="studentPaginationInfo" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
@@ -487,7 +431,6 @@ ob_start();
                 </div>
 
                 <div id="studentPaginationControls" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
-                    <!-- Sinh tự động bằng Javascript -->
                 </div>
             </div>
         <?php else: ?>
@@ -495,10 +438,6 @@ ob_start();
         <?php endif; ?>
     </div>
 </div>
-
-<!-- ========================================================================= -->
-<!-- MODAL IMPORT DANH SÁCH SINH VIÊN TỪ FILE CSV (GIỐNG MẪU USERS & PHÒNG) -->
-<!-- ========================================================================= -->
 <div id="importStudentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 20px 16px; box-sizing: border-box; overflow-y: auto;">
     <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 620px; max-height: calc(100vh - 40px); display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
         <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; flex-shrink: 0;">
@@ -565,13 +504,8 @@ ob_start();
         </form>
     </div>
 </div>
-
-<!-- ========================================================================= -->
-<!-- MODAL XÁC NHẬN KHÓA / MỞ KHÓA TÀI KHOẢN SINH VIÊN -->
-<!-- ========================================================================= -->
 <div id="lockStudentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 20px 16px; box-sizing: border-box; overflow-y: auto;">
     <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 520px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
-        <!-- Header -->
         <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc;">
             <div style="font-size: 1.05rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 10px;">
                 <div id="lockModalIconCircle" style="width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid transparent;">
@@ -583,15 +517,12 @@ ob_start();
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-
-        <!-- Body & Form -->
         <form action="<?= url('admin/students/toggle-status') ?>" method="POST" style="margin: 0;">
             <?= csrf_field() ?>
             <input type="hidden" name="maTaiKhoan" id="lockModalMaTaiKhoan" value="">
             <input type="hidden" name="status" id="lockModalTargetStatus" value="">
 
             <div style="padding: 20px;">
-                <!-- Student Card -->
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                         <div>
@@ -608,14 +539,9 @@ ob_start();
                         <div><i class="fa-solid fa-phone" style="color: #64748b; margin-right: 4px;"></i> <span id="lockModalSDT"></span></div>
                     </div>
                 </div>
-
-                <!-- Notice / Warning -->
                 <div id="lockModalNotice" style="border-radius: 8px; padding: 12px 14px; font-size: 0.85rem; line-height: 1.5; margin-bottom: 6px;">
-                    <!-- Điền động bởi JS -->
                 </div>
             </div>
-
-            <!-- Footer -->
             <div style="padding: 14px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: flex-end; gap: 10px;">
                 <button type="button" class="btn btn-outline" onclick="closeLockStudentModal()" style="border-radius: 6px; padding: 8px 18px;">
                     Hủy bỏ
@@ -627,13 +553,8 @@ ob_start();
         </form>
     </div>
 </div>
-
-<!-- ========================================================================= -->
-<!-- MODAL ĐỔI & ĐẶT LẠI MẬT KHẨU TÀI KHOẢN SINH VIÊN (GỬI EMAIL TỰ ĐỘNG) -->
-<!-- ========================================================================= -->
 <div id="changePasswordStudentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 20px 16px; box-sizing: border-box; overflow-y: auto;">
     <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 540px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
-        <!-- Header -->
         <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc;">
             <div style="font-size: 1.05rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 10px;">
                 <div style="width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb;">
@@ -645,14 +566,11 @@ ob_start();
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-
-        <!-- Body & Form -->
         <form action="<?= url('admin/students/reset-password') ?>" method="POST" onsubmit="return validateChangePasswordSubmit(event)" style="margin: 0;">
             <?= csrf_field() ?>
             <input type="hidden" name="maTaiKhoan" id="pwdModalMaTaiKhoan" value="">
 
             <div style="padding: 20px;">
-                <!-- Student Info Banner -->
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                         <div>
@@ -664,14 +582,10 @@ ob_start();
                         </div>
                         <span id="pwdModalEmailBadge" class="badge badge-success" style="font-size: 0.725rem;">Đã có Email</span>
                     </div>
-
-                    <!-- Email nhận mật khẩu -->
                     <div style="margin-top: 10px; padding: 8px 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; font-size: 0.85rem; color: #1e40af; display: flex; align-items: center; gap: 8px;">
                         <i class="fa-solid fa-envelope" style="color: #2563eb;"></i>
                         <span>Email nhận mật khẩu: <b id="pwdModalEmailDisplay" style="color: #1e3a8a;"></b></span>
                     </div>
-
-                    <!-- Trường nhập email nếu sinh viên chưa có email -->
                     <div id="pwdModalEmailMissingBox" style="display: none; margin-top: 10px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 12px; font-size: 0.85rem; color: #92400e;">
                         <div style="font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                             <i class="fa-solid fa-triangle-exclamation"></i> Sinh viên chưa cập nhật Email trong hồ sơ!
@@ -680,8 +594,6 @@ ob_start();
                         <input type="email" id="pwdModalEmailInput" name="emailNhan" placeholder="Nhập địa chỉ email của sinh viên..." class="btn-outline" style="width: 100%; padding: 8px 10px; border-radius: 6px; font-size: 0.85rem; background: #fff;">
                     </div>
                 </div>
-
-                <!-- Mật khẩu mới ngẫu nhiên 8 ký tự -->
                 <div style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <label style="font-size: 0.85rem; font-weight: 700; color: #581c87; margin: 0; display: flex; align-items: center; gap: 6px;">Mật khẩu mới ngẫu nhiên (8 ký tự):
@@ -700,8 +612,6 @@ ob_start();
                         </button>
                     </div>
                 </div>
-
-                <!-- Tùy chọn gửi Email -->
                 <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
                     <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 0.85rem; color: #166534; cursor: pointer; user-select: none; margin: 0;">
                         <input type="checkbox" id="pwdModalSendEmailCheck" name="sendEmail" value="1" checked style="margin-top: 3px; width: 16px; height: 16px; accent-color: #16a34a; cursor: pointer;">
@@ -711,8 +621,6 @@ ob_start();
                     </label>
                 </div>
             </div>
-
-            <!-- Footer -->
             <div style="padding: 14px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: flex-end; gap: 10px;">
                 <button type="button" class="btn btn-outline" onclick="closeChangePasswordModal()" style="border-radius: 6px; padding: 8px 18px;">
                     Hủy bỏ
@@ -726,9 +634,6 @@ ob_start();
 </div>
 
 <script>
-    // =========================================================================
-    // 1. PHÂN TRANG VÀ LỌC SINH VIÊN (REAL-TIME PAGINATION & FILTER)
-    // =========================================================================
     let studentCurrentPage = 1;
     let studentPageSize = 10;
     let studentMatchedRows = [];
@@ -806,7 +711,6 @@ ob_start();
         controlsEl.innerHTML = '';
         if (totalPages <= 1) return;
 
-        // First & Prev
         const btnFirst = document.createElement('button');
         btnFirst.type = 'button';
         btnFirst.className = 'btn btn-outline btn-sm';
@@ -825,7 +729,6 @@ ob_start();
         btnPrev.style.borderRadius = '6px';
         controlsEl.appendChild(btnPrev);
 
-        // Page buttons
         let startPage = Math.max(1, studentCurrentPage - 2);
         let endPage = Math.min(totalPages, studentCurrentPage + 2);
         if (startPage > 1) {
@@ -850,7 +753,6 @@ ob_start();
             controlsEl.appendChild(dot);
         }
 
-        // Next & Last
         const btnNext = document.createElement('button');
         btnNext.type = 'button';
         btnNext.className = 'btn btn-outline btn-sm';
@@ -891,9 +793,6 @@ ob_start();
         filterStudents();
     }
 
-    // =========================================================================
-    // 2. BIỂU MẪU THÊM MỚI / SỬA SINH VIÊN
-    // =========================================================================
     function showCreateStudentForm() {
         resetStudentForm();
         const card = document.getElementById('studentFormCard');
@@ -961,16 +860,10 @@ ob_start();
         document.getElementById('studentTrangThaiNoiTru').value = s.TrangThaiNoiTru || 'Chưa ở';
         document.getElementById('studentMaVaiTro').value = s.MaVaiTro || 'SINH_VIEN';
 
-        // Ẩn hoàn toàn khối mật khẩu khi chỉnh sửa hồ sơ (đổi MK dùng nút riêng kèm email)
         const pwdBox = document.getElementById('boxStudentPassword');
         if (pwdBox) pwdBox.style.display = 'none';
     }
 
-    // =========================================================================
-    // 3. CÁC THAO TÁC MODAL HÀNH ĐỘNG (ĐỔI MK, KHÓA/MỞ KHÓA, XÓA)
-    // =========================================================================
-
-    // --- A. MODAL XÁC NHẬN KHÓA / MỞ KHÓA TÀI KHOẢN ---
     function openToggleLockModal(btn) {
         let s = {};
         if (typeof btn === 'object' && btn !== null) {
@@ -1009,7 +902,6 @@ ob_start();
         const submitBtn = document.getElementById('lockModalSubmitBtn');
 
         if (isCurrentlyActive) {
-            // Chuẩn bị Khóa tài khoản
             title.innerText = 'Xác nhận Khóa tài khoản sinh viên';
             iconCircle.style.background = '#fffbeb';
             iconCircle.style.borderColor = '#fde68a';
@@ -1035,7 +927,6 @@ ob_start();
             submitBtn.style.color = '#ffffff';
             submitBtn.innerHTML = '<i class="fa-solid fa-lock" style="margin-right: 6px;"></i> Xác nhận Khóa tài khoản';
         } else {
-            // Chuẩn bị Mở khóa tài khoản
             title.innerText = 'Xác nhận Mở khóa tài khoản sinh viên';
             iconCircle.style.background = '#f0fdf4';
             iconCircle.style.borderColor = '#bbf7d0';
@@ -1077,7 +968,6 @@ ob_start();
         }
     }
 
-    // --- B. MODAL ĐỔI & ĐẶT LẠI MẬT KHẨU TÀI KHOẢN (GỬI EMAIL TỰ ĐỘNG) ---
     function openChangePasswordModal(btn) {
         let s = {};
         if (typeof btn === 'object' && btn !== null) {
@@ -1103,10 +993,8 @@ ob_start();
         document.getElementById('pwdModalMSSV').innerText = mssv;
         document.getElementById('pwdModalTruong').innerText = truong;
 
-        // Sinh sẵn mật khẩu ngẫu nhiên 8 ký tự an toàn
         generateNewRandomPassword();
 
-        // Xử lý thông tin hiển thị Email sinh viên
         const emailDisplay = document.getElementById('pwdModalEmailDisplay');
         const emailBadge = document.getElementById('pwdModalEmailBadge');
         const emailMissingBox = document.getElementById('pwdModalEmailMissingBox');
@@ -1171,7 +1059,6 @@ ob_start();
             res.push(combined.charAt(Math.floor(Math.random() * combined.length)));
         }
 
-        // Trộn ngẫu nhiên các ký tự
         res.sort(() => Math.random() - 0.5);
 
         const pass = res.join('');
@@ -1231,7 +1118,6 @@ ob_start();
         return true;
     }
 
-    // --- C. XÁC NHẬN XÓA TÀI KHOẢN SINH VIÊN ---
     function confirmDeleteStudent(btn) {
         let s = {};
         if (typeof btn === 'object' && btn !== null) {
@@ -1280,7 +1166,6 @@ ob_start();
         }
     }
 
-    // Compatibility wrappers
     function triggerResetPassword(id, name, mssv) {
         openChangePasswordModal({
             MaTaiKhoan: id,
@@ -1305,9 +1190,6 @@ ob_start();
         });
     }
 
-    // =========================================================================
-    // 4. XUẤT VÀ NHẬP CSV (EXPORT & IMPORT MODAL)
-    // =========================================================================
     function openImportStudentModal() {
         const modal = document.getElementById('importStudentModal');
         if (modal) {
@@ -1404,14 +1286,10 @@ ob_start();
         form.submit();
     }
 
-    // =========================================================================
-    // KHỞI TẠO KHI TẢI TRANG & SỰ KIỆN TOÀN CỤC
-    // =========================================================================
     document.addEventListener('DOMContentLoaded', function() {
         filterStudents();
     });
 
-    // Đóng modal khi click ra ngoài vùng dialog hoặc nhấn phím ESC
     window.addEventListener('click', function(e) {
         const importModal = document.getElementById('importStudentModal');
         if (e.target === importModal) closeImportStudentModal();

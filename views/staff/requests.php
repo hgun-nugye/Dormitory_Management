@@ -5,14 +5,12 @@ $isAllowed = $scope['isAllowed'] ?? false;
 $activeTab = $activeTab ?? 'pending';
 $kpiData = $kpis ?? ['pending' => 0, 'transfer' => 0, 'checkout' => 0, 'resolved' => 0, 'total' => 0];
 
-// Helper làm sạch tên tòa: tránh lặp "Tòa Tòa A01"
 $formatTenToa = function (?string $rawName, ?string $code = ''): string {
     if (!$rawName) return $code ?: '---';
     $clean = preg_replace('/^(tòa\s*|toà\s*)+/ui', '', trim($rawName));
     return 'Tòa ' . (!empty($clean) ? $clean : $rawName);
 };
 
-// Helper render lý do đơn & lý do từ chối nếu có
 function renderRequestReason(?string $rawReason): void
 {
     if (empty($rawReason)) {
@@ -35,7 +33,6 @@ function renderRequestReason(?string $rawReason): void
 
 <div class="container">
 
-    <!-- BREADCRUMB & HEADER (ĐỒNG BỘ CHUẨN ZONES, ROOMS, UTILITIES) -->
     <div style="margin-bottom: 20px;">
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('staff/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">BQL KTX</a>
@@ -54,7 +51,6 @@ function renderRequestReason(?string $rawReason): void
                 </p>
             </div>
 
-            <!-- CÁC NÚT THAO TÁC HEADER (ĐỒNG BỘ ADMIN & ROOMS) -->
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                 <?php if (!empty($isAllowed)): ?>
                     <button type="button" class="btn btn-outline" onclick="exportRequests()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #15803d; border-color: #86efac; background: #f0fdf4; cursor: pointer;" title="Xuất dữ liệu theo tab đang xem ra Excel/CSV">
@@ -69,7 +65,6 @@ function renderRequestReason(?string $rawReason): void
         </div>
     </div>
 
-    <!-- FLASH MESSAGES -->
     <?php if (!empty($success)): ?>
         <div class="alert alert-success" style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
             <i class="fa-solid fa-circle-check" style="margin-right: 6px;"></i> <b>Thành công:</b> <?= $success ?>
@@ -82,9 +77,6 @@ function renderRequestReason(?string $rawReason): void
         </div>
     <?php endif; ?>
 
-    <!-- ========================================================================= -->
-    <!-- TRƯỜNG HỢP 1: TỪ CHỐI TRUY CẬP (RED WARNING CARD) CHO NON-STAFF           -->
-    <!-- ========================================================================= -->
     <?php if (!$isAllowed): ?>
         <div class="card" style="border: 2px solid #ef4444; background: #fef2f2; border-radius: 12px; padding: 40px 30px; text-align: center; margin-top: 24px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.12);">
             <div style="width: 76px; height: 76px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; color: #dc2626; font-size: 2.2rem; border: 2px solid #fca5a5;">
@@ -120,13 +112,7 @@ function renderRequestReason(?string $rawReason): void
 
     <?php else: ?>
 
-        <!-- ========================================================================= -->
-        <!-- TRƯỜNG HỢP 2: CÁN BỘ ĐƯỢC PHÉP TRUY CẬP (ĐỒNG BỘ CHUẨN GIAO DIỆN)          -->
-        <!-- ========================================================================= -->
-
-        <!-- 4 THẺ KPI THỐNG KÊ NHANH (QUICK STATS CARDS CHUẨN TỶ LỆ ROOMS & APPS) -->
         <div class="grid grid-cols-4" style="gap: 16px; margin-bottom: 24px;">
-            <!-- Thẻ 1: Chờ xử lý mới -->
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Chờ xử lý mới</span>
@@ -138,7 +124,6 @@ function renderRequestReason(?string $rawReason): void
                 <div style="font-size: 0.8rem; color: var(--text-muted);">Cần cán bộ quản lý phê duyệt</div>
             </div>
 
-            <!-- Thẻ 2: Xin chuyển phòng -->
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Xin chuyển phòng</span>
@@ -150,7 +135,6 @@ function renderRequestReason(?string $rawReason): void
                 <div style="font-size: 0.8rem; color: var(--text-muted);">Đổi phòng & tính bù trừ chênh lệch</div>
             </div>
 
-            <!-- Thẻ 3: Trả phòng & Tạm vắng -->
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Trả phòng & Tạm vắng</span>
@@ -162,7 +146,6 @@ function renderRequestReason(?string $rawReason): void
                 <div style="font-size: 0.8rem; color: var(--text-muted);">Thanh lý hợp đồng & quản lý cư trú</div>
             </div>
 
-            <!-- Thẻ 4: Đã giải quyết / Hoàn tất -->
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Đã giải quyết</span>
@@ -175,13 +158,11 @@ function renderRequestReason(?string $rawReason): void
             </div>
         </div>
 
-        <!-- KHỐI BỘ LỌC ĐA TẦNG CASCADING (ĐỒNG BỘ BACKGROUND #f8fafc & PADDING CHUẨN ROOMS/ADMIN) -->
         <div class="card" style="margin-bottom: 24px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); background: #f8fafc;">
             <form method="GET" action="<?= url('staff/requests') ?>" id="filterFormRequests" style="margin: 0;">
                 <input type="hidden" name="tab" id="currentActiveTab" value="<?= htmlspecialchars($activeTab ?? 'pending') ?>">
 
                 <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <!-- 1. Ô tìm kiếm tức thời -->
                     <div style="position: relative; flex: 1; min-width: 240px; max-width: 320px;">
                         <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem;"></i>
                         <input type="text" name="search" id="inputSearch" class="btn-outline"
@@ -190,7 +171,6 @@ function renderRequestReason(?string $rawReason): void
                             style="width: 100%; padding: 8px 12px 8px 36px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;">
                     </div>
 
-                    <!-- 2. Dropdown Loại đơn -->
                     <select name="type" class="btn-outline" style="min-width: 170px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormRequests').submit()">
                         <option value="all" <?= ($selectedType === 'all') ? 'selected' : '' ?>>-- Tất cả loại đơn --</option>
                         <option value="chuyen-phong" <?= ($selectedType === 'chuyen-phong') ? 'selected' : '' ?>>Xin chuyển phòng</option>
@@ -199,7 +179,6 @@ function renderRequestReason(?string $rawReason): void
                         <option value="dong-phi" <?= ($selectedType === 'dong-phi') ? 'selected' : '' ?>>Đăng ký đóng phí</option>
                     </select>
 
-                    <!-- 3. Dropdown Khu (cho Admin) -->
                     <?php if ($scope['level'] === 'ALL'): ?>
                         <select name="khu" id="filterKhuSelect" class="btn-outline" style="min-width: 130px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="onKhuChange(this.value)">
                             <option value="">-- Tất cả Khu --</option>
@@ -211,7 +190,6 @@ function renderRequestReason(?string $rawReason): void
                         </select>
                     <?php endif; ?>
 
-                    <!-- 4. Dropdown Cụm (cho Admin / Khu) -->
                     <?php if ($scope['level'] === 'ALL' || $scope['level'] === 'KHU'): ?>
                         <select name="cum" id="filterCumSelect" class="btn-outline" style="min-width: 140px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="onCumChange(this.value)">
                             <option value="">-- Tất cả Cụm --</option>
@@ -225,7 +203,6 @@ function renderRequestReason(?string $rawReason): void
                         </select>
                     <?php endif; ?>
 
-                    <!-- 5. Dropdown Tòa (Khử lặp nhãn "Tòa Tòa") -->
                     <?php if ($scope['level'] !== 'TOA'): ?>
                         <select name="toa" id="filterToaSelect" class="btn-outline" style="min-width: 160px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormRequests').submit()">
                             <option value="">-- Tất cả Tòa nhà --</option>
@@ -243,7 +220,6 @@ function renderRequestReason(?string $rawReason): void
                         </select>
                     <?php endif; ?>
 
-                    <!-- 6. Dropdown Tầng -->
                     <select name="tang" class="btn-outline" style="min-width: 125px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormRequests').submit()">
                         <option value="">-- Tất cả tầng --</option>
                         <?php for ($t = 1; $t <= 12; $t++): ?>
@@ -251,7 +227,6 @@ function renderRequestReason(?string $rawReason): void
                         <?php endfor; ?>
                     </select>
 
-                    <!-- 7. Dropdown Trạng thái -->
                     <select name="status" class="btn-outline" style="min-width: 145px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormRequests').submit()">
                         <option value="all" <?= ($selectedStatus === 'all') ? 'selected' : '' ?>>-- Tất cả trạng thái --</option>
                         <option value="cho-duyet" <?= ($selectedStatus === 'cho-duyet') ? 'selected' : '' ?>>Chờ duyệt</option>
@@ -259,7 +234,6 @@ function renderRequestReason(?string $rawReason): void
                         <option value="tu-choi" <?= ($selectedStatus === 'tu-choi') ? 'selected' : '' ?>>Từ chối</option>
                     </select>
 
-                    <!-- Nút Lọc & Nút Xóa bộ lọc -->
                     <?php if (!empty($searchTerm) || $selectedType !== 'all' || $selectedStatus !== 'all' || !empty($selectedKhu) || !empty($selectedCum) || !empty($selectedToa) || !empty($selectedTang)): ?>
                         <a href="<?= url('staff/requests?tab=' . urlencode($activeTab)) ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; height: 38px; padding: 0 14px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; color: #dc2626; border-color: #fca5a5; background: #fff5f5; font-weight: 600;" title="Xóa toàn bộ bộ lọc và trở về mặc định">
                             <i class="fa-solid fa-filter-circle-xmark"></i> Xóa bộ lọc
@@ -269,7 +243,6 @@ function renderRequestReason(?string $rawReason): void
             </form>
         </div>
 
-        <!-- 4 SUB-TABS ĐIỀU HƯỚNG (ĐỒNG BỘ CHUẨN APPLICATIONS VỚI PILL BADGES) -->
         <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; flex-wrap: wrap;">
             <button type="button" class="tab-btn <?= ($activeTab === 'pending') ? 'active' : '' ?>" id="tabBtnPending" onclick="switchRequestTab('pending')"
                 style="background: <?= ($activeTab === 'pending') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'pending') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'pending') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
@@ -297,7 +270,6 @@ function renderRequestReason(?string $rawReason): void
         </div>
 
         <?php
-        // Danh sách render theo từng Tab
         $tabConfigs = [
             'pending' => ['title' => 'Đơn chờ xét duyệt', 'list' => $pendingRequests ?? []],
             'transfer' => ['title' => 'Danh sách Đơn Xin chuyển phòng', 'list' => $transferRequests ?? []],
@@ -349,14 +321,12 @@ function renderRequestReason(?string $rawReason): void
                                         $isAbsence = str_contains(mb_strtolower($loaiDon), 'tạm vắng');
                                         ?>
                                         <tr class="<?= $tabKey ?>-row">
-                                            <!-- 1. Mã đơn -->
                                             <td>
                                                 <b style="font-family: monospace; color: var(--primary); font-size: 0.95rem;">
                                                     <?= htmlspecialchars($req['MaDon']) ?>
                                                 </b>
                                             </td>
 
-                                            <!-- 2. Sinh viên -->
                                             <td>
                                                 <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">
                                                     <?= htmlspecialchars($req['HoVaTen'] ?? 'N/A') ?>
@@ -369,7 +339,6 @@ function renderRequestReason(?string $rawReason): void
                                                 </div>
                                             </td>
 
-                                            <!-- 3. Loại đơn & Vị trí hiện tại -->
                                             <td>
                                                 <span class="badge" style="background: #f1f5f9; color: #334155; border: none; font-weight: 700; padding: 3px 8px; font-size: 0.8rem;">
                                                     <?= htmlspecialchars($loaiDon) ?>
@@ -382,7 +351,6 @@ function renderRequestReason(?string $rawReason): void
                                                 </div>
                                             </td>
 
-                                            <!-- 4. Đề xuất / Chi tiết -->
                                             <td>
                                                 <?php if ($isTransfer): ?>
                                                     <div style="font-size: 0.85rem;">
@@ -411,7 +379,6 @@ function renderRequestReason(?string $rawReason): void
                                                 <?php endif; ?>
                                             </td>
 
-                                            <!-- 5. Lý do / Minh chứng -->
                                             <td style="max-width: 280px;">
                                                 <?php renderRequestReason($req['LyDo'] ?? ''); ?>
                                                 <?php if (!empty($req['TepMinhChung'])): ?>
@@ -423,7 +390,6 @@ function renderRequestReason(?string $rawReason): void
                                                 <?php endif; ?>
                                             </td>
 
-                                            <!-- 6. Trạng thái -->
                                             <td>
                                                 <?php if ($isApproved): ?>
                                                     <span class="badge" style="background: #dcfce7; color: #166534; border: none; font-weight: 600; padding: 4px 10px; border-radius: 6px; white-space: nowrap;">
@@ -440,7 +406,6 @@ function renderRequestReason(?string $rawReason): void
                                                 <?php endif; ?>
                                             </td>
 
-                                            <!-- 7. Thao tác -->
                                             <td style="text-align: right; white-space: nowrap; width: 180px; min-width: 180px;">
                                                 <?php if ($isPending && !empty($scope['canApprove'])): ?>
                                                     <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; white-space: nowrap;">
@@ -474,7 +439,6 @@ function renderRequestReason(?string $rawReason): void
                         </table>
                     </div>
 
-                    <!-- THANH PHÂN TRANG -->
                     <?php if (!empty($cfg['list'])): ?>
                         <div id="<?= $tabKey ?>PaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
                             <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
@@ -500,9 +464,6 @@ function renderRequestReason(?string $rawReason): void
     <?php endif; ?>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL: PHÊ DUYỆT ĐƠN MỘT CỬA                                              -->
-<!-- ========================================================================= -->
 <div id="modalApproveRequest" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 520px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -549,9 +510,6 @@ function renderRequestReason(?string $rawReason): void
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL: TỪ CHỐI ĐƠN MỘT CỬA (KÈM CHỌN LÝ DO NHANH)                        -->
-<!-- ========================================================================= -->
 <div id="modalRejectRequest" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 540px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -569,7 +527,6 @@ function renderRequestReason(?string $rawReason): void
             <input type="hidden" name="maDon" id="rejectModalMaDon">
             <input type="hidden" name="tab" id="rejectModalTab" value="<?= htmlspecialchars($activeTab ?? 'pending') ?>">
 
-            <!-- Lý do chọn nhanh -->
             <div style="margin-bottom: 14px;">
                 <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Chọn nhanh lý do mẫu:</label>
                 <select id="selectQuickReason" class="btn-outline" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.85rem; background: #fff;" onchange="onQuickReasonChange(this.value)">
@@ -582,7 +539,6 @@ function renderRequestReason(?string $rawReason): void
                 </select>
             </div>
 
-            <!-- Ô nhập lý do chi tiết -->
             <div style="margin-bottom: 20px;">
                 <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">
                     Lý do từ chối cụ thể: <span style="color: #dc2626;">*</span>
@@ -604,11 +560,7 @@ function renderRequestReason(?string $rawReason): void
 </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- JAVASCRIPT: TABS, PHÂN TRANG CLIENT-SIDE, MODALS VÀ XUẤT EXCEL            -->
-<!-- ========================================================================= -->
 <script>
-    // 1. Quản lý phân trang cho cả 4 tabs
     const requestPaginationState = {
         pending: {
             page: 1,
@@ -706,7 +658,6 @@ function renderRequestReason(?string $rawReason): void
         renderRequestPagination(tabKey);
     }
 
-    // 2. Chuyển đổi Sub-Tabs & Cập nhật số đếm nút Xuất Excel
     function updateExportButtonCount(tabKey) {
         const btnText = document.getElementById('btnExportText');
         if (!btnText) return;
@@ -747,7 +698,6 @@ function renderRequestReason(?string $rawReason): void
         updateExportButtonCount(tabKey);
     }
 
-    // 3. Cascading Dropdown Handlers
     function onKhuChange(khuVal) {
         const cumSelect = document.getElementById('filterCumSelect');
         const toaSelect = document.getElementById('filterToaSelect');
@@ -762,7 +712,6 @@ function renderRequestReason(?string $rawReason): void
         document.getElementById('filterFormRequests').submit();
     }
 
-    // 4. Xuất Excel
     function exportRequests() {
         const urlParams = new URLSearchParams(window.location.search);
         const input = document.getElementById('currentActiveTab');
@@ -771,7 +720,6 @@ function renderRequestReason(?string $rawReason): void
         window.location.href = '<?= url('staff/requests/export') ?>?' + urlParams.toString();
     }
 
-    // 5. Modals: Duyệt & Từ chối
     function openApproveModal(maDon, loaiDon, studentName, detailInfo) {
         document.getElementById('approveModalMaDon').value = maDon;
         document.getElementById('approveModalMaDonText').innerText = maDon;
@@ -817,7 +765,6 @@ function renderRequestReason(?string $rawReason): void
         }
     }
 
-    // Khởi chạy khi DOM sẵn sàng
     document.addEventListener('DOMContentLoaded', function() {
         renderRequestPagination('pending');
         renderRequestPagination('transfer');
@@ -829,7 +776,6 @@ function renderRequestReason(?string $rawReason): void
         updateExportButtonCount(initialTab);
     });
 
-    // ESC & Backdrop close
     window.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeApproveModal();

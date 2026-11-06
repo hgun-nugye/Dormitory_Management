@@ -143,9 +143,7 @@ class DashboardController extends Controller
         ]);
     }
 
-    // =========================================================================
-    // CÁC HÀM TIỆN ÍCH CHUYỂN TIẾP CHO TƯƠNG THÍCH NGƯỢC (FORWARDING METHODS)
-    // =========================================================================
+    // Forwarding methods cho tương thích ngược
     public function users(): void { (new UserController())->users(); }
     public function saveUser(): void { (new UserController())->saveUser(); }
     public function resetPassword(): void { (new UserController())->resetPassword(); }

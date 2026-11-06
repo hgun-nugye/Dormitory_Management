@@ -6,14 +6,12 @@ $hoSoDangKy = $hoSoDangKy ?? null;
 ?>
 
 <div class="container">
-    <!-- Breadcrumb -->
     <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
         <a href="<?= url('/') ?>" style="color: var(--text-muted); text-decoration: none;"><i class="fa-solid fa-house"></i> Trang chủ</a>
         <span>/</span>
         <span style="color: var(--text-primary); font-weight: 600;">Hồ sơ sinh viên</span>
     </div>
 
-    <!-- Alert Notifications -->
     <?php if (!empty($error)): ?>
         <div class="alert alert-danger" style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
             <i class="fa-solid fa-circle-exclamation" style="font-size: 16px;"></i>
@@ -27,7 +25,6 @@ $hoSoDangKy = $hoSoDangKy ?? null;
         </div>
     <?php endif; ?>
 
-    <!-- Page Header -->
     <div class="page-header">
         <div>
             <h1 class="page-title"> Hồ sơ sinh viên</h1>
@@ -42,9 +39,7 @@ $hoSoDangKy = $hoSoDangKy ?? null;
         </div>
     <?php else: ?>
         <div class="grid grid-cols-2" style="margin-bottom: 24px;">
-            <!-- COLUMN 1: PERSONAL & ACADEMIC INFO -->
             <div style="display: flex; flex-direction: column; gap: 24px;">
-                <!-- Personal & Academic Card -->
                 <div class="card">
                     <div class="card-title">
                         <span>Thông tin cá nhân & Học vụ</span>
@@ -86,7 +81,6 @@ $hoSoDangKy = $hoSoDangKy ?? null;
                     </table>
                 </div>
 
-                <!-- Housing Status Card -->
                 <div class="card">
                     <div class="card-title">
                         <span>Tình trạng lưu trú</span>
@@ -151,9 +145,7 @@ $hoSoDangKy = $hoSoDangKy ?? null;
                 </div>
             </div>
 
-            <!-- COLUMN 2: CONTACT & EDIT FORM -->
             <div style="display: flex; flex-direction: column; gap: 24px;">
-                <!-- Contact Info & Quick Update Card -->
                 <div class="card">
                     <div class="card-title">
                         <span>Thông tin liên lạc</span>
@@ -179,7 +171,6 @@ $hoSoDangKy = $hoSoDangKy ?? null;
                     </table>
                 </div>
 
-                <!-- Change Password Card -->
                 <div class="card">
                     <div class="card-title">
                         <span><i class="fa-solid fa-key" style="margin-right: 6px; color: var(--primary);"></i> Đổi mật khẩu tài khoản</span>

@@ -5,14 +5,12 @@ $isAllowed = $scope['isAllowed'] ?? false;
 $activeTab = $activeTab ?? 'pending';
 $kpiData = $kpis ?? ['pending' => 0, 'fixing' => 0, 'infra' => 0, 'completed' => 0, 'cancelled' => 0, 'total' => 0];
 
-// Helper làm sạch tên tòa: tránh lặp "Tòa Tòa A01"
 $formatTenToa = function (?string $rawName, ?string $code = ''): string {
     if (!$rawName) return $code ?: '---';
     $clean = preg_replace('/^(tòa\s*|toà\s*)+/ui', '', trim($rawName));
     return 'Tòa ' . (!empty($clean) ? $clean : $rawName);
 };
 
-// Helper render lý do / ghi chú tiến độ
 function renderMaintenanceNote(?string $note): void
 {
     if (empty($note)) {
@@ -31,7 +29,6 @@ function renderMaintenanceNote(?string $note): void
 
 <div class="container">
 
-    <!-- BREADCRUMB & HEADER (ĐỒNG BỘ CHUẨN ZONES, ROOMS, UTILITIES, REQUESTS) -->
     <div style="margin-bottom: 20px;">
         <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
             <a href="<?= url('staff/dashboard') ?>" style="color: var(--text-muted); text-decoration: none;">BQL KTX</a>
@@ -55,7 +52,6 @@ function renderMaintenanceNote(?string $note): void
                 </p>
             </div>
 
-            <!-- CÁC NÚT THAO TÁC HEADER (ĐỒNG BỘ ADMIN & ROOMS) -->
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                 <?php if (!empty($scope['canCreateStaffTicket'])): ?>
                     <button type="button" class="btn btn-primary" onclick="openStaffTicketModal()" style="height: 38px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; padding: 8px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
@@ -76,7 +72,6 @@ function renderMaintenanceNote(?string $note): void
         </div>
     </div>
 
-    <!-- FLASH MESSAGES -->
     <?php if (!empty($flashSuccess)): ?>
         <div class="alert alert-success" style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
             <i class="fa-solid fa-circle-check" style="margin-right: 6px;"></i> <b>Thành công:</b> <?= htmlspecialchars($flashSuccess) ?>
@@ -95,9 +90,6 @@ function renderMaintenanceNote(?string $note): void
         </div>
     <?php endif; ?>
 
-    <!-- ========================================================================= -->
-    <!-- TRƯỜNG HỢP 1: TỪ CHỐI TRUY CẬP (RED WARNING CARD) CHO NON-STAFF           -->
-    <!-- ========================================================================= -->
     <?php if (!$isAllowed): ?>
         <div class="card" style="border: 2px solid #ef4444; background: #fef2f2; border-radius: 12px; padding: 40px 30px; text-align: center; margin-top: 24px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.12);">
             <div style="width: 76px; height: 76px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; color: #dc2626; font-size: 2.2rem; border: 2px solid #fca5a5;">
@@ -133,13 +125,7 @@ function renderMaintenanceNote(?string $note): void
 
     <?php else: ?>
 
-        <!-- ========================================================================= -->
-        <!-- TRƯỜNG HỢP 2: CÁN BỘ & KỸ THUẬT VIÊN ĐƯỢC PHÉP TRUY CẬP                   -->
-        <!-- ========================================================================= -->
-
-        <!-- 4 THẺ KPI THỐNG KÊ NHANH (QUICK STATS CARDS CHUẨN TỶ LỆ ROOMS & UTILITIES) -->
         <div class="grid grid-cols-4" style="gap: 16px; margin-bottom: 24px;">
-            <!-- Thẻ 1: Chờ xử lý & Điều phối -->
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Chờ xử lý & Điều phối</span>
@@ -151,7 +137,6 @@ function renderMaintenanceNote(?string $note): void
                 <div style="font-size: 0.8rem; color: var(--text-muted);">Cần cán bộ điều phối phân công thợ</div>
             </div>
 
-            <!-- Thẻ 2: Đang sửa chữa -->
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Đang sửa chữa</span>
@@ -163,7 +148,6 @@ function renderMaintenanceNote(?string $note): void
                 <div style="font-size: 0.8rem; color: var(--text-muted);">Kỹ thuật viên đang khắc phục tại chỗ</div>
             </div>
 
-            <!-- Thẻ 3: Sự cố Hạ tầng chung -->
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Sự cố Hạ tầng chung</span>
@@ -175,7 +159,6 @@ function renderMaintenanceNote(?string $note): void
                 <div style="font-size: 0.8rem; color: var(--text-muted);">Hành lang, thang máy & khuôn viên</div>
             </div>
 
-            <!-- Thẻ 4: Đã hoàn tất & Nghiệm thu -->
             <div class="card" style="padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Đã hoàn tất</span>
@@ -188,13 +171,11 @@ function renderMaintenanceNote(?string $note): void
             </div>
         </div>
 
-        <!-- KHỐI BỘ LỌC ĐA TẦNG CASCADING (ĐỒNG BỘ BACKGROUND #f8fafc & PADDING CHUẨN ROOMS/ADMIN) -->
         <div class="card" style="margin-bottom: 24px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); background: #f8fafc;">
             <form method="GET" action="<?= url('staff/maintenance') ?>" id="filterFormMaintenance" style="margin: 0;">
                 <input type="hidden" name="tab" id="currentActiveTab" value="<?= htmlspecialchars($activeTab ?? 'pending') ?>">
 
                 <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <!-- 1. Ô tìm kiếm tức thời -->
                     <div style="position: relative; flex: 1; min-width: 240px; max-width: 320px;">
                         <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem;"></i>
                         <input type="text" name="search" id="inputSearch" class="btn-outline"
@@ -203,14 +184,12 @@ function renderMaintenanceNote(?string $note): void
                             style="width: 100%; padding: 8px 12px 8px 36px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;">
                     </div>
 
-                    <!-- 2. Dropdown Loại sự cố -->
                     <select name="type" class="btn-outline" style="min-width: 165px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormMaintenance').submit()">
                         <option value="all" <?= ($selectedType === 'all') ? 'selected' : '' ?>>-- Tất cả loại sự cố --</option>
                         <option value="PHONG" <?= ($selectedType === 'PHONG') ? 'selected' : '' ?>>Phòng sinh viên</option>
                         <option value="HA_TANG" <?= ($selectedType === 'HA_TANG') ? 'selected' : '' ?>>Hạ tầng công cộng</option>
                     </select>
 
-                    <!-- 3. Dropdown Khu (cho Admin) -->
                     <?php if ($scope['level'] === 'ALL'): ?>
                         <select name="khu" id="filterKhuSelect" class="btn-outline" style="min-width: 130px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="onKhuChange(this.value)">
                             <option value="">-- Tất cả Khu --</option>
@@ -222,7 +201,6 @@ function renderMaintenanceNote(?string $note): void
                         </select>
                     <?php endif; ?>
 
-                    <!-- 4. Dropdown Cụm (cho Admin / Khu) -->
                     <?php if ($scope['level'] === 'ALL' || $scope['level'] === 'KHU'): ?>
                         <select name="cum" id="filterCumSelect" class="btn-outline" style="min-width: 140px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="onCumChange(this.value)">
                             <option value="">-- Tất cả Cụm --</option>
@@ -236,7 +214,6 @@ function renderMaintenanceNote(?string $note): void
                         </select>
                     <?php endif; ?>
 
-                    <!-- 5. Dropdown Tòa (Khử lặp nhãn "Tòa Tòa") -->
                     <?php if ($scope['level'] !== 'TOA'): ?>
                         <select name="toa" id="filterToaSelect" class="btn-outline" style="min-width: 160px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormMaintenance').submit()">
                             <option value="">-- Tất cả Tòa nhà --</option>
@@ -254,7 +231,6 @@ function renderMaintenanceNote(?string $note): void
                         </select>
                     <?php endif; ?>
 
-                    <!-- 6. Dropdown Tầng -->
                     <select name="tang" class="btn-outline" style="min-width: 125px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormMaintenance').submit()">
                         <option value="">-- Tất cả tầng --</option>
                         <?php for ($t = 1; $t <= 12; $t++): ?>
@@ -262,7 +238,6 @@ function renderMaintenanceNote(?string $note): void
                         <?php endfor; ?>
                     </select>
 
-                    <!-- 7. Dropdown Kỹ thuật viên phụ trách -->
                     <select name="tech" class="btn-outline" style="min-width: 160px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormMaintenance').submit()">
                         <option value="">-- Kỹ thuật viên --</option>
                         <option value="none" <?= ($selectedTech === 'none') ? 'selected' : '' ?>>⚠️ Chưa phân công</option>
@@ -273,7 +248,6 @@ function renderMaintenanceNote(?string $note): void
                         <?php endforeach; ?>
                     </select>
 
-                    <!-- 8. Dropdown Trạng thái -->
                     <select name="status" class="btn-outline" style="min-width: 145px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; height: 38px; background: #fff;" onchange="document.getElementById('filterFormMaintenance').submit()">
                         <option value="all" <?= ($selectedStatus === 'all') ? 'selected' : '' ?>>-- Tất cả trạng thái --</option>
                         <option value="Chờ xử lý" <?= ($selectedStatus === 'Chờ xử lý') ? 'selected' : '' ?>>⏳ Chờ xử lý</option>
@@ -282,7 +256,6 @@ function renderMaintenanceNote(?string $note): void
                         <option value="Đã hủy" <?= ($selectedStatus === 'Đã hủy') ? 'selected' : '' ?>>✕ Đã hủy</option>
                     </select>
 
-                    <!-- Nút Lọc & Nút Xóa bộ lọc -->
                     <?php if (!empty($searchTerm) || $selectedType !== 'all' || $selectedStatus !== 'all' || !empty($selectedKhu) || !empty($selectedCum) || !empty($selectedToa) || !empty($selectedTang) || !empty($selectedTech)): ?>
                         <a href="<?= url('staff/maintenance?tab=' . urlencode($activeTab)) ?>" class="btn btn-outline btn-sm" style="border-radius: 6px; height: 38px; padding: 0 14px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; color: #dc2626; border-color: #fca5a5; background: #fff5f5; font-weight: 600;" title="Xóa toàn bộ bộ lọc và trở về mặc định">
                             <i class="fa-solid fa-filter-circle-xmark"></i> Xóa bộ lọc
@@ -292,7 +265,6 @@ function renderMaintenanceNote(?string $note): void
             </form>
         </div>
 
-        <!-- 5 SUB-TABS ĐIỀU HƯỚNG (ĐỒNG BỘ CHUẨN APPLICATIONS VỚI PILL BADGES) -->
         <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; flex-wrap: wrap;">
             <button type="button" class="tab-btn <?= ($activeTab === 'pending') ? 'active' : '' ?>" id="tabBtnPending" onclick="switchMaintenanceTab('pending')"
                 style="background: <?= ($activeTab === 'pending') ? '#eff6ff' : 'transparent' ?>; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: <?= ($activeTab === 'pending') ? '700' : '600' ?>; cursor: pointer; border-radius: 8px; color: <?= ($activeTab === 'pending') ? 'var(--primary)' : 'var(--text-secondary)' ?>;">
@@ -326,7 +298,6 @@ function renderMaintenanceNote(?string $note): void
         </div>
 
         <?php
-        // Danh sách cấu hình hiển thị 5 Tabs
         $tabConfigs = [
             'pending' => ['title' => 'Danh sách Sự cố Chờ xử lý & Điều phối phân công', 'list' => $pendingTickets ?? []],
             'fixing' => ['title' => 'Danh sách Sự cố Đang sửa chữa (Đang thi công khắc phục)', 'list' => $fixingTickets ?? []],
@@ -376,12 +347,10 @@ function renderMaintenanceNote(?string $note): void
                                         $isCancelled = ($status === 'Đã hủy');
                                         $isInfra = ($t['LoaiSuCo'] === 'HA_TANG');
 
-                                        // Kiểm tra thẩm quyền thao tác trên phiếu cụ thể
                                         $canManagerAct = !empty($scope['canAssign']) && (!$isInfra || !empty($scope['canApproveStaffTicket']) || $scope['level'] !== 'TOA');
                                         $canTechAct = !empty($scope['isTechnician']);
                                         ?>
                                         <tr class="<?= $tabKey ?>-row">
-                                            <!-- 1. Mã Phiếu & Loại -->
                                             <td>
                                                 <b style="font-family: monospace; color: var(--primary); font-size: 0.95rem;">
                                                     <?= htmlspecialchars($t['MaPhieu']) ?>
@@ -402,7 +371,6 @@ function renderMaintenanceNote(?string $note): void
                                                 </div>
                                             </td>
 
-                                            <!-- 2. Vị Trí & Khu Vực -->
                                             <td>
                                                 <?php if (!empty($t['SoPhong'])): ?>
                                                     <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">
@@ -417,7 +385,6 @@ function renderMaintenanceNote(?string $note): void
                                                 </div>
                                             </td>
 
-                                            <!-- 3. Hạng Mục / Thiết Bị -->
                                             <td>
                                                 <div style="font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">
                                                     <?= htmlspecialchars($t['TenThietBi'] ?? 'Cơ sở vật chất') ?>
@@ -434,7 +401,6 @@ function renderMaintenanceNote(?string $note): void
                                                 <?php endif; ?>
                                             </td>
 
-                                            <!-- 4. Nội Dung Sự Cố & Người Báo -->
                                             <td style="max-width: 280px;">
                                                 <div style="font-size: 0.85rem; color: var(--text-primary); line-height: 1.4; margin-bottom: 4px;">
                                                     <?= htmlspecialchars($t['MoTaHuHong']) ?>
@@ -454,7 +420,6 @@ function renderMaintenanceNote(?string $note): void
                                                 </div>
                                             </td>
 
-                                            <!-- 5. Kỹ Thuật Phụ Trách & Tiến Độ -->
                                             <td style="max-width: 220px;">
                                                 <?php if (!empty($t['TenTho'])): ?>
                                                     <div style="font-weight: 700; color: #0284c7; font-size: 0.88rem; display: flex; align-items: center; gap: 5px;">
@@ -476,7 +441,6 @@ function renderMaintenanceNote(?string $note): void
                                                 </div>
                                             </td>
 
-                                            <!-- 6. Trạng Thái -->
                                             <td>
                                                 <?php if ($isCompleted): ?>
                                                     <span class="badge" style="background: #dcfce7; color: #166534; border: none; font-weight: 600; padding: 4px 10px; border-radius: 6px; white-space: nowrap;">
@@ -497,10 +461,8 @@ function renderMaintenanceNote(?string $note): void
                                                 <?php endif; ?>
                                             </td>
 
-                                            <!-- 7. Thao Tác (CÂN ĐỐI 100% INLINE-FLEX KHÔNG RỚT DÒNG) -->
                                             <td style="text-align: right; white-space: nowrap; width: 195px; min-width: 195px;">
                                                 <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; white-space: nowrap;">
-                                                    <!-- A. DÀNH CHO CÁN BỘ QUẢN LÝ (PHÂN CÔNG & HỦY) -->
                                                     <?php if ($canManagerAct && ($isPending || $isFixing)): ?>
                                                         <button type="button" class="btn btn-primary btn-sm" onclick="openAssignModal('<?= htmlspecialchars($t['MaPhieu']) ?>', '<?= htmlspecialchars(addslashes($t['TenThietBi'] ?? 'Cơ sở vật chất')) ?>', '<?= htmlspecialchars($t['NhanVienKyThuat'] ?? '') ?>', '<?= htmlspecialchars($t['MaKhu'] ?? 'A') ?>')" style="border-radius: 6px; font-weight: 600; padding: 5px 11px; font-size: 0.825rem; display: inline-flex; align-items: center; gap: 4px; height: 32px; white-space: nowrap; flex-shrink: 0;" title="Phân công hoặc đổi kỹ thuật viên phụ trách">
                                                             <i class="fa-solid fa-user-gear"></i> Phân công
@@ -510,7 +472,6 @@ function renderMaintenanceNote(?string $note): void
                                                             <i class="fa-solid fa-xmark"></i> Hủy
                                                         </button>
 
-                                                        <!-- B. DÀNH CHO KỸ THUẬT VIÊN (TIẾP NHẬN, CẬP NHẬT & NGHIỆM THU) -->
                                                     <?php elseif ($canTechAct && ($isPending || $isFixing)): ?>
                                                         <?php if ($isPending): ?>
                                                             <form action="<?= url('staff/maintenance/update-progress') ?>" method="POST" style="margin: 0; display: inline-flex;">
@@ -531,7 +492,6 @@ function renderMaintenanceNote(?string $note): void
                                                             </button>
                                                         <?php endif; ?>
 
-                                                        <!-- C. PHIẾU ĐÃ HOÀN TẤT HOẶC ĐÃ HỦY -->
                                                     <?php else: ?>
                                                         <?php if ($isCompleted): ?>
                                                             <span class="badge" style="background: #dcfce7; color: #166534; border: none; font-size: 0.78rem; font-weight: 600; padding: 4px 10px; border-radius: 6px;">
@@ -554,7 +514,6 @@ function renderMaintenanceNote(?string $note): void
                         </table>
                     </div>
 
-                    <!-- THANH PHÂN TRANG -->
                     <?php if (!empty($cfg['list'])): ?>
                         <div id="<?= $tabKey ?>PaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;">
                             <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
@@ -580,9 +539,6 @@ function renderMaintenanceNote(?string $note): void
     <?php endif; ?>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL 1: DUYỆT & PHÂN CÔNG KỸ THUẬT VIÊN (CHO CÁN BỘ QUẢN LÝ)             -->
-<!-- ========================================================================= -->
 <div id="modalAssignTech" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 520px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -645,9 +601,6 @@ function renderMaintenanceNote(?string $note): void
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL 2: CẬP NHẬT TIẾN ĐỘ SỬA CHỮA (CHO KỸ THUẬT VIÊN)                    -->
-<!-- ========================================================================= -->
 <div id="modalProgress" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 520px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -701,9 +654,6 @@ function renderMaintenanceNote(?string $note): void
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL 3: BÁO CÁO NGHIỆM THU HOÀN THÀNH (QUICK COMPLETE)                   -->
-<!-- ========================================================================= -->
 <div id="modalComplete" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 500px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -740,9 +690,6 @@ function renderMaintenanceNote(?string $note): void
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL 4: LẬP PHIẾU SỰ CỐ HẠ TẦNG CHUNG (DÀNH CHO CÁN BỘ)                  -->
-<!-- ========================================================================= -->
 <div id="modalStaffTicket" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 560px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -800,9 +747,6 @@ function renderMaintenanceNote(?string $note): void
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL 5: HỦY PHIẾU BÁO HỎNG (KÈM LÝ DO)                                    -->
-<!-- ========================================================================= -->
 <div id="modalCancelTicket" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 500px; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -858,11 +802,7 @@ function renderMaintenanceNote(?string $note): void
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- JAVASCRIPT: PHÂN TRANG, CHUYỂN TAB, MODALS & XUẤT CSV                      -->
-<!-- ========================================================================= -->
 <script>
-    // 1. Phân trang Client-side cho cả 5 tabs
     const maintenancePaginationState = {
         pending: {
             page: 1,
@@ -956,7 +896,6 @@ function renderMaintenanceNote(?string $note): void
         renderMaintenancePagination(tabKey);
     }
 
-    // 2. Chuyển Tab Client-side mượt mà
     function updateExportButtonCount(tabKey) {
         const tbody = document.getElementById(`tbody_${tabKey}`);
         const rows = tbody ? tbody.querySelectorAll(`.${tabKey}-row`).length : 0;
@@ -1000,7 +939,6 @@ function renderMaintenanceNote(?string $note): void
         updateExportButtonCount(tabKey);
     }
 
-    // 3. Dropdown liên hoàn (Cascading Dropdowns)
     function onKhuChange(khuVal) {
         const cumSelect = document.getElementById('filterCumSelect');
         const toaSelect = document.getElementById('filterToaSelect');
@@ -1015,7 +953,6 @@ function renderMaintenanceNote(?string $note): void
         document.getElementById('filterFormMaintenance').submit();
     }
 
-    // 4. Xuất Excel / CSV
     function exportMaintenance() {
         const urlParams = new URLSearchParams(window.location.search);
         const input = document.getElementById('currentActiveTab');
@@ -1024,8 +961,6 @@ function renderMaintenanceNote(?string $note): void
         window.location.href = '<?= url('staff/maintenance/export') ?>?' + urlParams.toString();
     }
 
-    // 5. Xử lý Modals
-    // Modal Phân công
     function openAssignModal(maPhieu, tenThietBi, currentTechId, maKhu) {
         document.getElementById('assignModalMaPhieu').value = maPhieu;
         document.getElementById('assignModalMaPhieuText').innerText = maPhieu;
@@ -1042,7 +977,6 @@ function renderMaintenanceNote(?string $note): void
         document.getElementById('modalAssignTech').style.display = 'none';
     }
 
-    // Modal Cập nhật tiến độ
     function openProgressModal(maPhieu, moTa, currentNote) {
         document.getElementById('progressModalMaPhieu').value = maPhieu;
         document.getElementById('progressModalMaPhieuText').innerText = maPhieu;
@@ -1055,7 +989,6 @@ function renderMaintenanceNote(?string $note): void
         document.getElementById('modalProgress').style.display = 'none';
     }
 
-    // Modal Hoàn thành
     function openCompleteModal(maPhieu, tenThietBi) {
         document.getElementById('completeModalMaPhieu').value = maPhieu;
         document.getElementById('completeModalMaPhieuText').innerText = maPhieu;
@@ -1066,7 +999,6 @@ function renderMaintenanceNote(?string $note): void
         document.getElementById('modalComplete').style.display = 'none';
     }
 
-    // Modal Lập phiếu sự cố hạ tầng
     function openStaffTicketModal() {
         document.getElementById('modalStaffTicket').style.display = 'flex';
     }
@@ -1075,7 +1007,6 @@ function renderMaintenanceNote(?string $note): void
         document.getElementById('modalStaffTicket').style.display = 'none';
     }
 
-    // Modal Hủy phiếu
     function openCancelModal(maPhieu, tenThietBi) {
         document.getElementById('cancelModalMaPhieu').value = maPhieu;
         document.getElementById('cancelModalMaPhieuText').innerText = maPhieu;
@@ -1095,7 +1026,6 @@ function renderMaintenanceNote(?string $note): void
         }
     }
 
-    // Khởi chạy khi DOM sẵn sàng
     document.addEventListener('DOMContentLoaded', function() {
         ['pending', 'fixing', 'infra', 'completed', 'cancelled'].forEach(k => {
             renderMaintenancePagination(k);
@@ -1106,7 +1036,6 @@ function renderMaintenanceNote(?string $note): void
         updateExportButtonCount(initialTab);
     });
 
-    // ESC & Backdrop close
     window.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeAssignModal();
