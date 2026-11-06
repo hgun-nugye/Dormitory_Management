@@ -734,28 +734,7 @@ class DisciplineController extends Controller
      */
     public function history(): void
     {
-        header('Content-Type: application/json; charset=utf-8');
-
-        $user = Auth::user();
-        $scope = $this->getStaffScope($user);
-
-        if (!$scope['isAllowed']) {
-            echo json_encode(['success' => false, 'message' => 'Từ chối quyền truy cập!']);
-            exit;
-        }
-
-        $maSinhVien = trim($_GET['sv'] ?? '');
-        $namHoc = trim($_GET['nam'] ?? '2026-2027');
-        $hocKy = (int)($_GET['hk'] ?? 1);
-
-        if (empty($maSinhVien)) {
-            echo json_encode(['success' => false, 'message' => 'Thiếu mã sinh viên']);
-            exit;
-        }
-
-        $data = AttendanceDisciplineService::getStudentDisciplineHistory($maSinhVien, $namHoc, $hocKy);
-        echo json_encode(['success' => true, 'data' => $data], JSON_UNESCAPED_UNICODE);
-        exit;
+        (new \App\Controllers\Api\DisciplineApiController())->history();
     }
 
     /**
