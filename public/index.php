@@ -84,6 +84,9 @@ Router::post('/student/requests/create', 'Student\\RequestController@create', [S
 
 // Staff Routes - Tách theo từng nghiệp vụ chuẩn (Chỉ dành cho Cán bộ KTX & Quản trị viên)
 Router::get('/staff/dashboard', 'Staff\\DashboardController@index', [StaffMiddleware::class]);
+Router::get('/staff/profile', 'Staff\\ProfileController@index', [StaffMiddleware::class]);
+Router::post('/staff/profile/update', 'Staff\\ProfileController@update', [StaffMiddleware::class]);
+Router::post('/staff/profile/change-password', 'Staff\\ProfileController@changePassword', [StaffMiddleware::class]);
 
 // Staff - Quản lý Hạ tầng KTX (Khu, Cụm, Tòa, Phòng)
 Router::get('/staff/zones', 'Staff\\ZoneController@zones', [StaffMiddleware::class]);
