@@ -29,6 +29,7 @@
 
                 <?php elseif (\App\Core\Auth::isNhanVien()): ?>
                     <li><a href="<?= url('staff/dashboard') ?>" class="<?= nav_active_class('staff/dashboard') ?>">BQL Cụm</a></li>
+                    <li><a href="<?= url('staff/profile') ?>" class="<?= nav_active_class('staff/profile') ?>">Hồ sơ cán bộ</a></li>
 
                     <?php if (\App\Core\Auth::isQuanLy()): ?>
                         <li><a href="<?= url('staff/zones') ?>" class="<?= nav_active_class('staff/zones') ?>">Khu KTX</a></li>
@@ -118,12 +119,16 @@
                             </svg>
                             <span>Hotline: <strong>1900.055.559</strong></span>
                         </li>
-                        <li>
-                            <svg class="footer-icon footer-icon--green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <li style="align-items: flex-start;">
+                            <svg class="footer-icon footer-icon--green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-top: 3px; flex-shrink: 0;">
                                 <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z" />
                                 <path d="M12 8v4m0 4h.01" />
                             </svg>
-                            <span>Trực an ninh: Ext 113 (Khu A) / 114 (Khu B)</span>
+                            <span style="white-space: nowrap; margin-right: 6px;">Trực an ninh:</span>
+                            <span style="display: flex; flex-direction: column; gap: 4px; text-align: left; white-space: nowrap;">
+                                <span><strong>0983509807</strong> (Khu A)</span>
+                                <span><strong>0372702334</strong> (Khu B)</span>
+                            </span>
                         </li>
                         <li>
                             <svg class="footer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -167,7 +172,7 @@
                     }
                 } catch (e) {}
             });
-
+            
             // Nếu chưa khớp chính xác, khớp theo tiền tố đường dẫn (trừ trang chủ '/')
             if (!matched && currentPath !== '/') {
                 navLinks.forEach(link => {
