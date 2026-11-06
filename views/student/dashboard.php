@@ -26,23 +26,6 @@ if (!empty($hopDong['NgayKetThuc'])) {
 }
 ?>
 
-<style>
-.student-dashboard{padding-bottom:32px}
-.student-dashboard .student-welcome{position:relative;overflow:hidden;border:1px solid #d9e8f3!important;border-radius:18px;background:linear-gradient(120deg,#fff 0%,#f3f9fd 68%,#eaf5fb 100%)!important;box-shadow:0 12px 30px rgba(20,61,91,.07)!important}
-.student-dashboard .student-welcome:after{content:"";position:absolute;right:-48px;top:-100px;width:240px;height:240px;border:1px solid rgba(23,105,170,.12);border-radius:50%;box-shadow:0 0 0 26px rgba(23,105,170,.035),0 0 0 54px rgba(23,105,170,.025);pointer-events:none}
-.student-dashboard .student-welcome>div{position:relative;z-index:1}
-.student-dashboard .student-welcome>div>div:first-child>div:first-child{box-shadow:0 5px 14px rgba(23,105,170,.12)}
-.student-dashboard .student-kpis{gap:16px!important}
-.student-dashboard .student-kpis .stat-card{min-height:136px;border:1px solid #e3eaf1;border-top-width:3px!important;border-radius:14px;box-shadow:0 5px 17px rgba(19,48,72,.04);transition:transform .18s ease,box-shadow .18s ease}
-.student-dashboard .student-kpis .stat-card:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(19,48,72,.09)}
-.student-dashboard .card{border-radius:14px;box-shadow:0 5px 17px rgba(19,48,72,.045)}
-.student-dashboard .card-title{padding-bottom:13px;border-bottom:1px solid #edf1f5}
-.student-dashboard .data-table tbody tr:hover{background:#f5faff}
-.student-dashboard .action-item{border:1px solid #e4ebf2!important;border-radius:12px!important;background:linear-gradient(110deg,#fff,#f9fbfd);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
-.student-dashboard .action-item:hover{transform:translateY(-2px);border-color:#bdd6e9!important;box-shadow:0 8px 18px rgba(23,65,96,.08)}
-@media(max-width:700px){.student-dashboard{padding:0 14px 24px}.student-dashboard .student-welcome{padding:20px!important}.student-dashboard .student-kpis .stat-card{min-height:116px}.student-dashboard .card{padding:17px}.student-dashboard .table-responsive{overflow-x:auto}}
-</style>
-
 <div class="container student-dashboard">
     <!-- Breadcrumb -->
     <div style="display: flex; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">

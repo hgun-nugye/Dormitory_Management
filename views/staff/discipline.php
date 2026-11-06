@@ -33,8 +33,9 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                 <h1 class="page-title">Giám sát An ninh Ra Vào & Đánh giá Rèn luyện</h1>
                 <p class="page-subtitle" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
                     <span>Phạm vi cán bộ:</span>
-                    <span class="badge" style="background: #fefce8; color: #a16207; border: 1px solid #fef08a; border-radius: 6px; font-weight: 600; padding: 4px 10px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fa-solid fa-building-user"></i> <?= htmlspecialchars($scope['title'] ?? 'Cán bộ Quản lý') ?>
+                    <span class="badge <?= htmlspecialchars($scope['badgeClass'] ?? 'badge-primary') ?>" style="font-size: 0.8rem; padding: 4px 10px;">
+                        <i class="fa-solid fa-building-user" style="margin-right: 6px;"></i>
+                        <?= htmlspecialchars($scope['title'] ?? 'Cán bộ Quản lý') ?>
                     </span>
                 </p>
             </div>
@@ -324,12 +325,8 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
             <div class="card" style="margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i>
-                        <span style="font-weight: 700; font-size: 1.05rem;">Danh sách Sinh viên Vắng mặt Kéo dài > 30 ngày Không phép</span>
+                        <span style="font-weight: 700; font-size: 1.05rem;">Danh sách sinh viên vắng mặt kéo dài</span>
                         <span class="badge badge-danger"><?= count($absenceWarnings) ?> sinh viên</span>
-                    </div>
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">
-                        Tự động rà soát qua cổng Barrier & kiểm tra Đơn tạm vắng
                     </div>
                 </div>
 
@@ -454,8 +451,7 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
             <div class="card" style="margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <i class="fa-solid fa-shield-halved" style="color: #2563eb;"></i>
-                        <span style="font-weight: 700; font-size: 1.05rem;">Nhật ký Quét thẻ Cổng Barrier Thời gian thực</span>
+                        <span style="font-weight: 700; font-size: 1.05rem;">Nhật ký quét thẻ</span>
                         <span class="badge badge-info"><?= count($barrierLogs) ?> lượt gần nhất</span>
                     </div>
 
@@ -463,8 +459,8 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted);">Hướng:</span>
                         <a href="<?= url('staff/discipline?tab=barrier&huongDi=&namHoc=' . urlencode($namHoc) . '&hocKy=' . $hocKy) ?>" class="badge" style="padding: 4px 8px; border-radius: 6px; text-decoration: none; font-size: 0.78rem; <?= empty($huongDi) ? 'background: #0f172a; color: #fff;' : 'background: #f1f5f9; color: #475569;' ?>">Tất cả</a>
-                        <a href="<?= url('staff/discipline?tab=barrier&huongDi=Vào&namHoc=' . urlencode($namHoc) . '&hocKy=' . $hocKy) ?>" class="badge" style="padding: 4px 8px; border-radius: 6px; text-decoration: none; font-size: 0.78rem; <?= ($huongDi === 'Vào') ? 'background: #16a34a; color: #fff;' : 'background: #f1f5f9; color: #475569;' ?>">⬇️ Vào KTX</a>
-                        <a href="<?= url('staff/discipline?tab=barrier&huongDi=Ra&namHoc=' . urlencode($namHoc) . '&hocKy=' . $hocKy) ?>" class="badge" style="padding: 4px 8px; border-radius: 6px; text-decoration: none; font-size: 0.78rem; <?= ($huongDi === 'Ra') ? 'background: #2563eb; color: #fff;' : 'background: #f1f5f9; color: #475569;' ?>">⬆️ Ra ngoài</a>
+                        <a href="<?= url('staff/discipline?tab=barrier&huongDi=Vào&namHoc=' . urlencode($namHoc) . '&hocKy=' . $hocKy) ?>" class="badge" style="padding: 4px 8px; border-radius: 6px; text-decoration: none; font-size: 0.78rem; <?= ($huongDi === 'Vào') ? 'background: #16a34a; color: #fff;' : 'background: #f1f5f9; color: #475569;' ?>">Vào KTX</a>
+                        <a href="<?= url('staff/discipline?tab=barrier&huongDi=Ra&namHoc=' . urlencode($namHoc) . '&hocKy=' . $hocKy) ?>" class="badge" style="padding: 4px 8px; border-radius: 6px; text-decoration: none; font-size: 0.78rem; <?= ($huongDi === 'Ra') ? 'background: #2563eb; color: #fff;' : 'background: #f1f5f9; color: #475569;' ?>">Ra ngoài</a>
                     </div>
                 </div>
 
@@ -473,7 +469,7 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                         <thead>
                             <tr>
                                 <th>Mã lượt</th>
-                                <th>Sinh viên & MSSV</th>
+                                <th>Sinh viên</th>
                                 <th>Phòng & Tòa</th>
                                 <th>Cổng kiểm soát</th>
                                 <th>Hướng đi</th>
@@ -486,7 +482,6 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                             <?php if (empty($barrierLogs)): ?>
                                 <tr>
                                     <td colspan="8" style="text-align: center; padding: 40px 16px; color: var(--text-muted);">
-                                        <div style="font-size: 2.2rem; margin-bottom: 6px;">📂</div>
                                         <div style="font-weight: 600; color: var(--text-secondary);">Chưa có lượt quét thẻ barrier nào phù hợp với bộ lọc hiện tại.</div>
                                     </td>
                                 </tr>
@@ -517,11 +512,11 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                                         <td>
                                             <?php if ($log['HuongDi'] === 'Vào'): ?>
                                                 <span class="badge" style="background: #dcfce7; color: #15803d; border: none; font-weight: 600; padding: 3px 8px; border-radius: 4px; font-size: 0.74rem;">
-                                                    ⬇️ Vào KTX
+                                                    Vào KTX
                                                 </span>
                                             <?php else: ?>
                                                 <span class="badge" style="background: #dbeafe; color: #1e40af; border: none; font-weight: 600; padding: 3px 8px; border-radius: 4px; font-size: 0.74rem;">
-                                                    ⬆️ Ra ngoài
+                                                    Ra ngoài
                                                 </span>
                                             <?php endif; ?>
                                         </td>
@@ -584,13 +579,8 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
             <div class="card" style="margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <i class="fa-solid fa-star" style="color: #eab308;"></i>
-                        <span style="font-weight: 700; font-size: 1.05rem;">Bảng Tổng Kết Điểm Rèn Luyện & Kỷ Luật Nội Trú (HK<?= (int)$hocKy ?> / Năm <?= htmlspecialchars($namHoc) ?>)</span>
+                        <span style="font-weight: 700; font-size: 1.05rem;">Bảng tổng kết điểm rèn luyện nội trú (HK<?= (int)$hocKy ?> / Năm <?= htmlspecialchars($namHoc) ?>)</span>
                         <span class="badge badge-success"><?= count($summaryList) ?> sinh viên</span>
-                    </div>
-
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">
-                        Khởi điểm 100đ/kỳ &bull; Cập nhật tự động sau mỗi sự kiện vi phạm / khen thưởng
                     </div>
                 </div>
 
@@ -599,7 +589,7 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                         <thead>
                             <tr>
                                 <th>MSSV & Họ tên</th>
-                                <th>Phòng & Tòa</th>
+                                <th>Phòng</th>
                                 <th>Trường Đại học</th>
                                 <th>Điểm gốc</th>
                                 <th>Điểm +/-</th>
@@ -709,7 +699,7 @@ $formatTenToa = function (?string $tenToa, ?string $maToa): string {
                                                     </button>
                                                 <?php else: ?>
                                                     <span style="font-size: 0.78rem; color: var(--text-muted); font-style: italic; display: inline-flex; align-items: center; height: 32px; padding: 0 4px;">
-                                                        🔒 Đã khóa
+                                                        Đã khóa
                                                     </span>
                                                 <?php endif; ?>
                                             </div>

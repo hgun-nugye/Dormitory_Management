@@ -285,14 +285,6 @@ $latestUtility = !empty($chiSoDienNuoc) ? $chiSoDienNuoc[0] : null;
             </div>
         </div>
     </div>
-
-    <style>
-        @media (max-width: 768px) {
-            .payment-info-grid {
-                grid-template-columns: 1fr !important;
-            }
-        }
-    </style>
 </div>
 
 <script>
