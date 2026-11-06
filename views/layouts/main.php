@@ -14,7 +14,7 @@
 <body>
     <header class="navbar">
         <a href="<?= url('/') ?>" class="brand" style="display: flex; align-items: center; text-decoration: none;">
-            <img src="<?= url('assets/images/Logo_DHQGHCM.png') ?>" alt="Đại học Quốc gia TP. Hồ Chí Minh - Hệ thống Quản lý Ký túc xá Sinh viên" style="height: 85px; width: auto; ">
+            <img src="<?= url('assets/images/Logo_DHQGHCM.png') ?>" alt="Đại học Quốc gia TP. Hồ Chí Minh - Hệ thống Quản lý Ký túc xá Sinh viên" style="height: 60px; width: auto; scale:1.2; margin-left:40px">
         </a>
 
         <ul class="nav-links">

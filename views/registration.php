@@ -209,6 +209,102 @@ const csrfToken = csrfInput ? csrfInput.value : '';
  $('room').addEventListener('change',loadBed);
  if($('area').value && $('gender').value){loadBuilding();}
 
+ (async function checkUrlPreselection() {
+   const urlParams = new URLSearchParams(window.location.search);
+   const targetArea = urlParams.get('area');
+   const targetBuilding = urlParams.get('building');
+   const targetFloor = urlParams.get('floor');
+   const targetRoom = urlParams.get('room') || urlParams.get('maPhong');
+   const targetGender = urlParams.get('gender');
+   const targetRoomType = urlParams.get('roomType');
+   const targetUni = urlParams.get('university');
+
+   if (!targetArea && !targetRoom && !targetBuilding) return;
+
+   if (targetUni) {
+     const uEl = document.querySelector('[name="university"]');
+     if (uEl) {
+       for (let opt of uEl.options) {
+         if (opt.value === targetUni || opt.text.toUpperCase().includes(targetUni.toUpperCase())) {
+           uEl.value = opt.value;
+           break;
+         }
+       }
+     }
+   }
+
+   if (targetGender && $('gender')) {
+     for (let opt of $('gender').options) {
+       if (opt.value.toLowerCase() === targetGender.toLowerCase() || opt.text.toLowerCase() === targetGender.toLowerCase()) {
+         $('gender').value = opt.value;
+         break;
+       }
+     }
+   }
+
+   if (targetArea && $('area')) {
+     for (let opt of $('area').options) {
+       if (opt.value === targetArea || opt.text.includes(targetArea)) {
+         $('area').value = opt.value;
+         break;
+       }
+     }
+   }
+
+   if (targetRoomType && $('roomType')) {
+     for (let opt of $('roomType').options) {
+       if (opt.value === targetRoomType || opt.text.includes(targetRoomType)) {
+         $('roomType').value = opt.value;
+         break;
+       }
+     }
+   }
+
+   if ($('area').value && $('gender').value) {
+     await loadBuilding();
+     if (targetBuilding && $('building')) {
+       for (let opt of $('building').options) {
+         if (opt.value === targetBuilding || opt.text.includes(targetBuilding) || targetBuilding.includes(opt.value)) {
+           $('building').value = opt.value;
+           break;
+         }
+       }
+
+       if ($('building').value) {
+         await loadFloor();
+         if (targetFloor && $('floor')) {
+           $('floor').value = String(targetFloor);
+           await loadRoom();
+
+           if (targetRoom && $('room')) {
+             for (let opt of $('room').options) {
+               const normOpt = opt.value.replace('.', '-');
+               const normTarget = targetRoom.replace('.', '-');
+               if (opt.value === targetRoom || opt.text === targetRoom || normOpt === normTarget || opt.text.includes(targetRoom)) {
+                 $('room').value = opt.value;
+                 break;
+               }
+             }
+
+             if ($('room').value) {
+               await loadBed();
+             }
+           }
+         }
+       }
+     }
+
+     if (targetRoom) {
+       setHint('✓ Đã tự động chọn phòng ' + targetRoom + ' theo yêu cầu giữ chỗ 72h. Vui lòng hoàn tất thông tin cá nhân và gửi hồ sơ.');
+       const hintEl = $('accommodationHint');
+       if (hintEl) {
+         hintEl.style.color = '#0284c7';
+         hintEl.style.fontWeight = 'bold';
+       }
+     }
+   }
+ })();
+
  const otpButton=$('sendEmailOtp');
  const emailInput=$('registerEmail');
  const otpInput=$('emailOtp');
