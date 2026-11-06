@@ -188,7 +188,7 @@ class UtilityController extends Controller
                 'level' => 'ALL',
                 'levelNumber' => 4,
                 'role' => $role,
-                'title' => 'Quản lý toàn KTX (Giám đốc / Admin)',
+                'title' => 'Ban quản lý KTX',
                 'badgeClass' => 'badge-primary',
                 'userRoleName' => 'Cán bộ Quản trị',
                 'maKhu' => null,

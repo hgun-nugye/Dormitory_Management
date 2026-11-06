@@ -121,7 +121,7 @@ class DisciplineController extends Controller
                 'level' => 'ALL',
                 'levelNumber' => 4,
                 'role' => $role,
-                'title' => 'Quản trị viên / Quản lý toàn KTX',
+                'title' => 'Ban quản lý KTX',
                 'badgeClass' => 'badge-primary',
                 'userRoleName' => 'Ban Giám đốc / Cán bộ Quản trị',
                 'maKhu' => null,

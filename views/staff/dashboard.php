@@ -97,6 +97,12 @@ $viewType = $viewType ?? 'manager';
             </div>
         <?php endif; ?>
 
+        <?php if (!empty($flashWarning)): ?>
+            <div class="alert alert-warning" style="background: #fffbeb; border: 1px solid #fde68a; color: #b45309; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
+                <i class="fa-solid fa-circle-info" style="margin-right: 6px; color: #d97706;"></i> <b>Lưu ý:</b> <?= htmlspecialchars($flashWarning) ?>
+            </div>
+        <?php endif; ?>
+
         <?php if ($viewType === 'accounting'): ?>
             <?php
             $accStats = $accountingData['stats'] ?? [];

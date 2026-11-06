@@ -47,6 +47,7 @@ class DashboardController extends Controller
         // Flash message
         $flashSuccess = Session::flash('success');
         $flashError = Session::flash('error');
+        $flashWarning = Session::flash('warning');
 
         // 1. Nếu bị từ chối quyền truy cập (Sinh viên, Trưởng phòng, khách vãng lai)
         if (!$scope['isAllowed']) {
@@ -57,6 +58,7 @@ class DashboardController extends Controller
                 'viewType' => 'blocked',
                 'flashSuccess' => $flashSuccess,
                 'flashError' => $flashError,
+                'flashWarning' => $flashWarning,
             ]);
             return;
         }
@@ -72,6 +74,7 @@ class DashboardController extends Controller
                 'accountingData' => $accountingData,
                 'flashSuccess' => $flashSuccess,
                 'flashError' => $flashError,
+                'flashWarning' => $flashWarning,
             ]);
             return;
         }
@@ -87,6 +90,7 @@ class DashboardController extends Controller
                 'technicalData' => $technicalData,
                 'flashSuccess' => $flashSuccess,
                 'flashError' => $flashError,
+                'flashWarning' => $flashWarning,
             ]);
             return;
         }
@@ -117,6 +121,7 @@ class DashboardController extends Controller
             'viewType' => 'manager',
             'flashSuccess' => $flashSuccess,
             'flashError' => $flashError,
+            'flashWarning' => $flashWarning,
         ], $dashboardData));
     }
 

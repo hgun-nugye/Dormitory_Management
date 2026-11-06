@@ -4,6 +4,7 @@ namespace App\Middlewares;
 
 use App\Core\Auth;
 use App\Core\Request;
+use App\Core\Session;
 
 class RoleMiddleware {
     protected array $allowedRoles = [];
@@ -12,13 +13,38 @@ class RoleMiddleware {
         $this->allowedRoles = $roles;
     }
 
-    public function handle(Request $request): void {
-        if (!Auth::check()) {
+    public function handle(Request $request, ...$roles): void {
+        $allowed = !empty($roles) ? $roles : $this->allowedRoles;
+
+        if (!Auth::check() || !Auth::isUserActive()) {
+            Session::set('intended_url', $request->getUri());
+            Session::flash('error', 'Vui lòng đăng nhập để tiếp tục.');
             redirect('login');
+            exit;
         }
 
-        $currentRole = Auth::role();
-        if (!empty($this->allowedRoles) && !in_array($currentRole, $this->allowedRoles)) {
+        $currentRole = (string)Auth::role();
+
+        if (!empty($allowed) && !in_array($currentRole, $allowed, true)) {
+            // Chuyển hướng thân thiện theo vai trò nếu bị từ chối
+            if (Auth::isSinhVien()) {
+                Session::flash('error', 'Truy cập bị từ chối: Tài khoản của bạn không có quyền truy cập chức năng này.');
+                redirect('student/dashboard');
+                exit;
+            }
+
+            if (Auth::isNhanVien()) {
+                Session::flash('error', 'Truy cập bị từ chối: Chức năng không thuộc phạm vi quyền hạn của bạn.');
+                redirect('staff/dashboard');
+                exit;
+            }
+
+            if (Auth::isQuanTriVien()) {
+                Session::flash('error', 'Truy cập bị từ chối: Quản trị viên không có quyền truy cập chức năng này.');
+                redirect('admin/dashboard');
+                exit;
+            }
+
             http_response_code(403);
             echo "<div style='font-family:sans-serif;text-align:center;padding:50px;'>";
             echo "<h1 style='color:#dc2626;'>403 - Bạn không có quyền truy cập</h1>";
